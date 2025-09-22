@@ -11,9 +11,9 @@ metadata:
 spec:
   project: apps
   sources:
-  - repoURL: https://geek-cookbook.github.io/charts
+  - repoURL: http://pajikos.github.io/home-assistant-helm-chart
     chart: home-assistant
-    targetRevision: 13.5.0
+    targetRevision: 0.3.22
     helm:
       valueFiles:
       - $values/apps/home_assistant/values.yaml

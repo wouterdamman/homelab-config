@@ -4,7 +4,7 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
-  name: home-assistant
+  name: pi-hole
   namespace: argocd
   finalizers:
   - resources-finalizer.argocd.argoproj.io

@@ -1,32 +1,32 @@
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"
-  name: pi-hole
-  namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-spec:
-  project: apps
-  sources:
-  - repoURL: https://mojo2600.github.io/pihole-kubernetes/
-    chart: pihole
-    targetRevision: 2.34.0
-    helm:
-      valueFiles:
-      - $values/apps/pi-hole/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-apps
-    targetRevision: HEAD
-    path: apps/pi-hole
-    ref: values
-  destination:
-    namespace: pi-hole
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-    automated:
-      prune: true
-      selfHeal: true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "6"
+#   name: pi-hole
+#   namespace: argocd
+#   finalizers:
+#   - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: apps
+#   sources:
+#   - repoURL: https://mojo2600.github.io/pihole-kubernetes/
+#     chart: pihole
+#     targetRevision: 2.34.0
+#     helm:
+#       valueFiles:
+#       - $values/apps/pi-hole/values.yaml
+#   - repoURL: https://github.com/TheIronRock95/homelab-apps
+#     targetRevision: HEAD
+#     path: apps/pi-hole
+#     ref: values
+#   destination:
+#     namespace: pi-hole
+#     server: https://kubernetes.default.svc
+#   syncPolicy:
+#     syncOptions:
+#       - CreateNamespace=true
+#     automated:
+#       prune: true
+#       selfHeal: true

@@ -151,7 +151,7 @@ resource "helm_release" "argo_cd" {
   repository = "https://argoproj.github.io/argo-helm"
   namespace  = kubernetes_namespace.namespaces["argocd"].metadata[0].name
   chart      = "argo-cd"
-  version    = "8.5.6"
+  version    = "8.5.8"
   values     = [file("./operators/argo-cd/values.yaml")]
   depends_on = [
     time_sleep.wait_for_cluster_secret_store,

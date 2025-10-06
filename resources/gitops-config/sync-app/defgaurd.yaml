@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  name: defguard
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  sources:
+  - repoURL: https://github.com/DefGuard/deployment.git
+    targetRevision: HEAD
+    path: charts/defguard
+    helm:
+      valueFiles:
+      - $values/apps/defguard/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-apps
+    targetRevision: HEAD
+    path: apps/defguard
+    ref: values
+  destination:
+    namespace: defguard
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,7 +1,17 @@
-# tofu/providers.tf
 terraform {
-  backend "local" {
-    path = "/Users/wouter/personal/homelab-config/resources/state/talos.tfstate"  # Local path for the state file
+  backend "s3" {
+    bucket = "sironite-state"
+    key    = "terraform.tfstate"
+
+    region   = "eu-central-003"
+    endpoint = "https://s3.eu-central-003.backblazeb2.com"
+
+    use_path_style = true
+
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_metadata_api_check     = true
+    skip_requesting_account_id  = true
   }
 
   required_providers {
@@ -17,6 +27,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "2.38.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.6.0"
+    }
   }
 }
 
@@ -25,6 +39,7 @@ provider "proxmox" {
   username = var.proxmox.username
   password = var.proxmox.password
   insecure = var.proxmox.insecure
+
   ssh {
     agent = true
 

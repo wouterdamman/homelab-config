@@ -15,9 +15,16 @@ machine:
   network:
     hostname: ${hostname}
     interfaces:
-    - interface: eth0
-      vip:
-        ip: 10.0.10.230
+      - deviceSelector:
+          hardwareAddr: "${mac_address}"
+        dhcp: false
+        addresses:
+          - ${ip}/${cidr}
+        vip:
+          ip: ${vip}
+        routes:
+          - network: 0.0.0.0/0
+            gateway: ${gateway}
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}

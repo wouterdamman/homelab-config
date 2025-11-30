@@ -24,12 +24,21 @@ data "talos_machine_configuration" "this" {
       cluster_name   = var.cluster.proxmox_cluster
       cilium_values  = var.cilium.values
       cilium_install = var.cilium.install
+      vip            = var.cluster.vip
+      gateway        = var.cluster.gateway
+      ip             = each.value.ip
+      mac_address    = each.value.mac_address
+      cidr           = 25
     })
     ] : [
     templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
       hostname     = each.key
       node_name    = each.value.host_node
       cluster_name = var.cluster.proxmox_cluster
+      gateway      = var.cluster.gateway
+      ip           = each.value.ip
+      mac_address  = each.value.mac_address
+      cidr         = 25
     })
   ]
 }
@@ -66,15 +75,22 @@ data "talos_cluster_health" "this" {
   }
 }
 
-data "talos_cluster_kubeconfig" "this" {
+resource "talos_cluster_kubeconfig" "this" {
   depends_on = [
     talos_machine_bootstrap.this,
     data.talos_cluster_health.this
   ]
-  node                 = [for k, v in var.nodes : v.ip if v.machine_type == "controlplane"][0]
+
+  node = [
+    for k, v in var.nodes :
+    v.ip if v.machine_type == "controlplane"
+  ][0]
+
   endpoint             = var.cluster.endpoint
   client_configuration = talos_machine_secrets.this.client_configuration
+
   timeouts = {
     read = "1m"
   }
 }
+

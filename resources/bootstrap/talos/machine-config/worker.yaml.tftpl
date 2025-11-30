@@ -13,6 +13,15 @@ machine:
           - rw
   network:
     hostname: ${hostname}
+    interfaces:
+      - deviceSelector:
+          hardwareAddr: "${mac_address}"
+        dhcp: false
+        addresses:
+          - ${ip}/${cidr}
+        routes:
+          - network: 0.0.0.0/0
+            gateway: ${gateway}
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}

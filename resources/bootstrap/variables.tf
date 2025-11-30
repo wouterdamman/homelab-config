@@ -1,4 +1,50 @@
-# tofu/variables.tf
+##############################
+# Environment / Counts
+##############################
+
+variable "env" {
+  type        = string
+  description = "Environment identifier (prd or tst)"
+  validation {
+    condition     = contains(["prd", "tst"], var.env)
+    error_message = "env must be 'prd' or 'tst'"
+  }
+}
+
+variable "controlplane_count" {
+  type        = number
+  description = "Number of controlplane nodes"
+}
+
+variable "worker_count" {
+  type        = number
+  description = "Number of worker nodes"
+}
+
+variable "base_vm_id" {
+  type        = number
+  description = "Starting VM ID for automatic numbering"
+}
+
+variable "cluster_cidr" {
+  type        = string
+  description = "Cluster CIDR prefix (e.g. 10.0.10)"
+}
+
+variable "ip_offset" {
+  type        = number
+  description = "Start offset for IP addressing (e.g. 100, 200)"
+}
+
+variable "host_nodes" {
+  type        = list(string)
+  description = "Proxmox nodes used for placement"
+}
+
+##############################
+# Proxmox access
+##############################
+
 variable "proxmox" {
   type = object({
     name         = string
@@ -14,7 +60,59 @@ variable "proxmox" {
 }
 
 variable "kube_config_path" {
-  description = "Pad naar het kubeconfig-bestand"
+  description = "Path to kubeconfig"
   type        = string
   default     = "~/.kube/config"
+}
+
+##############################
+# Talos Image
+##############################
+
+variable "talos_version" {
+  type        = string
+  description = "Talos version (e.g. v1.11.3)"
+}
+
+variable "talos_schematic_path" {
+  type        = string
+  description = "Relative path to schematic.yaml"
+}
+
+##############################
+# Cilium
+##############################
+
+variable "cilium_install_path" {
+  type        = string
+  description = "Relative path to Cilium install manifest"
+}
+
+variable "cilium_values_path" {
+  type        = string
+  description = "Relative path to Cilium values.yaml"
+}
+
+##############################
+# Cluster
+##############################
+
+variable "cluster_name" {
+  type        = string
+  description = "Cluster name"
+}
+
+variable "cluster_gateway" {
+  type        = string
+  description = "Gateway for cluster network"
+}
+
+variable "proxmox_cluster" {
+  type        = string
+  description = "Proxmox cluster name"
+}
+
+variable "cluster_vip" {
+  type        = string
+  description = "Virtual IP for the control-plane Kubernetes endpoint"
 }

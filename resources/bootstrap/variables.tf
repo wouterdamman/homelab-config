@@ -29,11 +29,21 @@ variable "base_vm_id" {
 variable "cluster_cidr" {
   type        = string
   description = "Cluster CIDR prefix (e.g. 10.0.10)"
+
+  validation {
+    condition     = can(regex("^([0-9]{1,3}\\.){2}[0-9]{1,3}$", var.cluster_cidr))
+    error_message = "cluster_cidr must be a valid IP prefix (e.g., 10.0.10)"
+  }
 }
 
 variable "ip_offset" {
   type        = number
   description = "Start offset for IP addressing (e.g. 100, 200)"
+
+  validation {
+    condition     = var.ip_offset >= 1 && var.ip_offset <= 254
+    error_message = "ip_offset must be between 1 and 254"
+  }
 }
 
 variable "host_nodes" {
@@ -52,11 +62,26 @@ variable "proxmox" {
     endpoint     = string
     cluster_ip   = string
     insecure     = bool
-    username     = string
-    password     = string
-    api_token    = string
   })
-  sensitive = true
+  description = "Proxmox cluster configuration (non-sensitive)"
+}
+
+variable "proxmox_username" {
+  type        = string
+  description = "Proxmox username (e.g., root@pam). Set via TF_VAR_proxmox_username"
+  sensitive   = true
+}
+
+variable "proxmox_password" {
+  type        = string
+  description = "Proxmox password. Set via TF_VAR_proxmox_password"
+  sensitive   = true
+}
+
+variable "proxmox_api_token" {
+  type        = string
+  description = "Proxmox API token. Set via TF_VAR_proxmox_api_token"
+  sensitive   = true
 }
 
 variable "kube_config_path" {
@@ -72,12 +97,22 @@ variable "kube_config_path" {
 variable "talos_version" {
   type        = string
   description = "Talos version (e.g. v1.11.3)"
+
+  validation {
+    condition     = can(regex("^v[0-9]+\\.[0-9]+\\.[0-9]+$", var.talos_version))
+    error_message = "Talos version must be in format vX.Y.Z (e.g., v1.12.0)"
+  }
 }
 
 variable "talos_update_version" {
   type        = string
   description = "Talos upgrade target version (optional, for rolling upgrades)"
   default     = null
+
+  validation {
+    condition     = var.talos_update_version == null || can(regex("^v[0-9]+\\.[0-9]+\\.[0-9]+$", var.talos_update_version))
+    error_message = "Talos update version must be in format vX.Y.Z (e.g., v1.12.0) or null"
+  }
 }
 
 variable "talos_schematic_path" {
@@ -89,6 +124,17 @@ variable "talos_schematic_path" {
 # Cilium
 ##############################
 
+variable "cilium_version" {
+  type        = string
+  description = "Cilium version to install (e.g., v1.18.5)"
+  default     = "v1.18.5"
+
+  validation {
+    condition     = can(regex("^v[0-9]+\\.[0-9]+\\.[0-9]+$", var.cilium_version))
+    error_message = "Cilium version must be in format vX.Y.Z (e.g., v1.18.5)"
+  }
+}
+
 variable "cilium_install_path" {
   type        = string
   description = "Relative path to Cilium install manifest"
@@ -97,6 +143,16 @@ variable "cilium_install_path" {
 variable "cilium_values_path" {
   type        = string
   description = "Relative path to Cilium values.yaml"
+}
+
+##############################
+# Gateway API
+##############################
+
+variable "gateway_api_version" {
+  type        = string
+  description = "Gateway API CRD version (e.g., v1.1.0, v1.2.0)"
+  default     = "v1.2.0"
 }
 
 ##############################

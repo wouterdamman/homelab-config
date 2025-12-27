@@ -16,12 +16,13 @@ variable "image" {
 variable "cluster" {
   description = "Cluster configuration"
   type = object({
-    name            = string
-    endpoint        = string
-    gateway         = string
-    talos_version   = string
-    proxmox_cluster = string
-    vip             = string
+    name                = string
+    endpoint            = string
+    gateway             = string
+    talos_version       = string
+    proxmox_cluster     = string
+    vip                 = string
+    gateway_api_version = optional(string, "v1.2.0")
   })
 }
 
@@ -47,5 +48,6 @@ variable "cilium" {
   type = object({
     values  = string
     install = string
+    version = optional(string, "v1.18.5")
   })
 }

@@ -149,21 +149,41 @@ get_cluster_state() {
     local cp_count=$(grep -E "^controlplane_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
     local worker_count=$(grep -E "^worker_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
 
+    # Extract IP configuration from tfvars
+    CLUSTER_CIDR=$(grep -E "^cluster_cidr\s*=" "$TFVARS_FILE" | sed 's/.*=\s*"\(.*\)".*/\1/')
+    IP_OFFSET=$(grep -E "^ip_offset\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
+    ENV=$(grep -E "^env\s*=" "$TFVARS_FILE" | sed 's/.*=\s*"\(.*\)".*/\1/')
+
+    if [[ -z "$CLUSTER_CIDR" ]] || [[ -z "$IP_OFFSET" ]] || [[ -z "$ENV" ]]; then
+        log_error "Failed to extract cluster_cidr, ip_offset, or env from tfvars"
+        exit 1
+    fi
+
     echo "Control Planes: $cp_count"
     echo "Workers: $worker_count"
+    echo "Cluster CIDR: $CLUSTER_CIDR"
+    echo "IP Offset: $IP_OFFSET"
+    echo "Environment: $ENV"
 
     # Generate node names
     WORKER_NODES=()
     for i in $(seq 1 "$worker_count"); do
-        WORKER_NODES+=("prd-w-$(printf '%02d' $i)")
+        WORKER_NODES+=("${ENV}-w-$(printf '%02d' $i)")
     done
 
     CP_NODES=()
     for i in $(seq 1 "$cp_count"); do
-        CP_NODES+=("prd-cp-$(printf '%02d' $i)")
+        CP_NODES+=("${ENV}-cp-$(printf '%02d' $i)")
     done
 
     log_success "Found ${#WORKER_NODES[@]} workers and ${#CP_NODES[@]} control planes"
+}
+
+# Calculate IP for a node based on its index
+# Args: node_index (0-based)
+get_node_ip() {
+    local node_index=$1
+    echo "${CLUSTER_CIDR}.$((IP_OFFSET + node_index))"
 }
 
 # Update tfvars file
@@ -323,9 +343,11 @@ upgrade_workers() {
         update_tfvars "nodes_to_upgrade" "$nodes_json"
         apply_terraform "Upgrade $worker"
 
-        # Extract IP for this worker
+        # Calculate IP for this worker (CPs come first, then workers)
         local worker_num=$(echo "$worker" | grep -oE '[0-9]+$')
-        local worker_ip="10.0.10.$((132 + worker_num))"
+        local cp_count=$(grep -E "^controlplane_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
+        local node_index=$((cp_count + worker_num - 1))
+        local worker_ip=$(get_node_ip "$node_index")
 
         # Wait for node
         if ! wait_for_node "$worker" "$worker_ip" "$WORKER_WAIT_TIME"; then
@@ -376,9 +398,10 @@ upgrade_control_planes() {
         update_tfvars "nodes_to_upgrade" "$nodes_json"
         apply_terraform "Upgrade $cp"
 
-        # Extract IP for this CP
+        # Calculate IP for this CP (CPs are indexed from 0)
         local cp_num=$(echo "$cp" | grep -oE '[0-9]+$')
-        local cp_ip="10.0.10.$((129 + cp_num))"
+        local node_index=$((cp_num - 1))
+        local cp_ip=$(get_node_ip "$node_index")
 
         # Wait for node
         if ! wait_for_node "$cp" "$cp_ip" "$CP_WAIT_TIME"; then

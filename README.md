@@ -1,149 +1,65 @@
-# 🏡 My Homelab Configuration
+# 🏡 Homelab Infrastructure
 
-This repository contains the complete Infrastructure-as-Code (IaC) and GitOps configuration for my homelab environment, powered by **Proxmox**, **Talos Linux**, **Argo CD**, and **OpenTofu**.
+Infrastructure-as-Code and GitOps configuration for a production-grade homelab running on Proxmox with Talos Kubernetes.
 
----
+## 📚 Documentation
 
-## 🧭 Project Structure Overview
+**All documentation is maintained in Notion for better collaboration and organization.**
 
-This setup is divided into two major components:
+### Quick Links
 
-- **Infrastructure Bootstrap** (`resources/bootstrap`)  
-  Provision Talos VMs on Proxmox, CSI plugin config, Talos machine/image setup, and OpenTofu orchestration.
-  
-- **GitOps Configuration** (`resources/gitops-config`)  
-  Cluster apps and services managed via Argo CD, including operators, secrets, and Helm-based application installs.
+- **[Homelab Database](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e)** - Main documentation hub
+- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - How to deploy the cluster
+- **[Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c)** - Complete stack overview
+- **[Secrets Management - 1Password](https://www.notion.so/2d6b49ed6b9181b0b331f641f915b5b5)** - How credentials are managed
+- **[Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb)** - Production deployment guide
 
----
+## 🚀 Quick Start
 
-## ⚙️ Setup Instructions
+1. **Prerequisites**: Install OpenTofu, kubectl, talosctl, and 1Password CLI
+2. **Load Secrets**: `source resources/bootstrap/scripts/load-secrets.sh`
+3. **Deploy**: `cd resources/bootstrap && tofu apply`
+4. **Verify**: `kubectl get nodes`
 
-### ✅ Prerequisites
+See [Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4) for detailed instructions.
 
-Before running the setup, make sure these tools are installed:
+## 🗂️ Repository Structure
 
-- [`talosctl`](https://www.talos.dev/docs/latest/introduction/what-is-talos/)
-- [`kubectl`](https://kubernetes.io/)
-- [`OpenTofu`](https://opentofu.org/)
-- [`argocd`](https://argo-cd.readthedocs.io/)
-- [`proxmox`](https://www.proxmox.com/en/)
-
----
-
-### 🚀 Bootstrap Infrastructure & GitOps
-
-Run the following to fully deploy Talos, bootstrap the cluster, and install Argo CD:
-
-```bash
-./setup_talos_and_gitops.sh
+```
+├── resources/
+│   ├── bootstrap/          # OpenTofu for VMs + Talos cluster
+│   │   ├── scripts/        # Automation scripts (1Password, upgrades)
+│   │   ├── talos/          # Talos module
+│   │   └── README.md       # Technical reference
+│   └── gitops-config/      # ArgoCD apps + operators
+└── docs/                   # Development-specific docs
 ```
 
-What it does:
+## 🔧 Tech Stack
 
-1. Provisions infrastructure using Terraform (VMs on Proxmox)
-2. Generates and applies Talos configs (`machine-config`, `image`)
-3. Installs Talos cluster components (e.g. Cilium)
-4. Deploys Argo CD and syncs the GitOps config
+- **Infrastructure**: Proxmox VE
+- **Kubernetes**: Talos Linux v1.12.0
+- **Networking**: Cilium v1.18.5 + Gateway API v1.2.0
+- **GitOps**: ArgoCD
+- **IaC**: OpenTofu/Terraform
+- **Secrets**: 1Password CLI
+- **Storage**: Backblaze B2 (Terraform state)
 
-> 🔐 You must configure [`proxmox.auto.tfvars`](docs/example/proxmox.auto.tfvars.example) with your Proxmox credentials.
+## 📖 Local Documentation
 
----
+Some development-specific docs remain in this repo:
 
-### 🩹 Teardown / Cleanup
+- [resources/bootstrap/README.md](resources/bootstrap/README.md) - Technical implementation details
+- [docs/generate-1password-credentials.md](docs/generate-1password-credentials.md) - 1Password Connect setup
+- [docs/secrets.md](docs/secrets.md) - Secrets management patterns
+- [docs/todo.md](docs/todo.md) - Development tasks
 
-To remove everything:
-
-```bash
-./delete_all_resources.sh
-```
-
-This deletes:
-
-- All Kubernetes resources
-- Opentofu-managed infrastructure
-
----
-
-## 🗂️ Directory Structure
-
-```plaintext
-resources/
-|
-|
-├── docs/
-│   ├── example/
-|
-├── bootstrap/
-│   ├── output/                        
-│   ├── proxmox-csi-plugin/          
-│   ├── talos/
-│   │   ├── image/
-│   │   ├── inline-manifests/
-│   │   └── machine-config/
-│   └── other files                         # main.tf, variables.tf, etc.
-│
-├── gitops-config/
-│   ├── input-files/                        
-│   ├── operators/                          
-│   │   ├── argo-cd/
-│   │   |   ├── templates/
-│   │   ├── cert-manager/
-│   │   |   ├── templates/
-│   │   ├── cilium/
-│   │   |   ├── templates/
-│   │   ├── external-dns/
-│   │   |   ├── templates/
-│   │   └── external-secrets/
-│   │       ├── templates/
-│   ├── sync-app/
-│   │   ├── templates/
-│   └── other files                         # main.tf, variables.tf, etc.
-│
-├── state/
-│
-│── setup_talos_and_gitops.sh
-│── delete_all_resources.sh
-├── LICENSE
-├── .gitignore
-├── renovate.json
-└── README.md
-```
-
----
-
-## 🔐 Secrets Management
-
-Secrets like GitHub tokens and 1Password credentials are stored in:
-
-- `resources/gitops-config/input-files/`  
-  > These are **not committed** and should be generated manually or via automation prior to running GitOps sync.
-
----
-
-## 📆 GitOps-Managed Applications
-
-Deployed and managed through Argo CD:
-
-- `argocd` — GitOps CD tool
-- `cert-manager` — TLS management
-- `cilium` — CNI for Talos
-- `external-dns` — Auto-DNS management
-- `external-secrets` — Secrets from vaults
-- `sync-app` — Root Argo CD app syncing the rest
-
----
-## 📓 Docs
-- [`docs/`](docs/README.md) — Wiki-style knowledge base for configuring, managing, and maintaining your homelab environment.
-
----
+For all other documentation, see the [Homelab Database in Notion](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e).
 
 ## 🤝 Contributing
 
-Pull requests and issue reports are welcome!  
-Please feel free to open an issue or submit a PR if you have ideas to improve this setup.
-
----
+Issues and pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
 
 ## 📄 License
 
-This project is licensed under the [MIT License](./LICENSE).
+[MIT License](./LICENSE)

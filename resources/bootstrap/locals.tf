@@ -58,7 +58,6 @@ locals {
       cpu           = cfg.machine_type == "controlplane" ? var.controlplane_specs.cpu : var.worker_specs.cpu
       ram_dedicated = cfg.machine_type == "controlplane" ? var.controlplane_specs.ram : var.worker_specs.ram
       disk_size     = cfg.machine_type == "controlplane" ? var.controlplane_specs.disk : var.worker_specs.disk
-      mac_address   = local.mac[cfg.index]
 
       # Mark node for upgrade if it's in the upgrade list
       update = contains(var.nodes_to_upgrade, name)
@@ -78,6 +77,9 @@ locals {
 ############################################################
 
 locals {
+  # Validate file paths exist before processing
+  _talos_schematic_check = fileexists(abspath("${path.module}/${var.talos_schematic_path}")) ? true : tobool("ERROR: talos_schematic_path file not found: ${var.talos_schematic_path}")
+
   image_config = {
     version        = var.talos_version
     update_version = var.talos_update_version
@@ -90,9 +92,16 @@ locals {
 ############################################################
 
 locals {
+  # Validate file paths exist before processing
+  _cilium_install_check = fileexists(abspath("${path.module}/${var.cilium_install_path}")) ? true : tobool("ERROR: cilium_install_path file not found: ${var.cilium_install_path}")
+  _cilium_values_check  = fileexists(abspath("${path.module}/${var.cilium_values_path}")) ? true : tobool("ERROR: cilium_values_path file not found: ${var.cilium_values_path}")
+
   cilium_config = {
-    install = file(abspath("${path.module}/${var.cilium_install_path}"))
+    install = templatefile(abspath("${path.module}/${var.cilium_install_path}"), {
+      cilium_version = var.cilium_version
+    })
     values  = file(abspath("${path.module}/${var.cilium_values_path}"))
+    version = var.cilium_version
   }
 }
 
@@ -102,11 +111,12 @@ locals {
 
 locals {
   cluster_config = {
-    name            = var.cluster_name
-    endpoint        = format("%s.%d", var.cluster_cidr, var.ip_offset)
-    gateway         = var.cluster_gateway
-    talos_version   = substr(var.talos_version, 0, 5)
-    proxmox_cluster = var.proxmox_cluster
-    vip             = var.cluster_vip
+    name               = var.cluster_name
+    endpoint           = format("%s.%d", var.cluster_cidr, var.ip_offset)
+    gateway            = var.cluster_gateway
+    talos_version      = substr(var.talos_version, 0, 5)
+    proxmox_cluster    = var.proxmox_cluster
+    vip                = var.cluster_vip
+    gateway_api_version = var.gateway_api_version
   }
 }

@@ -19,15 +19,17 @@ data "talos_machine_configuration" "this" {
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   config_patches = each.value.machine_type == "controlplane" ? [
     templatefile("${path.module}/machine-config/control-plane.yaml.tftpl", {
-      hostname       = each.key
-      node_name      = each.value.host_node
-      cluster_name   = var.cluster.proxmox_cluster
-      cilium_values  = var.cilium.values
-      cilium_install = var.cilium.install
-      vip            = var.cluster.vip
-      gateway        = var.cluster.gateway
-      ip             = each.value.ip
-      cidr           = 25
+      hostname            = each.key
+      node_name           = each.value.host_node
+      cluster_name        = var.cluster.proxmox_cluster
+      cilium_values       = var.cilium.values
+      cilium_install      = var.cilium.install
+      cilium_version      = var.cilium.version
+      gateway_api_version = var.cluster.gateway_api_version
+      vip                 = var.cluster.vip
+      gateway             = var.cluster.gateway
+      ip                  = each.value.ip
+      cidr                = 25
     })
     ] : [
     templatefile("${path.module}/machine-config/worker.yaml.tftpl", {

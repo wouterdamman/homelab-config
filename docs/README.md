@@ -1,48 +1,44 @@
 # 📚 Homelab Documentation
 
-> **Note**: Primary documentation is maintained in Notion for better collaboration and organization.
+> **All primary documentation is maintained in Notion.**
 
-## 📖 Documentation Location
+## 📖 Main Documentation (Notion)
 
-All homelab documentation is available in the **Homelab** database in Notion:
+Access the complete homelab documentation in the **[Homelab Database](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e)**:
 
-### Main Documentation
-- [Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c) - Complete infrastructure stack overview
-- [Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb) - Production cluster deployment guide
-- [S3 Backend Setup](https://www.notion.so/2d3b49ed6b9181b3b6bfe2760e755dc9) - Backblaze B2 configuration
-- [Talos Upgrade Procedure](https://www.notion.so/2d6b49ed6b91813ebe8bd18f4fb7a150) - Automated rolling upgrade guide
-- [Networking Stack](https://www.notion.so/2d3b49ed6b9181d0a118de59312eadd0) - UniFi network configuration
+### Infrastructure & Deployment
+- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - Complete deployment guide
+- **[Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c)** - Stack overview
+- **[Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb)** - Production deployment checklist
+
+### Operations & Maintenance
+- **[Secrets Management - 1Password](https://www.notion.so/2d6b49ed6b9181b0b331f641f915b5b5)** - Credential management
+- **[Talos Upgrade Procedure](https://www.notion.so/2d6b49ed6b91813ebe8bd18f4fb7a150)** - Rolling upgrades
+- **[S3 Backend Setup](https://www.notion.so/2d3b49ed6b9181b3b6bfe2760e755dc9)** - Backblaze B2 configuration
+
+### Network
+- **[Networking Stack](https://www.notion.so/2d3b49ed6b9181d0a118de59312eadd0)** - UniFi configuration
 
 ## 🔧 Local Development Documentation
 
-The following docs remain local as they contain development-specific information:
+The following docs remain in this repo as they contain development-specific information:
 
-- [1Password Connect](./generate-1password-credentials.md) - Generate 1Password Connect credentials for External Secrets Operator
-- [Secrets Management](./secrets.md) - Overview of secrets management using External Secrets Operator and 1Password Connect
-- [TODOs](./todo.md) - Development tasks and ideas
+- **[1Password Connect](./generate-1password-credentials.md)** - External Secrets Operator setup
+- **[Secrets Management Patterns](./secrets.md)** - Development secrets practices
+- **[Development TODOs](./todo.md)** - Tasks and ideas
+
+## 📁 Technical Reference
+
+For technical implementation details, see:
+- **[Bootstrap README](../resources/bootstrap/README.md)** - OpenTofu/Terraform technical docs
 
 ## 🚀 Quick Start
 
-1. **Deploy Cluster**: Follow the [Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb) in Notion
-2. **Configure S3 Backend**: See [S3 Backend Setup](https://www.notion.so/2d3b49ed6b9181b3b6bfe2760e755dc9)
-3. **Upgrade Talos**: Use the automated script from [Talos Upgrade Procedure](https://www.notion.so/2d6b49ed6b91813ebe8bd18f4fb7a150)
+1. Review **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** in Notion
+2. Load secrets: `source resources/bootstrap/scripts/load-secrets.sh`
+3. Deploy: `cd resources/bootstrap && tofu apply`
 
-## 📁 Repository Structure
-
-```
-homelab-config/
-├── resources/
-│   ├── bootstrap/          # OpenTofu for VMs + Talos cluster
-│   │   ├── scripts/        # Automation scripts
-│   │   │   └── upgrade-talos.sh    # Automated Talos upgrade
-│   │   ├── talos/          # Talos module
-│   │   ├── output/         # Generated configs (gitignored)
-│   │   └── *.tf            # Terraform/OpenTofu configuration
-│   └── gitops-config/      # ArgoCD apps + operators
-└── docs/                   # Documentation (see Notion for primary docs)
-```
-
-## 🔗 External Links
+## 🔗 External Resources
 
 - [Talos Documentation](https://www.talos.dev/)
 - [Cilium Documentation](https://docs.cilium.io/)

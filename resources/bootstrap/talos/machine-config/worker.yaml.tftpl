@@ -15,8 +15,7 @@ machine:
   network:
     hostname: ${hostname}
     interfaces:
-      - deviceSelector:
-          hardwareAddr: "${mac_address}"
+      - interface: eth0
         dhcp: false
         addresses:
           - ${ip}/${cidr}

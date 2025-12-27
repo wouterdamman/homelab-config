@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "sironite-state"
-    key    = "terraform.tfstate"
+    bucket = "homelab-prd"
+    key    = "tofu/bootstrap.tfstate"
 
     region   = "eu-central-003"
     endpoint = "https://s3.eu-central-003.backblazeb2.com"

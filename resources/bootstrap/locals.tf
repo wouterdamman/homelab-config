@@ -55,10 +55,13 @@ locals {
       machine_type = cfg.machine_type
       host_node    = var.host_nodes[cfg.index % length(var.host_nodes)]
 
-      cpu           = cfg.machine_type == "controlplane" ? 4 : 2
-      ram_dedicated = cfg.machine_type == "controlplane" ? 8192 : 4096
-      disk_size     = 250
-      mac_address  = local.mac[cfg.index]
+      cpu           = cfg.machine_type == "controlplane" ? var.controlplane_specs.cpu : var.worker_specs.cpu
+      ram_dedicated = cfg.machine_type == "controlplane" ? var.controlplane_specs.ram : var.worker_specs.ram
+      disk_size     = cfg.machine_type == "controlplane" ? var.controlplane_specs.disk : var.worker_specs.disk
+      mac_address   = local.mac[cfg.index]
+
+      # Mark node for upgrade if it's in the upgrade list
+      update = contains(var.nodes_to_upgrade, name)
 
       hostname = format(
         "%s-%s-%02d",
@@ -76,8 +79,9 @@ locals {
 
 locals {
   image_config = {
-    version   = var.talos_version
-    schematic = file(abspath("${path.module}/${var.talos_schematic_path}"))
+    version        = var.talos_version
+    update_version = var.talos_update_version
+    schematic      = file(abspath("${path.module}/${var.talos_schematic_path}"))
   }
 }
 

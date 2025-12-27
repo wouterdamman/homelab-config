@@ -74,6 +74,12 @@ variable "talos_version" {
   description = "Talos version (e.g. v1.11.3)"
 }
 
+variable "talos_update_version" {
+  type        = string
+  description = "Talos upgrade target version (optional, for rolling upgrades)"
+  default     = null
+}
+
 variable "talos_schematic_path" {
   type        = string
   description = "Relative path to schematic.yaml"
@@ -115,4 +121,46 @@ variable "proxmox_cluster" {
 variable "cluster_vip" {
   type        = string
   description = "Virtual IP for the control-plane Kubernetes endpoint"
+}
+
+##############################
+# Node Specifications
+##############################
+
+variable "controlplane_specs" {
+  type = object({
+    cpu  = number
+    ram  = number
+    disk = number
+  })
+  description = "Hardware specs for control plane nodes (CPU cores, RAM in MB, disk in GB)"
+  default = {
+    cpu  = 4
+    ram  = 8192
+    disk = 250
+  }
+}
+
+variable "worker_specs" {
+  type = object({
+    cpu  = number
+    ram  = number
+    disk = number
+  })
+  description = "Hardware specs for worker nodes (CPU cores, RAM in MB, disk in GB)"
+  default = {
+    cpu  = 2
+    ram  = 4096
+    disk = 250
+  }
+}
+
+##############################
+# Upgrade Control
+##############################
+
+variable "nodes_to_upgrade" {
+  type        = list(string)
+  description = "List of node names to upgrade (e.g., ['prd-cp-01', 'prd-w-01']). Empty list means no upgrades."
+  default     = []
 }

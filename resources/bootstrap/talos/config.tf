@@ -27,7 +27,6 @@ data "talos_machine_configuration" "this" {
       vip            = var.cluster.vip
       gateway        = var.cluster.gateway
       ip             = each.value.ip
-      mac_address    = each.value.mac_address
       cidr           = 25
     })
     ] : [
@@ -37,7 +36,6 @@ data "talos_machine_configuration" "this" {
       cluster_name = var.cluster.proxmox_cluster
       gateway      = var.cluster.gateway
       ip           = each.value.ip
-      mac_address  = each.value.mac_address
       cidr         = 25
     })
   ]

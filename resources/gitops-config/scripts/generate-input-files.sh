@@ -211,18 +211,18 @@ spec:
       engineVersion: v2
       type: Opaque
       data:
-        AWS_ACCESS_KEY_ID: '{{ .awsAccessKeyId }}'
-        AWS_SECRET_ACCESS_KEY: '{{ .awsSecretAccessKey }}'
+        AWS_ACCESS_KEY_ID: '{{ .keyid }}'
+        AWS_SECRET_ACCESS_KEY: '{{ .secretkey }}'
         AWS_ENDPOINTS: 'https://s3.eu-central-003.backblazeb2.com'
   data:
-  - secretKey: awsAccessKeyId
+  - secretKey: keyid
     remoteRef:
       key: longhorn-s3-backup
-      property: AWS_ACCESS_KEY_ID
-  - secretKey: awsSecretAccessKey
+      property: username
+  - secretKey: secretkey
     remoteRef:
       key: longhorn-s3-backup
-      property: AWS_SECRET_ACCESS_KEY
+      property: password
 EOF
 
 echo -e "${GREEN}  ✓ Created input-files/longhorn-s3-secret.yaml${NC}"

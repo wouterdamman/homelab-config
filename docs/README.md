@@ -7,7 +7,8 @@
 Access the complete homelab documentation in the **[Homelab Database](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e)**:
 
 ### Infrastructure & Deployment
-- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - Complete deployment guide
+- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - Talos cluster bootstrap
+- **[GitOps Deployment - ArgoCD Bootstrap](https://www.notion.so/2d7b49ed6b91816dbb9cc3cdab067eeb)** - ArgoCD & GitOps setup
 - **[Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c)** - Stack overview
 - **[Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb)** - Production deployment checklist
 
@@ -30,7 +31,8 @@ The following docs remain in this repo as they contain development-specific info
 ## 📁 Technical Reference
 
 For technical implementation details, see:
-- **[Bootstrap README](../resources/bootstrap/README.md)** - OpenTofu/Terraform technical docs
+- **[Bootstrap README](../resources/bootstrap/README.md)** - Talos cluster bootstrap technical docs
+- **[GitOps Config README](../resources/gitops-config/README.md)** - ArgoCD bootstrap technical docs
 
 ## 🚀 Quick Start
 

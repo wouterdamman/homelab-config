@@ -34,7 +34,7 @@ echo ""
 ##############################################
 # 1. Generate secret.yaml (1Password Connect credentials)
 ##############################################
-echo -e "${BLUE}  [1/4] Generating secret.yaml...${NC}"
+echo -e "${BLUE}  [1/5] Generating secret.yaml...${NC}"
 
 # Get 1Password Connect credentials (base64 encoded JSON)
 ONEPASSWORD_CREDENTIALS=$(op read "op://KubernetesSecrets/onepassword-connect-credentials.json/password" 2>&1 | tr -d '\n\r')
@@ -80,7 +80,7 @@ echo -e "${GREEN}  ✓ Created input-files/secret.yaml${NC}"
 ##############################################
 # 2. Generate github-client-secret.yaml (GitHub OAuth for ArgoCD SSO)
 ##############################################
-echo -e "${BLUE}  [2/4] Generating github-client-secret.yaml...${NC}"
+echo -e "${BLUE}  [2/5] Generating github-client-secret.yaml...${NC}"
 
 cat > input-files/github-client-secret.yaml <<'EOF'
 ---
@@ -117,7 +117,7 @@ echo -e "${GREEN}  ✓ Created input-files/github-client-secret.yaml${NC}"
 ##############################################
 # 3. Generate github-private-repo-creds.yaml (GitHub App for private repos)
 ##############################################
-echo -e "${BLUE}  [3/4] Generating github-private-repo-creds.yaml...${NC}"
+echo -e "${BLUE}  [3/5] Generating github-private-repo-creds.yaml...${NC}"
 
 cat > input-files/github-private-repo-creds.yaml <<'EOF'
 ---
@@ -158,7 +158,7 @@ echo -e "${GREEN}  ✓ Created input-files/github-private-repo-creds.yaml${NC}"
 ##############################################
 # 4. Generate onepassword-connect-credentials.yaml (ESO refresh)
 ##############################################
-echo -e "${BLUE}  [4/4] Generating onepassword-connect-credentials.yaml...${NC}"
+echo -e "${BLUE}  [4/5] Generating onepassword-connect-credentials.yaml...${NC}"
 
 cat > input-files/onepassword-connect-credentials.yaml <<'EOF'
 ---
@@ -189,6 +189,49 @@ EOF
 echo -e "${GREEN}  ✓ Created input-files/onepassword-connect-credentials.yaml${NC}"
 
 ##############################################
+# 5. Generate longhorn-s3-secret.yaml (Longhorn S3 backup credentials)
+##############################################
+echo -e "${BLUE}  [5/5] Generating longhorn-s3-secret.yaml...${NC}"
+
+cat > input-files/longhorn-s3-secret.yaml <<'EOF'
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: longhorn-s3-backup-credentials
+  namespace: longhorn-system
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    creationPolicy: Owner
+    name: longhorn-s3-secret
+    template:
+      engineVersion: v2
+      type: Opaque
+      data:
+        AWS_ACCESS_KEY_ID: '{{ .awsAccessKeyId }}'
+        AWS_SECRET_ACCESS_KEY: '{{ .awsSecretAccessKey }}'
+        AWS_ENDPOINTS: '{{ .awsEndpoints }}'
+  data:
+  - secretKey: awsAccessKeyId
+    remoteRef:
+      key: longhorn-s3-backup
+      property: AWS_ACCESS_KEY_ID
+  - secretKey: awsSecretAccessKey
+    remoteRef:
+      key: longhorn-s3-backup
+      property: AWS_SECRET_ACCESS_KEY
+  - secretKey: awsEndpoints
+    remoteRef:
+      key: longhorn-s3-backup
+      property: AWS_ENDPOINTS
+EOF
+
+echo -e "${GREEN}  ✓ Created input-files/longhorn-s3-secret.yaml${NC}"
+
+##############################################
 # Summary
 ##############################################
 echo ""
@@ -199,6 +242,7 @@ echo "  ✓ input-files/secret.yaml"
 echo "  ✓ input-files/github-client-secret.yaml"
 echo "  ✓ input-files/github-private-repo-creds.yaml"
 echo "  ✓ input-files/onepassword-connect-credentials.yaml"
+echo "  ✓ input-files/longhorn-s3-secret.yaml"
 echo ""
 echo -e "${YELLOW}⚠️  IMPORTANT: These files contain sensitive data!${NC}"
 echo "  - They are automatically gitignored"

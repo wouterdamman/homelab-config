@@ -1,31 +1,109 @@
 ---
+# Fast Storage Tier - Hourly snapshots + Daily backups
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: backup-2xdaily
+  name: snapshot-hourly-fast
   namespace: longhorn-system
 spec:
-  name: backup-2xdaily
-  task: backup
-  cron: "0 2,14 * * *"
-  retain: 7
-  concurrency: 1
-  groups:
-    - default
-  labels: {}
+  name: snapshot-hourly-fast
+  task: snapshot
+  cron: "0 * * * *"  # Every hour
+  retain: 24         # Keep 24 hours
+  concurrency: 2
+  labels:
+    tier: fast
 
 ---
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
 metadata:
-  name: snapshot-hourly
+  name: backup-daily-fast
   namespace: longhorn-system
 spec:
-  name: snapshot-hourly
+  name: backup-daily-fast
+  task: backup
+  cron: "0 2 * * *"  # Daily at 02:00
+  retain: 30         # Keep 30 days
+  concurrency: 2
+  labels:
+    tier: fast
+
+---
+# Standard Storage Tier - Daily snapshots + Daily backups
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-daily-standard
+  namespace: longhorn-system
+spec:
+  name: snapshot-daily-standard
   task: snapshot
-  cron: "0 * * * *"
-  retain: 24
+  cron: "0 3 * * *"  # Daily at 03:00
+  retain: 7          # Keep 7 days
+  concurrency: 2
+  labels:
+    tier: standard
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-daily-standard
+  namespace: longhorn-system
+spec:
+  name: backup-daily-standard
+  task: backup
+  cron: "0 4 * * *"  # Daily at 04:00
+  retain: 14         # Keep 14 days
+  concurrency: 2
+  labels:
+    tier: standard
+
+---
+# Archive Storage Tier - Weekly snapshots + Weekly backups
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: snapshot-weekly-archive
+  namespace: longhorn-system
+spec:
+  name: snapshot-weekly-archive
+  task: snapshot
+  cron: "0 5 * * 0"  # Weekly on Sunday at 05:00
+  retain: 4          # Keep 4 weeks
   concurrency: 1
-  groups:
-    - default
-  labels: {}
+  labels:
+    tier: archive
+
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-weekly-archive
+  namespace: longhorn-system
+spec:
+  name: backup-weekly-archive
+  task: backup
+  cron: "0 6 * * 0"  # Weekly on Sunday at 06:00
+  retain: 4          # Keep 4 weeks
+  concurrency: 1
+  labels:
+    tier: archive
+
+---
+# Monthly full backup for all tiers (disaster recovery)
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: backup-monthly-all
+  namespace: longhorn-system
+spec:
+  name: backup-monthly-all
+  task: backup
+  cron: "0 1 1 * *"  # Monthly on 1st at 01:00
+  retain: 12         # Keep 12 months
+  concurrency: 1
+  labels:
+    tier: all
+    purpose: dr

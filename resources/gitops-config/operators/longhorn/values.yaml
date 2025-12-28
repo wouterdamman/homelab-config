@@ -8,6 +8,52 @@ tolerations:
   effect: NoSchedule
 
 defaultBackupStore:
-  backupTarget: nfs://10.0.10.205:/volume1/longhorn
-  backupTargetCredentialSecret: ""
+  backupTarget: s3://homelab-prd@eu-central-003/longhorn-backup/
+  backupTargetCredentialSecret: longhorn-s3-secret
   pollInterval: 300
+
+defaultSettings:
+  backupCompressionMethod: lz4
+  backupConcurrentLimit: 2
+  restoreConcurrentLimit: 2
+  snapshotDataIntegrity: fast
+  snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: true
+  snapshotMaxCount: 250
+  replicaReplenishmentWaitInterval: 600
+  replicaAutoBalance: best-effort
+  storageMinimalAvailablePercentage: 15
+  storageOverProvisioningPercentage: 200
+  nodeDownPodDeletionPolicy: delete-both-statefulset-and-deployment-pod
+  nodeDrainPolicy: block-if-contains-last-replica
+  guaranteedInstanceManagerCPU: 12
+  orphanAutoDeletion: true
+  concurrentAutomaticEngineUpgradePerNodeLimit: 1
+  concurrentReplicaRebuildPerNodeLimit: 5
+  defaultDataLocality: best-effort
+
+longhornManager:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+longhornDriver:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+longhornUI:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi

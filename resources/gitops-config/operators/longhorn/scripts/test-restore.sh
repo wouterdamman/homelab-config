@@ -66,6 +66,12 @@ metadata:
   name: $TEST_POD_NAME
   namespace: $TEST_NAMESPACE
 spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
   containers:
   - name: writer
     image: busybox
@@ -76,6 +82,13 @@ spec:
         echo "$TEST_DATA" > $TEST_MOUNT_PATH/test-file.txt
         echo "File checksum: \$(md5sum $TEST_MOUNT_PATH/test-file.txt)"
         sleep 10
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      runAsNonRoot: true
+      runAsUser: 1000
     volumeMounts:
     - name: data
       mountPath: $TEST_MOUNT_PATH
@@ -93,44 +106,90 @@ echo -e "${GREEN}✓ Test data written${NC}"
 echo -e "  Original checksum: $ORIGINAL_CHECKSUM"
 echo ""
 
-# Step 4: Create snapshot
+# Step 4: Create snapshot using Longhorn CRD
 echo -e "${BLUE}[4/8] Creating volume snapshot...${NC}"
 VOLUME_NAME=$(kubectl get pvc -n $TEST_NAMESPACE $TEST_PVC_NAME -o jsonpath='{.spec.volumeName}')
-kubectl exec -n longhorn-system $(kubectl get pods -n longhorn-system -l app=longhorn-manager -o jsonpath='{.items[0].metadata.name}') -- \
-  curl -X POST "http://localhost:9500/v1/volumes/$VOLUME_NAME?action=snapshotCreate" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"dr-test-snapshot"}' > /dev/null 2>&1
 
-sleep 5
+# Create a snapshot directly on the volume
+echo -e "${YELLOW}  Creating snapshot on volume $VOLUME_NAME...${NC}"
+SNAPSHOT_NAME="dr-test-$(date +%s)"
+
+cat <<EOF | kubectl apply --warnings-as-errors=false -f -
+apiVersion: longhorn.io/v1beta2
+kind: Snapshot
+metadata:
+  name: $SNAPSHOT_NAME
+  namespace: longhorn-system
+  labels:
+    longhornvolume: $VOLUME_NAME
+spec:
+  volume: $VOLUME_NAME
+  createSnapshot: true
+EOF
+
+# Wait for snapshot to be ready
+echo -e "${YELLOW}  Waiting for snapshot to be created...${NC}"
+for i in {1..12}; do
+    SNAPSHOT_READY=$(kubectl get snapshot -n longhorn-system $SNAPSHOT_NAME -o jsonpath='{.status.readyToUse}' 2>/dev/null || echo "false")
+    if [ "$SNAPSHOT_READY" = "true" ]; then
+        break
+    fi
+    echo -e "${YELLOW}  Snapshot not ready yet... waiting (attempt $i/12)${NC}"
+    sleep 5
+done
+
+if [ "$SNAPSHOT_READY" != "true" ]; then
+    echo -e "${RED}✗ Snapshot creation failed or timed out${NC}"
+    echo -e "${YELLOW}Debug: kubectl get snapshot -n longhorn-system $SNAPSHOT_NAME -o yaml${NC}"
+    exit 1
+fi
+
 echo -e "${GREEN}✓ Snapshot created${NC}"
 echo ""
 
 # Step 5: Create backup from snapshot
-echo -e "${BLUE}[5/8] Creating backup to S3...${NC}"
-kubectl exec -n longhorn-system $(kubectl get pods -n longhorn-system -l app=longhorn-manager -o jsonpath='{.items[0].metadata.name}') -- \
-  curl -X POST "http://localhost:9500/v1/volumes/$VOLUME_NAME?action=snapshotBackup" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"dr-test-snapshot"}' > /dev/null 2>&1
+echo -e "${BLUE}[5/8] Creating backup to S3 from snapshot...${NC}"
+
+# Trigger backup by creating a Backup CRD
+BACKUP_NAME="backup-$SNAPSHOT_NAME"
+cat <<EOF | kubectl apply --warnings-as-errors=false -f -
+apiVersion: longhorn.io/v1beta2
+kind: Backup
+metadata:
+  name: $BACKUP_NAME
+  namespace: longhorn-system
+  labels:
+    longhornvolume: $VOLUME_NAME
+    snapshot: $SNAPSHOT_NAME
+spec:
+  snapshotName: $SNAPSHOT_NAME
+  labels:
+    test: dr-restore
+EOF
 
 echo -e "${YELLOW}  Waiting for backup to complete (this may take a minute)...${NC}"
-sleep 30
+sleep 10
 
 # Wait for backup to complete
-for i in {1..12}; do
-    BACKUP_STATE=$(kubectl get backup -n longhorn-system -l longhornvolume=$VOLUME_NAME --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].status.state}' 2>/dev/null || echo "")
+for i in {1..30}; do
+    BACKUP_STATE=$(kubectl get backup -n longhorn-system $BACKUP_NAME -o jsonpath='{.status.state}' 2>/dev/null || echo "")
     if [ "$BACKUP_STATE" = "Completed" ]; then
         break
+    elif [ "$BACKUP_STATE" = "Error" ]; then
+        echo -e "${RED}✗ Backup failed with error state${NC}"
+        kubectl get backup -n longhorn-system $BACKUP_NAME -o yaml
+        exit 1
     fi
-    echo -e "${YELLOW}  Backup state: $BACKUP_STATE... waiting${NC}"
+    echo -e "${YELLOW}  Backup state: $BACKUP_STATE... waiting (attempt $i/30)${NC}"
     sleep 5
 done
 
 if [ "$BACKUP_STATE" != "Completed" ]; then
     echo -e "${RED}✗ Backup failed or timed out (state: $BACKUP_STATE)${NC}"
+    echo -e "${YELLOW}Debug: kubectl get backup -n longhorn-system $BACKUP_NAME -o yaml${NC}"
     exit 1
 fi
 
-BACKUP_NAME=$(kubectl get backup -n longhorn-system -l longhornvolume=$VOLUME_NAME --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1].metadata.name}')
 BACKUP_URL=$(kubectl get backup -n longhorn-system $BACKUP_NAME -o jsonpath='{.status.url}')
 echo -e "${GREEN}✓ Backup completed${NC}"
 echo -e "  Backup URL: $BACKUP_URL"
@@ -176,6 +235,12 @@ metadata:
   name: ${TEST_POD_NAME}-verify
   namespace: $TEST_NAMESPACE
 spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
   containers:
   - name: reader
     image: busybox
@@ -190,6 +255,13 @@ spec:
         echo "Restored data: \$(cat $TEST_MOUNT_PATH/test-file.txt)"
         echo "File checksum: \$(md5sum $TEST_MOUNT_PATH/test-file.txt)"
         sleep 5
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      runAsNonRoot: true
+      runAsUser: 1000
     volumeMounts:
     - name: data
       mountPath: $TEST_MOUNT_PATH

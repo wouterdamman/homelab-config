@@ -1,20 +1,21 @@
-# 🏡 Homelab Infrastructure
+# Homelab Infrastructure
 
 Infrastructure-as-Code and GitOps configuration for a production-grade homelab running on Proxmox with Talos Kubernetes.
 
-## 📚 Documentation
+## Documentation
 
 **All documentation is maintained in Notion for better collaboration and organization.**
 
 ### Quick Links
 
 - **[Homelab Database](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e)** - Main documentation hub
-- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - How to deploy the cluster
 - **[Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c)** - Complete stack overview
+- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - How to deploy the cluster
+- **[GitOps Deployment - ArgoCD Bootstrap](https://www.notion.so/2d7b49ed6b91816dbb9cc3cdab067eeb)** - ArgoCD & operators setup
 - **[Secrets Management - 1Password](https://www.notion.so/2d6b49ed6b9181b0b331f641f915b5b5)** - How credentials are managed
-- **[Deployment Plan](https://www.notion.so/2d3b49ed6b918145be33fa54e2e417bb)** - Production deployment guide
+- **[Longhorn DR Runbook](https://www.notion.so/2d7b49ed6b918115a374db661adfce74)** - Disaster recovery procedures
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Prerequisites**: Install OpenTofu, kubectl, talosctl, and 1Password CLI
 2. **Load Secrets**: `source resources/bootstrap/scripts/load-secrets.sh`
@@ -23,43 +24,53 @@ Infrastructure-as-Code and GitOps configuration for a production-grade homelab r
 
 See [Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4) for detailed instructions.
 
-## 🗂️ Repository Structure
+## Repository Structure
 
 ```
+homelab-config/
 ├── resources/
-│   ├── bootstrap/          # OpenTofu for VMs + Talos cluster
-│   │   ├── scripts/        # Automation scripts (1Password, upgrades)
-│   │   ├── talos/          # Talos module
-│   │   └── README.md       # Technical reference
-│   └── gitops-config/      # ArgoCD apps + operators
-└── docs/                   # Development-specific docs
+│   ├── bootstrap/              # OpenTofu for VMs + Talos cluster
+│   │   ├── scripts/            # Automation scripts (1Password, upgrades)
+│   │   ├── talos/              # Talos module
+│   │   └── README.md           # Technical reference
+│   └── gitops-config/          # ArgoCD apps + operators
+│       ├── operators/          # Longhorn, Cilium, External Secrets
+│       ├── apps/               # ArgoCD application definitions
+│       ├── scripts/            # Helper scripts
+│       └── README.md           # Technical reference
+└── docs/                       # Documentation index (links to Notion)
 ```
 
-## 🔧 Tech Stack
+## Tech Stack
 
-- **Infrastructure**: Proxmox VE
-- **Kubernetes**: Talos Linux v1.12.0
-- **Networking**: Cilium v1.18.5 + Gateway API v1.2.0
-- **GitOps**: ArgoCD
-- **IaC**: OpenTofu/Terraform
-- **Secrets**: 1Password CLI
-- **Storage**: Backblaze B2 (Terraform state)
+| Component | Technology | Version |
+|-----------|------------|---------|
+| **Virtualization** | Proxmox VE | Latest |
+| **Kubernetes** | Talos Linux | v1.12.0 |
+| **Networking** | Cilium + Gateway API | v1.18.5 |
+| **GitOps** | ArgoCD | Latest |
+| **Storage** | Longhorn | v1.10.1 |
+| **IaC** | OpenTofu | Latest |
+| **Secrets** | 1Password + External Secrets | Latest |
+| **Backup** | Backblaze B2 | - |
 
-## 📖 Local Documentation
+## Key Features
 
-Some development-specific docs remain in this repo:
+- **GitOps-driven**: All cluster state managed through ArgoCD
+- **Secure secrets**: 1Password integration via External Secrets Operator
+- **Production storage**: Longhorn with S3 backups to Backblaze B2
+- **3-tier storage**: Fast (3 replicas), Standard (2 replicas), Archive (1 replica)
+- **Automated DR**: Backup validation and restore testing scripts
+- **Infrastructure as Code**: Full cluster reproducibility via OpenTofu
 
-- [resources/bootstrap/README.md](resources/bootstrap/README.md) - Technical implementation details
-- [docs/generate-1password-credentials.md](docs/generate-1password-credentials.md) - 1Password Connect setup
-- [docs/secrets.md](docs/secrets.md) - Secrets management patterns
-- [docs/todo.md](docs/todo.md) - Development tasks
+## Local Documentation
 
-For all other documentation, see the [Homelab Database in Notion](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e).
+Technical implementation details are kept in-repo:
 
-## 🤝 Contributing
+- [resources/bootstrap/README.md](resources/bootstrap/README.md) - Talos cluster bootstrap
+- [resources/gitops-config/README.md](resources/gitops-config/README.md) - ArgoCD and operators
+- [docs/README.md](docs/README.md) - Documentation index with all Notion links
 
-Issues and pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
-
-## 📄 License
+## License
 
 [MIT License](./LICENSE)

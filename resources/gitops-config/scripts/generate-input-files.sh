@@ -87,7 +87,7 @@ cat > input-files/github-client-secret.yaml <<'EOF'
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: github-private-homelab-config-creds
+  name: github-client-secret
   namespace: argocd
 spec:
   secretStoreRef:

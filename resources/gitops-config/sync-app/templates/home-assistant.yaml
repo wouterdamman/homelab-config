@@ -1,32 +1,32 @@
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "6"
-  name: home-assistant
-  namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-spec:
-  project: apps
-  sources:
-  - repoURL: http://pajikos.github.io/home-assistant-helm-chart
-    chart: home-assistant
-    targetRevision: 0.3.36
-    helm:
-      valueFiles:
-      - $values/apps/home_assistant/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-apps
-    targetRevision: HEAD
-    path: apps/home_assistant
-    ref: values
-  destination:
-    namespace: home-assistant
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-    automated:
-      prune: true
-      selfHeal: true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "6"
+#   name: home-assistant
+#   namespace: argocd
+#   finalizers:
+#   - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: apps
+#   sources:
+#   - repoURL: http://pajikos.github.io/home-assistant-helm-chart
+#     chart: home-assistant
+#     targetRevision: 0.3.36
+#     helm:
+#       valueFiles:
+#       - $values/apps/home_assistant/values.yaml
+#   - repoURL: https://github.com/TheIronRock95/homelab-apps
+#     targetRevision: HEAD
+#     path: apps/home_assistant
+#     ref: values
+#   destination:
+#     namespace: home-assistant
+#     server: https://kubernetes.default.svc
+#   syncPolicy:
+#     syncOptions:
+#       - CreateNamespace=true
+#     automated:
+#       prune: true
+#       selfHeal: true

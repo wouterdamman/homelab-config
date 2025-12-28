@@ -1,32 +1,32 @@
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-  name: zigbee2mqtt
-  namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
-spec:
-  project: apps
-  sources:
-  # - repoURL: https://charts.zigbee2mqtt.io/
-  #   chart: zigbee2mqtt
-  #   targetRevision: 2.3.0
-  #   helm:
-  #     valueFiles:
-  #     - $values/apps/zigbee2mqtt/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-apps
-    targetRevision: HEAD
-    path: apps/zigbee2mqtt
-    ref: values
-  destination:
-    namespace: zigbee2mqtt
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-    automated:
-      prune: true
-      selfHeal: true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "5"
+#   name: zigbee2mqtt
+#   namespace: argocd
+#   finalizers:
+#   - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: apps
+#   sources:
+#   # - repoURL: https://charts.zigbee2mqtt.io/
+#   #   chart: zigbee2mqtt
+#   #   targetRevision: 2.3.0
+#   #   helm:
+#   #     valueFiles:
+#   #     - $values/apps/zigbee2mqtt/values.yaml
+#   - repoURL: https://github.com/TheIronRock95/homelab-apps
+#     targetRevision: HEAD
+#     path: apps/zigbee2mqtt
+#     ref: values
+#   destination:
+#     namespace: zigbee2mqtt
+#     server: https://kubernetes.default.svc
+#   syncPolicy:
+#     syncOptions:
+#       - CreateNamespace=true
+#     automated:
+#       prune: true
+#       selfHeal: true

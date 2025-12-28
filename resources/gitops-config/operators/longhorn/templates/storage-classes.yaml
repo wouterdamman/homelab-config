@@ -1,6 +1,4 @@
 ---
-# Fast Storage Class - 3 replicas, NVMe optimized
-# Use for: Databases, high-performance workloads
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -14,24 +12,8 @@ volumeBindingMode: Immediate
 parameters:
   numberOfReplicas: "3"
   staleReplicaTimeout: "30"
-  fromBackup: ""
-  fsType: "ext4"
   dataLocality: "best-effort"
-  diskSelector: "ssd,nvme"  # Only use NVMe/SSD disks
-  nodeSelector: ""
-  recurringJobSelector: '[
-    {
-      "name": "snapshot-hourly-fast",
-      "isGroup": false
-    },
-    {
-      "name": "backup-daily-fast",
-      "isGroup": false
-    }
-  ]'
 ---
-# Standard Storage Class - 2 replicas (default)
-# Use for: Most workloads, general purpose storage
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -45,24 +27,8 @@ volumeBindingMode: Immediate
 parameters:
   numberOfReplicas: "2"
   staleReplicaTimeout: "30"
-  fromBackup: ""
-  fsType: "ext4"
   dataLocality: "best-effort"
-  diskSelector: ""
-  nodeSelector: ""
-  recurringJobSelector: '[
-    {
-      "name": "snapshot-daily-standard",
-      "isGroup": false
-    },
-    {
-      "name": "backup-daily-standard",
-      "isGroup": false
-    }
-  ]'
 ---
-# Archive Storage Class - 1 replica
-# Use for: Logs, temporary data, non-critical workloads
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -71,23 +37,9 @@ metadata:
     storageclass.kubernetes.io/is-default-class: "false"
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
-reclaimPolicy: Delete  # Archive data can be deleted
+reclaimPolicy: Delete
 volumeBindingMode: Immediate
 parameters:
   numberOfReplicas: "1"
   staleReplicaTimeout: "30"
-  fromBackup: ""
-  fsType: "ext4"
-  dataLocality: "disabled"  # Don't enforce locality for archive
-  diskSelector: ""
-  nodeSelector: ""
-  recurringJobSelector: '[
-    {
-      "name": "snapshot-weekly-archive",
-      "isGroup": false
-    },
-    {
-      "name": "backup-weekly-archive",
-      "isGroup": false
-    }
-  ]'
+  dataLocality: "disabled"

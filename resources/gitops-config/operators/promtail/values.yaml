@@ -1,32 +1,10 @@
 # Promtail values
 # Docs: https://github.com/grafana/helm-charts/tree/main/charts/promtail
 
-# Loki endpoint
+# Loki endpoint - only override clients, use default scrape configs
 config:
   clients:
     - url: http://loki.monitoring:3100/loki/api/v1/push
-
-  # Scrape configs
-  snippets:
-    pipelineStages:
-      - cri: {}
-    common:
-      - action: replace
-        source_labels:
-          - __meta_kubernetes_pod_node_name
-        target_label: node_name
-      - action: replace
-        source_labels:
-          - __meta_kubernetes_namespace
-        target_label: namespace
-      - action: replace
-        source_labels:
-          - __meta_kubernetes_pod_name
-        target_label: pod
-      - action: replace
-        source_labels:
-          - __meta_kubernetes_container_name
-        target_label: container
 
 # DaemonSet runs on all nodes
 daemonSet:

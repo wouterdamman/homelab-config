@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: https://argoproj.github.io/argo-helm/
     chart: argocd-apps
-    targetRevision: 2.0.2
+    targetRevision: 2.0.3
     helm:
       values: |
         projects:

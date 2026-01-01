@@ -1,0 +1,204 @@
+# kube-prometheus-stack values
+# Docs: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
+
+# Global settings
+fullnameOverride: prometheus
+
+# Prometheus
+prometheus:
+  prometheusSpec:
+    retention: 60d
+    retentionSize: "35GB"
+
+    # Storage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 40Gi
+
+    # Resources
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+    # Tolerations for control-plane
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+
+    # Service monitors
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+
+# Alertmanager
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn-standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+    tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+
+    # Mount Pushover secret
+    secrets:
+      - alertmanager-pushover-secret
+
+  # Alertmanager config - Pushover integration
+  config:
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname', 'namespace']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: 'pushover-critical'
+      routes:
+        - receiver: 'pushover-critical'
+          matchers:
+            - severity =~ "critical|error"
+        - receiver: 'pushover-warning'
+          matchers:
+            - severity = "warning"
+
+    receivers:
+      - name: 'pushover-critical'
+        pushover_configs:
+          - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
+            token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
+            priority: 1
+            title: '{{ template "pushover.title" . }}'
+            message: '{{ template "pushover.message" . }}'
+
+      - name: 'pushover-warning'
+        pushover_configs:
+          - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
+            token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
+            priority: 0
+            title: '{{ template "pushover.title" . }}'
+            message: '{{ template "pushover.message" . }}'
+
+    templates:
+      - '/etc/alertmanager/config/*.tmpl'
+
+  # Custom templates
+  templateFiles:
+    pushover.tmpl: |-
+      {{ define "pushover.title" }}[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}{{ end }}
+      {{ define "pushover.message" }}{{ range .Alerts }}{{ .Annotations.summary }}
+      {{ .Annotations.description }}
+      {{ end }}{{ end }}
+
+# Grafana
+grafana:
+  enabled: true
+
+  # Admin credentials from ExternalSecret
+  admin:
+    existingSecret: grafana-admin-secret
+    userKey: admin-user
+    passwordKey: admin-password
+
+  # Persistence
+  persistence:
+    enabled: true
+    storageClassName: longhorn-standard
+    size: 5Gi
+
+  # Resources
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Tolerations
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+  # Grafana.ini settings
+  grafana.ini:
+    server:
+      root_url: https://grafana.svc.damman.tech
+    auth:
+      disable_login_form: false
+    auth.anonymous:
+      enabled: false
+
+  # Default dashboards
+  defaultDashboardsEnabled: true
+  defaultDashboardsTimezone: Europe/Amsterdam
+
+  # Additional data sources (Loki)
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring:3100
+      access: proxy
+      isDefault: false
+
+  # Sidecar for dashboard discovery
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+
+# Prometheus Node Exporter
+prometheus-node-exporter:
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+
+# Kube State Metrics
+kube-state-metrics:
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+# Disable components we don't need
+kubeEtcd:
+  enabled: true
+kubeControllerManager:
+  enabled: true
+kubeScheduler:
+  enabled: true
+kubeProxy:
+  enabled: false  # Using Cilium kube-proxy replacement

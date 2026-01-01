@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  name: promtail
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://grafana.github.io/helm-charts
+    chart: promtail
+    targetRevision: 6.17.1
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/promtail/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/promtail
+    ref: values
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,42 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  name: prometheus-community
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 80.9.2
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/prometheus-community/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/prometheus-community
+    ref: values
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true

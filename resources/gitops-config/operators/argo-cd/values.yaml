@@ -1,9 +1,16 @@
+# ArgoCD values
+# Docs: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
+
 configs:
   cm:
     url: https://argocd.svc.damman.tech
     exec.enabled: true
-    admin.enabled: true
-    resource.exclusions: "[{apiGroups: ['cilium.io'], kinds: ['CiliumIdentity'], clusters: ['*']}]"
+    admin.enabled: false  # Disable local admin, use GitHub SSO only
+    # Exclude high-churn Cilium resources from tracking
+    resource.exclusions: |
+      - apiGroups: ['cilium.io']
+        kinds: ['CiliumIdentity']
+        clusters: ['*']
     dex.config: |
       connectors:
         - type: github
@@ -15,11 +22,26 @@ configs:
             orgs:
               - name: sironite
   params:
-    server.insecure: true
+    server.insecure: true  # TLS terminated at Gateway
+    # Performance tuning
+    controller.status.processors: 20
+    controller.operation.processors: 10
+    controller.self.heal.timeout.seconds: 5
+    reposerver.parallelism.limit: 0
   rbac:
     policy.csv: |
       g, sironite:Owners, role:admin
     policy.default: role:readonly
+    scopes: "[groups]"
+
+# Metrics for Prometheus
+global:
+  monitoring:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: prometheus
 
 controller:
   tolerations:
@@ -34,6 +56,12 @@ controller:
     requests:
       cpu: 200m
       memory: 1Gi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
 
 applicationSet:
   tolerations:
@@ -48,6 +76,12 @@ applicationSet:
     requests:
       cpu: 2m
       memory: 50Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
 
 repoServer:
   tolerations:
@@ -62,6 +96,12 @@ repoServer:
     requests:
       cpu: 500m
       memory: 256Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
 
 server:
   tolerations:
@@ -77,6 +117,12 @@ server:
       cpu: 2m
       memory: 75Mi
   insecure: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
 
 redis:
   tolerations:
@@ -98,13 +144,13 @@ dex:
     operator: Equal
     value: "true"
     effect: NoSchedule
-  # resources:
-  #   limits:
-  #     cpu: 1
-  #     memory: 100Mi
-  #   requests:
-  #     cpu: 1m
-  #     memory: 50Mi
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
 
 notificationsController:
   tolerations:
@@ -119,3 +165,49 @@ notificationsController:
     requests:
       cpu: 1m
       memory: 50Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+
+# Notifications - prepared for Slack (disabled until Slack is configured)
+# To enable: set notifications.enabled=true and configure Slack webhook secret
+notifications:
+  enabled: false
+  # secret:
+  #   create: false
+  #   name: argocd-notifications-secret  # Create ExternalSecret with slack-token
+  # notifiers:
+  #   service.slack: |
+  #     token: $slack-token
+  # templates:
+  #   template.app-deployed: |
+  #     message: |
+  #       Application {{.app.metadata.name}} is now {{.app.status.sync.status}}.
+  #       {{if .app.status.operationState}}Operation: {{.app.status.operationState.phase}}{{end}}
+  #   template.app-health-degraded: |
+  #     message: |
+  #       Application {{.app.metadata.name}} health is {{.app.status.health.status}}.
+  #   template.app-sync-failed: |
+  #     message: |
+  #       Application {{.app.metadata.name}} sync failed.
+  #       {{if .app.status.operationState}}Error: {{.app.status.operationState.message}}{{end}}
+  # triggers:
+  #   trigger.on-deployed: |
+  #     - when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+  #       send: [app-deployed]
+  #   trigger.on-health-degraded: |
+  #     - when: app.status.health.status == 'Degraded'
+  #       send: [app-health-degraded]
+  #   trigger.on-sync-failed: |
+  #     - when: app.status.operationState.phase in ['Error', 'Failed']
+  #       send: [app-sync-failed]
+  # subscriptions:
+  #   - recipients:
+  #       - slack:homelab-alerts
+  #     triggers:
+  #       - on-deployed
+  #       - on-health-degraded
+  #       - on-sync-failed

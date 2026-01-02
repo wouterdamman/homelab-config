@@ -81,16 +81,29 @@ alertmanager:
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
-      receiver: 'pushover-critical'
+      receiver: 'pushover-warning'
       routes:
+        # Watchdog goes to null (dead man's switch, not for push notifications)
+        - receiver: 'null'
+          matchers:
+            - alertname = "Watchdog"
+        # InfoInhibitor goes to null
+        - receiver: 'null'
+          matchers:
+            - alertname = "InfoInhibitor"
+        # Critical alerts
         - receiver: 'pushover-critical'
           matchers:
-            - severity =~ "critical|error"
+            - severity = "critical"
+        # Warning alerts (default)
         - receiver: 'pushover-warning'
           matchers:
             - severity = "warning"
 
     receivers:
+      # Null receiver for alerts we don't want to send
+      - name: 'null'
+
       - name: 'pushover-critical'
         pushover_configs:
           - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
@@ -196,9 +209,20 @@ kube-state-metrics:
 # Disable components we don't need
 kubeEtcd:
   enabled: true
+# kube-controller-manager and kube-scheduler metrics
+# On Talos, these bind to 127.0.0.1 by default. We've configured them to bind to 0.0.0.0
+# in the Talos machine config. Endpoints are discovered via control-plane node IPs.
 kubeControllerManager:
   enabled: true
+  serviceMonitor:
+    enabled: true
+    https: true
+    insecureSkipVerify: true
 kubeScheduler:
   enabled: true
+  serviceMonitor:
+    enabled: true
+    https: true
+    insecureSkipVerify: true
 kubeProxy:
   enabled: false  # Using Cilium kube-proxy replacement

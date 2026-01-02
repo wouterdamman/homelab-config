@@ -57,3 +57,10 @@ longhornUI:
     limits:
       cpu: 200m
       memory: 256Mi
+
+# Prometheus metrics
+metrics:
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus

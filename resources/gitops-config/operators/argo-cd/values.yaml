@@ -14,8 +14,6 @@ configs:
             clientID: 73cf0e66844d5dd766ab
             orgs:
               - name: sironite
-                teams:
-                  - DevOps
   params:
     server.insecure: true
   rbac:

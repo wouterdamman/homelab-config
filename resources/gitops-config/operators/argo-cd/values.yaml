@@ -18,7 +18,7 @@ configs:
     server.insecure: true
   rbac:
     policy.csv: |
-      g, sironite:DevOps, role:admin
+      g, sironite:Owners, role:admin
     policy.default: role:readonly
 
 controller:

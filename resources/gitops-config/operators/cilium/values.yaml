@@ -30,6 +30,12 @@ operator:
     requests:
       cpu: 50m
       memory: 128Mi
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: prometheus
 
 # Roll out cilium agent pods automatically when ConfigMap is updated.
 rollOutCiliumPods: true
@@ -70,6 +76,13 @@ envoy:
     capabilities:
       keepCapNetBindService: true
       envoy: [ NET_ADMIN, PERFMON, BPF ]
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
 ingressController:
   enabled: false
@@ -84,6 +97,50 @@ hubble:
   relay:
     enabled: true
     rollOutPods: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
   ui:
     enabled: true
     rollOutPods: true
+    backend:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+    frontend:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 32Mi
+  metrics:
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - flow
+      - icmp
+      - http
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: prometheus
+
+# Prometheus metrics for Cilium agent and operator
+prometheus:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: prometheus
+

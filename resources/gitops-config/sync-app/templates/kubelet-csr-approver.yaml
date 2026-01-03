@@ -22,7 +22,7 @@ spec:
       path: resources/gitops-config/operators/kubelet-csr-approver
       ref: values
   destination:
-    namespace: kube-system
+    namespace: kubelet-serving-cert-approver
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:

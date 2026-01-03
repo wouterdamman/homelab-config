@@ -1,0 +1,50 @@
+# Kubelet CSR Approver - Auto-approves kubelet serving certificate requests
+# https://github.com/postfinance/kubelet-csr-approver
+
+# Allow all nodes (Talos uses hostnames like prd-cp-01, prd-w-01, etc.)
+providerRegex: "^prd-(cp|w)-\\d+$"
+
+# Allow internal IPs (10.0.10.0/24 subnet)
+providerIpPrefixes:
+  - 10.0.10.0/24
+
+# HA deployment
+replicas: 2
+leaderElection: true
+
+# Resources - increased from defaults to prevent CPU throttling
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+
+# Prometheus monitoring
+metrics:
+  enable: true
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+# Run on control-plane nodes
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+
+# Security context (already good defaults in chart)
+securityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+  runAsNonRoot: true
+  privileged: false
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop: ["all"]

@@ -151,10 +151,10 @@ dex:
   resources:
     limits:
       cpu: 100m
-      memory: 128Mi
+      memory: 256Mi
     requests:
       cpu: 5m
-      memory: 64Mi
+      memory: 128Mi
 
 notificationsController:
   tolerations:

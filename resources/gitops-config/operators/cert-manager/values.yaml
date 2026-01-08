@@ -16,11 +16,11 @@ extraArgs:
 
 resources:
   limits:
-    cpu: 500m
-    memory: 256Mi
+    cpu: 200m
+    memory: 128Mi
   requests:
-    cpu: 50m
-    memory: 64Mi
+    cpu: 10m
+    memory: 32Mi
 
 podDnsConfig:
   nameservers:
@@ -40,11 +40,11 @@ webhook:
   replicaCount: 1
   resources:
     limits:
-      cpu: 500m
-      memory: 128Mi
+      cpu: 100m
+      memory: 64Mi
     requests:
-      cpu: 50m
-      memory: 32Mi
+      cpu: 5m
+      memory: 16Mi
 
 # CA Injector
 cainjector:
@@ -52,11 +52,11 @@ cainjector:
   replicaCount: 1
   resources:
     limits:
-      cpu: 500m
-      memory: 256Mi
+      cpu: 200m
+      memory: 128Mi
     requests:
-      cpu: 50m
-      memory: 64Mi
+      cpu: 10m
+      memory: 32Mi
 
 # Startup API Check
 startupapicheck:

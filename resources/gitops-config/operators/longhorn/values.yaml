@@ -34,11 +34,11 @@ defaultSettings:
 longhornManager:
   resources:
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 25m
+      memory: 64Mi
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 250m
+      memory: 256Mi
 
 longhornDriver:
   resources:
@@ -52,8 +52,8 @@ longhornDriver:
 longhornUI:
   resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
+      cpu: 5m
+      memory: 32Mi
     limits:
       cpu: 200m
       memory: 256Mi

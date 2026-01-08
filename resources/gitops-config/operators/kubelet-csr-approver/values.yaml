@@ -12,14 +12,14 @@ providerIpPrefixes:
 replicas: 2
 leaderElection: true
 
-# Resources - increased from defaults to prevent CPU throttling
+# Resources
 resources:
   requests:
-    cpu: 50m
-    memory: 64Mi
+    cpu: 5m
+    memory: 32Mi
   limits:
-    cpu: 500m
-    memory: 128Mi
+    cpu: 100m
+    memory: 64Mi
 
 # Prometheus monitoring
 metrics:

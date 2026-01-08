@@ -32,11 +32,11 @@ txtSuffix: ""
 # Resource limits
 resources:
   limits:
-    cpu: 200m
-    memory: 128Mi
-  requests:
-    cpu: 50m
+    cpu: 100m
     memory: 64Mi
+  requests:
+    cpu: 5m
+    memory: 32Mi
 
 provider:
   name: webhook
@@ -79,11 +79,11 @@ provider:
       port: 8080
     resources:
       limits:
-        cpu: 100m
-        memory: 64Mi
-      requests:
-        cpu: 10m
+        cpu: 50m
         memory: 32Mi
+      requests:
+        cpu: 5m
+        memory: 16Mi
 
 extraArgs:
   - --ignore-ingress-tls-spec

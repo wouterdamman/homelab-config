@@ -79,11 +79,11 @@ provider:
       port: 8080
     resources:
       limits:
-        cpu: 50m
-        memory: 32Mi
+        cpu: 100m
+        memory: 128Mi
       requests:
-        cpu: 5m
-        memory: 16Mi
+        cpu: 10m
+        memory: 64Mi
 
 extraArgs:
   - --ignore-ingress-tls-spec

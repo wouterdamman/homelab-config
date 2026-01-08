@@ -55,11 +55,11 @@ controller:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 1Gi
     requests:
-      cpu: 50m
-      memory: 256Mi
+      cpu: 100m
+      memory: 512Mi
   metrics:
     enabled: true
     serviceMonitor:
@@ -137,10 +137,10 @@ redis:
   resources:
     limits:
       cpu: 100m
-      memory: 64Mi
+      memory: 128Mi
     requests:
-      cpu: 1m
-      memory: 20Mi
+      cpu: 5m
+      memory: 32Mi
 
 dex:
   tolerations:
@@ -151,10 +151,10 @@ dex:
   resources:
     limits:
       cpu: 100m
-      memory: 64Mi
+      memory: 128Mi
     requests:
       cpu: 5m
-      memory: 32Mi
+      memory: 64Mi
 
 notificationsController:
   tolerations:

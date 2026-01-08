@@ -23,11 +23,11 @@ prometheus:
     # Resources
     resources:
       requests:
-        cpu: 50m
-        memory: 256Mi
+        cpu: 100m
+        memory: 512Mi
       limits:
-        cpu: 500m
-        memory: 1Gi
+        cpu: 1000m
+        memory: 1536Mi
 
     # Tolerations for control-plane
     tolerations:
@@ -150,10 +150,10 @@ grafana:
   # Resources
   resources:
     requests:
-      cpu: 20m
-      memory: 64Mi
+      cpu: 50m
+      memory: 128Mi
     limits:
-      cpu: 500m
+      cpu: 1500m
       memory: 512Mi
 
   # Tolerations

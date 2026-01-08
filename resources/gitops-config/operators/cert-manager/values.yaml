@@ -16,10 +16,10 @@ extraArgs:
 
 resources:
   limits:
-    cpu: 200m
+    cpu: 100m
     memory: 128Mi
   requests:
-    cpu: 10m
+    cpu: 5m
     memory: 32Mi
 
 podDnsConfig:
@@ -52,10 +52,10 @@ cainjector:
   replicaCount: 1
   resources:
     limits:
-      cpu: 200m
+      cpu: 100m
       memory: 128Mi
     requests:
-      cpu: 10m
+      cpu: 5m
       memory: 32Mi
 
 # Startup API Check

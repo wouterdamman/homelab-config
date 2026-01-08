@@ -150,10 +150,10 @@ grafana:
   # Resources
   resources:
     requests:
-      cpu: 50m
+      cpu: 20m
       memory: 128Mi
     limits:
-      cpu: 1500m
+      cpu: 500m
       memory: 512Mi
 
   # Tolerations

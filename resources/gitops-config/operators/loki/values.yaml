@@ -56,7 +56,7 @@ singleBinary:
       cpu: 25m
       memory: 128Mi
     limits:
-      cpu: 300m
+      cpu: 200m
       memory: 512Mi
 
   tolerations:

@@ -25,10 +25,10 @@ operator:
   rollOutPods: true
   resources:
     limits:
-      cpu: 250m
+      cpu: 100m
       memory: 128Mi
     requests:
-      cpu: 20m
+      cpu: 10m
       memory: 64Mi
   prometheus:
     enabled: true
@@ -41,11 +41,11 @@ operator:
 rollOutCiliumPods: true
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 200m
+    memory: 256Mi
   requests:
     cpu: 50m
-    memory: 256Mi
+    memory: 128Mi
 
 #debug:
 #  enabled: true
@@ -78,11 +78,11 @@ envoy:
       envoy: [ NET_ADMIN, PERFMON, BPF ]
   resources:
     limits:
-      cpu: 500m
-      memory: 256Mi
-    requests:
-      cpu: 20m
+      cpu: 100m
       memory: 64Mi
+    requests:
+      cpu: 5m
+      memory: 32Mi
 
 ingressController:
   enabled: false
@@ -99,10 +99,10 @@ hubble:
     rollOutPods: true
     resources:
       limits:
-        cpu: 250m
+        cpu: 100m
         memory: 128Mi
       requests:
-        cpu: 10m
+        cpu: 5m
         memory: 32Mi
   ui:
     enabled: true

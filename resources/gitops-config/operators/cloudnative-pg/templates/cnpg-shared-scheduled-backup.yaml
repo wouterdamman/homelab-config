@@ -1,0 +1,21 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: cnpg-shared-daily-backup
+  namespace: cnpg-system
+spec:
+  # Reference to the cluster
+  cluster:
+    name: cnpg-shared
+
+  # Daily backup at 03:00 UTC
+  schedule: "0 3 * * *"
+
+  # Backup configuration
+  backupOwnerReference: self
+  immediate: false
+  suspend: false
+
+  # Target for backup (prefer standby to reduce primary load)
+  target: prefer-standby

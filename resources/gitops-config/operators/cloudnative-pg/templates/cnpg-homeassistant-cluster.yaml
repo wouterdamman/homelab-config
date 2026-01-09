@@ -1,0 +1,84 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg-homeassistant
+  namespace: cnpg-system
+spec:
+  description: "Dedicated PostgreSQL cluster for Home Assistant"
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+  instances: 2
+
+  # PostgreSQL configuration - optimized for Home Assistant recorder
+  postgresql:
+    parameters:
+      shared_buffers: "128MB"
+      effective_cache_size: "384MB"
+      maintenance_work_mem: "64MB"
+      max_connections: "50"
+      log_statement: "ddl"
+      log_min_duration_statement: "1000"
+      # Home Assistant writes frequently - optimize for that
+      synchronous_commit: "off"
+      wal_writer_delay: "200ms"
+    pg_hba:
+      - host all all 10.0.0.0/8 scram-sha-256
+      - host all all 192.168.0.0/16 scram-sha-256
+
+  # Bootstrap with databases
+  bootstrap:
+    initdb:
+      database: homeassistant
+      owner: homeassistant
+      secret:
+        name: cnpg-homeassistant-app
+
+  # Superuser secret reference
+  superuserSecret:
+    name: cnpg-homeassistant-superuser
+
+  # Storage configuration - larger for Home Assistant history
+  storage:
+    storageClass: longhorn-standard
+    size: 10Gi
+
+  # Resource configuration
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Backup configuration to Backblaze B2
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://homelab-prd/cnpg-backup/homeassistant/
+      endpointURL: https://s3.eu-central-003.backblazeb2.com
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-s3-secret
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-s3-secret
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        maxParallel: 2
+      data:
+        compression: gzip
+    retentionPolicy: "30d"
+
+  # Monitoring
+  monitoring:
+    enablePodMonitor: true
+    podMonitorMetricRelabelings:
+      - sourceLabels: [cluster]
+        targetLabel: cnpg_cluster
+
+  # Affinity - prefer different nodes for replicas
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred

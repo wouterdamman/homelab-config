@@ -1,0 +1,84 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cnpg-shared
+  namespace: cnpg-system
+spec:
+  description: "Shared PostgreSQL cluster for small applications"
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+  instances: 2
+
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      shared_buffers: "64MB"
+      effective_cache_size: "192MB"
+      maintenance_work_mem: "32MB"
+      max_connections: "100"
+      log_statement: "ddl"
+      log_min_duration_statement: "1000"
+    pg_hba:
+      - host all all 10.0.0.0/8 scram-sha-256
+      - host all all 192.168.0.0/16 scram-sha-256
+
+  # Bootstrap with superuser from ExternalSecret
+  bootstrap:
+    initdb:
+      database: postgres
+      owner: postgres
+      secret:
+        name: cnpg-shared-superuser
+      postInitSQL:
+        - CREATE DATABASE authelia OWNER postgres;
+        - CREATE DATABASE netbox OWNER postgres;
+
+  # Superuser secret reference
+  superuserSecret:
+    name: cnpg-shared-superuser
+
+  # Storage configuration
+  storage:
+    storageClass: longhorn-standard
+    size: 5Gi
+
+  # Resource configuration
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Backup configuration to Backblaze B2
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://homelab-prd/cnpg-backup/shared/
+      endpointURL: https://s3.eu-central-003.backblazeb2.com
+      s3Credentials:
+        accessKeyId:
+          name: cnpg-s3-secret
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: cnpg-s3-secret
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        maxParallel: 2
+      data:
+        compression: gzip
+    retentionPolicy: "14d"
+
+  # Monitoring
+  monitoring:
+    enablePodMonitor: true
+    podMonitorMetricRelabelings:
+      - sourceLabels: [cluster]
+        targetLabel: cnpg_cluster
+
+  # Affinity - prefer different nodes for replicas
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred

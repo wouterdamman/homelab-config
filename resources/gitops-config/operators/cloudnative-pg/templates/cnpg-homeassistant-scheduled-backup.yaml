@@ -1,0 +1,21 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: cnpg-homeassistant-6h-backup
+  namespace: cnpg-system
+spec:
+  # Reference to the cluster
+  cluster:
+    name: cnpg-homeassistant
+
+  # Every 6 hours at minute 0
+  schedule: "0 */6 * * *"
+
+  # Backup configuration
+  backupOwnerReference: self
+  immediate: false
+  suspend: false
+
+  # Target for backup (prefer standby to reduce primary load)
+  target: prefer-standby

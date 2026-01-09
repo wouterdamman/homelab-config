@@ -1,0 +1,58 @@
+# CloudNative-PG Operator Configuration
+# https://cloudnative-pg.io/documentation/current/
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/cloudnative-pg/cloudnative-pg
+  pullPolicy: IfNotPresent
+
+crds:
+  create: true
+
+# Resource configuration for the operator
+resources:
+  requests:
+    cpu: 10m
+    memory: 100Mi
+  limits:
+    cpu: 100m
+    memory: 256Mi
+
+# Monitoring configuration
+monitoring:
+  podMonitorEnabled: true
+  podMonitorAdditionalLabels:
+    release: prometheus
+
+  grafanaDashboard:
+    create: true
+    namespace: monitoring
+    configMapName: "cnpg-grafana-dashboard"
+    sidecarLabel: "grafana_dashboard"
+    sidecarLabelValue: "1"
+    labels: {}
+    annotations: {}
+
+# Webhook configuration
+webhook:
+  port: 9443
+  mutating:
+    create: true
+    failurePolicy: Fail
+  validating:
+    create: true
+    failurePolicy: Fail
+
+# Service account
+serviceAccount:
+  create: true
+
+# Config for operator
+config:
+  # Create a secret for the operator to use
+  create: true
+  name: cnpg-controller-manager-config
+  data:
+    # Watched namespaces (empty = all namespaces)
+    WATCH_NAMESPACE: ""

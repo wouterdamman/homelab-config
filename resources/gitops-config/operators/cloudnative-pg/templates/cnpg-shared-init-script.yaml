@@ -1,0 +1,46 @@
+---
+# SQL initialization script for setting up dedicated database users with proper permissions
+# This ConfigMap contains SQL that should be executed after the cluster is initialized
+# to grant schema-level permissions to dedicated users
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cnpg-shared-init-script
+  namespace: cnpg-system
+data:
+  init-users.sql: |
+    -- Grant schema permissions for authentik user
+    \c authentik
+    GRANT ALL ON SCHEMA public TO authentik;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authentik;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authentik;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO authentik;
+
+    -- If tables already exist, grant permissions on them
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO authentik;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authentik;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO authentik;
+
+    -- Grant schema permissions for netbox user
+    \c netbox
+    GRANT ALL ON SCHEMA public TO netbox;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO netbox;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO netbox;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO netbox;
+
+    -- If tables already exist, grant permissions on them
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO netbox;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO netbox;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO netbox;
+
+  set-user-password.sql: |
+    -- Template for setting user passwords
+    -- Execute this manually with:
+    -- kubectl exec -n cnpg-system cnpg-shared-1 -c postgres -- psql -U postgres -f /path/to/this/file
+    --
+    -- Or set via ALTER USER:
+    -- ALTER USER authentik WITH PASSWORD 'your-secure-password-here';
+    -- ALTER USER netbox WITH PASSWORD 'your-secure-password-here';
+
+    -- Note: Passwords should be managed via 1Password/ExternalSecrets in production
+    -- This file is for reference only

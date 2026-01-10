@@ -29,9 +29,18 @@ spec:
       owner: postgres
       secret:
         name: cnpg-shared-superuser
-      postInitSQL:
+      postInitApplicationSQL:
+        # Create databases
         - CREATE DATABASE authentik OWNER postgres;
         - CREATE DATABASE netbox OWNER postgres;
+      postInitSQL:
+        # Create dedicated database users without passwords
+        # Passwords must be set separately via ALTER USER or managed through 1Password/ExternalSecrets
+        - CREATE USER authentik WITH LOGIN;
+        - CREATE USER netbox WITH LOGIN;
+        # Grant database-level privileges
+        - GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;
+        - GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
 
   # Superuser secret reference
   superuserSecret:

@@ -74,4 +74,22 @@ spec:
         compression: gzip
         backupType: incremental
         schedule:
-          full: "0
+          full: "0 3 * * 0"
+          diff: "0 3 * * 1-6"
+      retentionFull: 7
+      retentionDiff: 14
+      maxBackupSize: "5GB"
+
+  # Monitoring
+  monitoring:
+    enablePodMonitor: true
+    podMonitorMetricRelabelings:
+      - action: replace
+        sourceLabels: [cluster]
+        targetLabel: cnpg_cluster
+
+  # Affinity - prefer different nodes for replicas
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: preferred

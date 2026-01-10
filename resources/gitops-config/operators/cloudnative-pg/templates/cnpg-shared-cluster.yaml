@@ -1,4 +1,3 @@
----
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
@@ -8,7 +7,7 @@ spec:
   description: "Shared PostgreSQL cluster for small applications"
   imageName: ghcr.io/cloudnative-pg/postgresql:16.4
   instances: 2
-  
+
   # PostgreSQL configuration
   postgresql:
     parameters:
@@ -78,13 +77,11 @@ spec:
         maxParallel: 1
       data:
         compression: gzip
-        backupType: incremental
-        schedule:
-          full: "0 2 * * 0"
-          diff: "0 2 * * 1-6"
-      retentionFull: 7
-      retentionDiff: 14
-      maxBackupSize: "2GB"
+    schedule:
+      full: "0 2 * * 0"
+      diff: "0 2 * * 1-6"
+    retentionFull: 7
+    retentionDiff: 14
 
   # Monitoring
   monitoring:

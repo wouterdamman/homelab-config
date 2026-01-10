@@ -30,7 +30,7 @@ spec:
       secret:
         name: cnpg-shared-superuser
       postInitSQL:
-        - CREATE DATABASE authelia OWNER postgres;
+        - CREATE DATABASE authentik OWNER postgres;
         - CREATE DATABASE netbox OWNER postgres;
 
   # Superuser secret reference

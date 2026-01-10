@@ -1,0 +1,122 @@
+# Authentik Configuration
+# Chart: https://github.com/goauthentik/helm
+# Docs: https://docs.goauthentik.io/
+
+global:
+  env:
+    # PostgreSQL configuration (external CNPG)
+    - name: AUTHENTIK_POSTGRESQL__HOST
+      value: "cnpg-shared-rw.cnpg-system.svc.cluster.local"
+    - name: AUTHENTIK_POSTGRESQL__PORT
+      value: "5432"
+    - name: AUTHENTIK_POSTGRESQL__NAME
+      value: "authentik"
+    - name: AUTHENTIK_POSTGRESQL__USER
+      valueFrom:
+        secretKeyRef:
+          name: authentik-db-credentials
+          key: username
+    - name: AUTHENTIK_POSTGRESQL__PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-db-credentials
+          key: password
+
+    # Redis configuration (bundled)
+    - name: AUTHENTIK_REDIS__HOST
+      value: "authentik-redis-master"
+    - name: AUTHENTIK_REDIS__PORT
+      value: "6379"
+
+    # Secret key (for session encryption)
+    - name: AUTHENTIK_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: authentik-secret-key
+          key: secret-key
+
+    # Bootstrap admin password
+    - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: authentik-bootstrap-password
+          key: password
+
+    # Error reporting (disabled for privacy)
+    - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+      value: "false"
+
+# Server configuration (web UI + API)
+server:
+  replicas: 2
+
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: prometheus
+
+  ingress:
+    enabled: false  # We use Gateway API HTTPRoute instead
+
+# Worker configuration (background tasks)
+worker:
+  replicas: 2
+
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# PostgreSQL (use external CNPG cluster)
+postgresql:
+  enabled: false
+
+# Redis (enable bundled Bitnami Redis)
+redis:
+  enabled: true
+
+  master:
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+    persistence:
+      enabled: false  # Sessions are ephemeral
+
+  replica:
+    replicaCount: 0  # Single instance for homelab

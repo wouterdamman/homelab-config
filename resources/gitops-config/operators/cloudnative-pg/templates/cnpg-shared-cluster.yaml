@@ -8,7 +8,7 @@ spec:
   description: "Shared PostgreSQL cluster for small applications"
   imageName: ghcr.io/cloudnative-pg/postgresql:16.4
   instances: 2
-
+  
   # PostgreSQL configuration
   postgresql:
     parameters:
@@ -18,6 +18,11 @@ spec:
       max_connections: "100"
       log_statement: "ddl"
       log_min_duration_statement: "1000"
+      max_wal_size: "128MB"
+      wal_level: "replica"
+      archive_mode: "on"
+      archive_command: "test ! -f /backups/%f && cp %p /backups/%f"
+      archive_timeout: "60s"
     pg_hba:
       - host all all 10.0.0.0/8 scram-sha-256
       - host all all 192.168.0.0/16 scram-sha-256
@@ -30,15 +35,11 @@ spec:
       secret:
         name: cnpg-shared-superuser
       postInitApplicationSQL:
-        # Create databases
         - CREATE DATABASE authentik OWNER postgres;
         - CREATE DATABASE netbox OWNER postgres;
       postInitSQL:
-        # Create dedicated database users without passwords
-        # Passwords must be set separately via ALTER USER or managed through 1Password/ExternalSecrets
         - CREATE USER authentik WITH LOGIN;
         - CREATE USER netbox WITH LOGIN;
-        # Grant database-level privileges
         - GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;
         - GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
 
@@ -74,10 +75,16 @@ spec:
           key: ACCESS_SECRET_KEY
       wal:
         compression: gzip
-        maxParallel: 2
+        maxParallel: 1
       data:
         compression: gzip
-    retentionPolicy: "14d"
+        backupType: incremental
+        schedule:
+          full: "0 2 * * 0"
+          diff: "0 2 * * 1-6"
+      retentionFull: 7
+      retentionDiff: 14
+      maxBackupSize: "2GB"
 
   # Monitoring
   monitoring:

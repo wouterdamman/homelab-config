@@ -72,9 +72,6 @@ spec:
         maxParallel: 2
       data:
         compression: gzip
-    schedule:
-      full: "0 3 * * 0"
-      diff: "0 3 * * 1-6"
     retentionFull: 7
     retentionDiff: 14
 

@@ -4,51 +4,51 @@
 
 global:
   env:
-    # PostgreSQL configuration (external CNPG)
-    - name: AUTHENTIK_POSTGRESQL__HOST
-      value: "cnpg-shared-rw.cnpg-system.svc.cluster.local"
-    - name: AUTHENTIK_POSTGRESQL__PORT
-      value: "5432"
-    - name: AUTHENTIK_POSTGRESQL__NAME
-      value: "authentik"
-    - name: AUTHENTIK_POSTGRESQL__USER
-      valueFrom:
-        secretKeyRef:
-          name: authentik-db-credentials
-          key: username
-    - name: AUTHENTIK_POSTGRESQL__PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: authentik-db-credentials
-          key: password
+  # PostgreSQL configuration (external CNPG)
+  - name: AUTHENTIK_POSTGRESQL__HOST
+    value: "cnpg-shared-rw.cnpg-system.svc.cluster.local"
+  - name: AUTHENTIK_POSTGRESQL__PORT
+    value: "5432"
+  - name: AUTHENTIK_POSTGRESQL__NAME
+    value: "authentik"
+  - name: AUTHENTIK_POSTGRESQL__USER
+    valueFrom:
+      secretKeyRef:
+        name: authentik-db-credentials
+        key: username
+  - name: AUTHENTIK_POSTGRESQL__PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-db-credentials
+        key: password
 
-    # Redis configuration (bundled)
-    - name: AUTHENTIK_REDIS__HOST
-      value: "authentik-redis-master"
-    - name: AUTHENTIK_REDIS__PORT
-      value: "6379"
+  # Redis configuration (bundled)
+  - name: AUTHENTIK_REDIS__HOST
+    value: "authentik-redis-master"
+  - name: AUTHENTIK_REDIS__PORT
+    value: "6379"
 
-    # Secret key (for session encryption)
-    - name: AUTHENTIK_SECRET_KEY
-      valueFrom:
-        secretKeyRef:
-          name: authentik-secret-key
-          key: secret-key
+  # Secret key (for session encryption)
+  - name: AUTHENTIK_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: authentik-secret-key
+        key: secret-key
 
-    # Bootstrap admin password
-    - name: AUTHENTIK_BOOTSTRAP_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: authentik-bootstrap-password
-          key: password
+  # Bootstrap admin password
+  - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: authentik-bootstrap-password
+        key: password
 
-    # Error reporting (disabled for privacy)
-    - name: AUTHENTIK_ERROR_REPORTING__ENABLED
-      value: "false"
+  # Error reporting (disabled for privacy)
+  - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+    value: "false"
 
 # Server configuration (web UI + API)
 server:
-  replicas: 2
+  replicas: 1
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -72,11 +72,11 @@ server:
         release: prometheus
 
   ingress:
-    enabled: false  # We use Gateway API HTTPRoute instead
+    enabled: false # We use Gateway API HTTPRoute instead
 
 # Worker configuration (background tasks)
 worker:
-  replicas: 2
+  replicas: 1
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -116,7 +116,7 @@ redis:
         memory: 128Mi
 
     persistence:
-      enabled: false  # Sessions are ephemeral
+      enabled: false # Sessions are ephemeral
 
   replica:
-    replicaCount: 0  # Single instance for homelab
+    replicaCount: 1 # Single instance for homelab

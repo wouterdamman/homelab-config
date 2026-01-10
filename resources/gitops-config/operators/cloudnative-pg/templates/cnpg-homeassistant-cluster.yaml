@@ -72,8 +72,6 @@ spec:
         maxParallel: 2
       data:
         compression: gzip
-    retentionFull: 7
-    retentionDiff: 14
 
   # Monitoring
   monitoring:

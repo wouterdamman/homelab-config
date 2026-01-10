@@ -17,14 +17,8 @@ spec:
       max_connections: "50"
       log_statement: "ddl"
       log_min_duration_statement: "1000"
-      # Home Assistant writes frequently - optimize for that
       synchronous_commit: "off"
       wal_writer_delay: "200ms"
-      max_wal_size: "128MB"
-      wal_level: "replica"
-      archive_mode: "on"
-      archive_command: "test ! -f /backups/%f && cp %p /backups/%f"
-      archive_timeout: "60s"
     pg_hba:
       - host all all 10.0.0.0/8 scram-sha-256
       - host all all 192.168.0.0/16 scram-sha-256

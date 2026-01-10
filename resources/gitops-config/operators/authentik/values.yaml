@@ -4,7 +4,7 @@
 
 global:
   env:
-  # PostgreSQL configuration (external CNPG)
+  # PostgreSQL (external CNPG)
   - name: AUTHENTIK_POSTGRESQL__HOST
     value: "cnpg-shared-rw.cnpg-system.svc.cluster.local"
   - name: AUTHENTIK_POSTGRESQL__PORT
@@ -22,33 +22,35 @@ global:
         name: authentik-db-credentials
         key: password
 
-  # Redis configuration (bundled)
+  # Redis (bundled)
   - name: AUTHENTIK_REDIS__HOST
     value: "authentik-redis-master"
   - name: AUTHENTIK_REDIS__PORT
     value: "6379"
 
-  # Secret key (for session encryption)
+  # Secret key
   - name: AUTHENTIK_SECRET_KEY
     valueFrom:
       secretKeyRef:
         name: authentik-secret-key
         key: secret-key
 
-  # Bootstrap admin password
+  # Bootstrap admin
   - name: AUTHENTIK_BOOTSTRAP_PASSWORD
     valueFrom:
       secretKeyRef:
         name: authentik-bootstrap-password
         key: password
 
-  # Error reporting (disabled for privacy)
+  # Privacy
   - name: AUTHENTIK_ERROR_REPORTING__ENABLED
     value: "false"
 
-# Server configuration (web UI + API)
+# ─────────────────────────────────────────────────────────────
+# Server (UI + API)
+# ─────────────────────────────────────────────────────────────
 server:
-  replicas: 1
+  replicas: 2
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -58,11 +60,23 @@ server:
 
   resources:
     requests:
-      cpu: 50m
-      memory: 256Mi
+      cpu: 200m
+      memory: 768Mi
     limits:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 1500m
+      memory: 1536Mi
+
+  livenessProbe:
+    initialDelaySeconds: 60
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 10
+
+  readinessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 5
 
   metrics:
     enabled: true
@@ -72,11 +86,13 @@ server:
         release: prometheus
 
   ingress:
-    enabled: false # We use Gateway API HTTPRoute instead
+    enabled: false # Gateway API HTTPRoute in use
 
-# Worker configuration (background tasks)
+# ─────────────────────────────────────────────────────────────
+# Worker (background tasks)
+# ─────────────────────────────────────────────────────────────
 worker:
-  replicas: 1
+  replicas: 2
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -86,17 +102,21 @@ worker:
 
   resources:
     requests:
-      cpu: 50m
-      memory: 256Mi
-    limits:
-      cpu: 500m
+      cpu: 150m
       memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
 
-# PostgreSQL (use external CNPG cluster)
+# ─────────────────────────────────────────────────────────────
+# PostgreSQL (external CNPG)
+# ─────────────────────────────────────────────────────────────
 postgresql:
   enabled: false
 
-# Redis (enable bundled Bitnami Redis)
+# ─────────────────────────────────────────────────────────────
+# Redis (bundled Bitnami)
+# ─────────────────────────────────────────────────────────────
 redis:
   enabled: true
 
@@ -109,14 +129,14 @@ redis:
 
     resources:
       requests:
-        cpu: 10m
-        memory: 64Mi
-      limits:
-        cpu: 100m
+        cpu: 25m
         memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
 
     persistence:
-      enabled: false # Sessions are ephemeral
+      enabled: false
 
   replica:
-    replicaCount: 1 # Single instance for homelab
+    replicaCount: 0

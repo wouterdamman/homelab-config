@@ -50,7 +50,7 @@ global:
 # Server (UI + API)
 # ─────────────────────────────────────────────────────────────
 server:
-  replicas: 2
+  replicas: 1
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -60,11 +60,11 @@ server:
 
   resources:
     requests:
-      cpu: 200m
-      memory: 768Mi
+      cpu: 100m
+      memory: 640Mi
     limits:
-      cpu: 1500m
-      memory: 1536Mi
+      cpu: 750m
+      memory: 1280Mi
 
   livenessProbe:
     initialDelaySeconds: 60
@@ -92,7 +92,7 @@ server:
 # Worker (background tasks)
 # ─────────────────────────────────────────────────────────────
 worker:
-  replicas: 2
+  replicas: 1
 
   tolerations:
   - key: node-role.kubernetes.io/control-plane
@@ -102,11 +102,11 @@ worker:
 
   resources:
     requests:
-      cpu: 150m
-      memory: 512Mi
+      cpu: 100m
+      memory: 384Mi
     limits:
-      cpu: 1000m
-      memory: 1024Mi
+      cpu: 500m
+      memory: 768Mi
 
 # ─────────────────────────────────────────────────────────────
 # PostgreSQL (external CNPG)

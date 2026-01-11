@@ -6,7 +6,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: wouterdamman@outlook.com
+    email: little.storm7930@sironite.com
     privateKeySecretRef:
       name: letsencrypt-staging
     solvers:

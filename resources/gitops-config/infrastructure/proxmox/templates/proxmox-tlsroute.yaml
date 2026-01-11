@@ -1,0 +1,26 @@
+---
+# TLSRoute voor Proxmox met TLS Passthrough
+# Routes TLS traffic naar Proxmox zonder te decrypten (SNI-based routing)
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: proxmox-tlsroute
+  namespace: infrastructure
+  labels:
+    app: proxmox
+    app.kubernetes.io/name: proxmox
+    app.kubernetes.io/component: tlsroute
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: pve.svc.damman.tech
+spec:
+  parentRefs:
+    - name: svc-gateway
+      namespace: kube-system
+      sectionName: svc-tls-passthrough-listener
+  hostnames:
+    - pve.svc.damman.tech
+  rules:
+    - backendRefs:
+        - name: proxmox
+          port: 8006
+          weight: 1

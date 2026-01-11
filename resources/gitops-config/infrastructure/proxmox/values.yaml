@@ -1,0 +1,12 @@
+# Proxmox VE Gateway API Configuration
+# Exposes external Proxmox server via Cilium Gateway API with TLS passthrough
+
+proxmox:
+  # External Proxmox server
+  host: "10.0.10.200"
+  port: 8006
+
+  # Gateway API configuration
+  hostname: "pve.svc.damman.tech"
+  gateway: "svc-gateway"
+  namespace: "kube-system"

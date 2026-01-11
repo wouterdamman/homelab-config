@@ -29,3 +29,12 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: svc-tls-passthrough-listener
+      protocol: TLS
+      port: 8006
+      hostname: "pve.svc.damman.tech"
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        namespaces:
+          from: All

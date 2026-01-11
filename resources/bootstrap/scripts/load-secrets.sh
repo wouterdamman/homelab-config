@@ -27,21 +27,21 @@ echo "🔐 Loading secrets from 1Password..."
 
 # Proxmox credentials from 1Password "Homelab" vault
 echo "  Loading Proxmox credentials..."
-TF_VAR_proxmox_username=$(op read "op://Homelab/Proxmox/username" 2>&1 | tr -d '\n\r')
+TF_VAR_proxmox_username=$(op read "op://Homelab/Proxmox - Root Account/username" 2>&1 | tr -d '\n\r')
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Proxmox username: $TF_VAR_proxmox_username"
     return 1 2>/dev/null || exit 1
 fi
 export TF_VAR_proxmox_username
 
-TF_VAR_proxmox_password=$(op read "op://Homelab/Proxmox/password" 2>&1 | tr -d '\n\r')
+TF_VAR_proxmox_password=$(op read "op://Homelab/Proxmox - Root Account/password" 2>&1 | tr -d '\n\r')
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Proxmox password: $TF_VAR_proxmox_password"
     return 1 2>/dev/null || exit 1
 fi
 export TF_VAR_proxmox_password
 
-TF_VAR_proxmox_api_token=$(op read "op://Homelab/Proxmox/api_token" 2>&1 | tr -d '\n\r')
+TF_VAR_proxmox_api_token=$(op read "op://Homelab/Proxmox - Root Account/api_key" 2>&1 | tr -d '\n\r')
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Proxmox API token: $TF_VAR_proxmox_api_token"
     return 1 2>/dev/null || exit 1

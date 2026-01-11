@@ -21,6 +21,7 @@ sources:
   - service
   - ingress
   - gateway-httproute
+  - gateway-tlsroute
 
 policy: sync
 

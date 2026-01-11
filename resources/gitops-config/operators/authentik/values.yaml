@@ -105,7 +105,7 @@ worker:
       cpu: 100m
       memory: 384Mi
     limits:
-      cpu: 500m
+      # No CPU limit to prevent throttling on background tasks
       memory: 768Mi
 
 # ─────────────────────────────────────────────────────────────

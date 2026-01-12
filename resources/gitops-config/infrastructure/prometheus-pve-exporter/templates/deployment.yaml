@@ -28,17 +28,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ .Values.existingSecret }}
-              key: username
+              key: PVE_USER
         - name: PVE_TOKEN_NAME
           valueFrom:
             secretKeyRef:
               name: {{ .Values.existingSecret }}
-              key: token-name
-        - name: PVE_TOKEN_VALUE
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.existingSecret }}
-              key: token-value
+              key: PVE_TOKEN_NAME
         - name: PVE_VERIFY_SSL
           value: "{{ .Values.proxmox.verify_ssl }}"
         args:

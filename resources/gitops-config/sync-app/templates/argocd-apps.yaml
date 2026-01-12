@@ -42,6 +42,19 @@ spec:
                 server: '*'
             sourceRepos:
               - '*'
+          infrastructure:
+            namespace: argocd
+            displayName: infrastructure
+            finalizers:
+              - resources-finalizer.argocd.argoproj.io
+            clusterResourceWhitelist:
+              - group: '*'
+                kind: '*'
+            destinations:
+              - namespace: '*'
+                server: '*'
+            sourceRepos:
+              - '*'
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

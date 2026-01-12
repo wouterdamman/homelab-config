@@ -7,10 +7,10 @@ metadata:
     app: pve-exporter
 spec:
   type: {{ .Values.service.type }}
+  selector:
+    app: pve-exporter
   ports:
   - name: metrics
     port: {{ .Values.service.port }}
     targetPort: metrics
     protocol: TCP
-  selector:
-    app: pve-exporter

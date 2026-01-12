@@ -6,9 +6,9 @@ metadata:
   namespace: monitoring
   labels:
     app: pve-exporter
-    {{- range $key, $val := .Values.serviceMonitor.labels }}
+{{- range $key, $val := .Values.serviceMonitor.labels }}
     {{ $key }}: {{ $val }}
-    {{- end }}
+{{- end }}
 spec:
   selector:
     matchLabels:

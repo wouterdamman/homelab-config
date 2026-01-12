@@ -6,7 +6,7 @@ metadata:
   labels:
     app: pve-exporter
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app: pve-exporter
@@ -15,62 +15,83 @@ spec:
       labels:
         app: pve-exporter
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
       - name: generate-config
         image: busybox:1.36
         command:
-        - sh
-        - -c
-        - |
-          set -eu
+          - sh
+          - -c
+          - |
+            set -eu
 
-          cat > /config/pve.yml <<EOF
-          default:
-            user: ${PVE_USER}
-            token_name: ${PVE_TOKEN_NAME}
-            token_value: ${PVE_TOKEN_VALUE}
-            verify_ssl: {{ .Values.proxmox.verify_ssl }}
-          EOF
+            cat > /config/pve.yml <<EOF
+            default:
+              host: ${PVE_HOST}
+              user: ${PVE_USER}
+              token_name: ${PVE_TOKEN_NAME}
+              token_value: ${PVE_TOKEN_VALUE}
+              verify_ssl: false
+            EOF
 
-          echo "Generated pve.yml (token hidden):"
-          sed 's/token_value:.*/token_value: ***/' /config/pve.yml
+            echo "Generated pve.yml (token hidden):"
+            sed 's/token_value:.*/token_value: ***/' /config/pve.yml
         env:
-        - name: PVE_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.existingSecret }}
-              key: PVE_USER
-        - name: PVE_TOKEN_NAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.existingSecret }}
-              key: PVE_TOKEN_NAME
-        - name: PVE_TOKEN_VALUE
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.existingSecret }}
-              key: PVE_TOKEN_VALUE
+          - name: PVE_USER
+            valueFrom:
+              secretKeyRef:
+                name: pve-exporter-credentials
+                key: PVE_USER
+          - name: PVE_TOKEN_NAME
+            valueFrom:
+              secretKeyRef:
+                name: pve-exporter-credentials
+                key: PVE_TOKEN_NAME
+          - name: PVE_TOKEN_VALUE
+            valueFrom:
+              secretKeyRef:
+                name: pve-exporter-credentials
+                key: PVE_TOKEN_VALUE
+          - name: PVE_HOST
+            value: "10.0.10.200"  # je Proxmox node IP of FQDN
         volumeMounts:
-        - name: config
-          mountPath: /config
+          - name: config
+            mountPath: /config
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
 
       containers:
       - name: pve-exporter
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        image: "ghcr.io/bcleonard/prometheus-pve-exporter:latest"
+        imagePullPolicy: IfNotPresent
         args:
-        - "--config.file=/etc/pve-exporter/pve.yml"
-        - "--web.listen-address=:9221"
+          - "--config.file=/etc/pve-exporter/pve.yml"
+          - "--web.listen-address=:9221"
         ports:
-        - name: metrics
-          containerPort: 9221
-          protocol: TCP
+          - name: metrics
+            containerPort: 9221
+            protocol: TCP
         volumeMounts:
-        - name: config
-          mountPath: /etc/pve-exporter
-          readOnly: true
+          - name: config
+            mountPath: /etc/pve-exporter
+            readOnly: true
         resources:
-{{- toYaml .Values.resources | nindent 10 }}
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         livenessProbe:
           httpGet:
             path: /
@@ -83,7 +104,14 @@ spec:
             port: metrics
           initialDelaySeconds: 10
           periodSeconds: 10
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
 
       volumes:
-      - name: config
-        emptyDir: {}
+        - name: config
+          emptyDir: {}

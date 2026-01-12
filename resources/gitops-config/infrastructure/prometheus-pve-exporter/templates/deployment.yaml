@@ -15,14 +15,20 @@ spec:
       labels:
         app: pve-exporter
     spec:
-      containers:
-      - name: pve-exporter
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        ports:
-        - name: metrics
-          containerPort: 9221
-          protocol: TCP
+      initContainers:
+      - name: generate-config
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          cat > /config/pve.yml <<EOF
+          default:
+            user: ${PVE_USER}
+            token_name: ${PVE_TOKEN_NAME}
+            verify_ssl: {{ .Values.proxmox.verify_ssl }}
+          EOF
+          cat /config/pve.yml
         env:
         - name: PVE_USER
           valueFrom:
@@ -34,10 +40,23 @@ spec:
             secretKeyRef:
               name: {{ .Values.existingSecret }}
               key: PVE_TOKEN_NAME
-        - name: PVE_VERIFY_SSL
-          value: "{{ .Values.proxmox.verify_ssl }}"
+        volumeMounts:
+        - name: config
+          mountPath: /config
+      containers:
+      - name: pve-exporter
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: metrics
+          containerPort: 9221
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/pve-exporter
+          readOnly: true
         args:
-        - "--target.url={{ .Values.proxmox.endpoint }}"
+        - "--config.file=/etc/pve-exporter/pve.yml"
         - "--web.listen-address=:9221"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
@@ -53,3 +72,6 @@ spec:
             port: metrics
           initialDelaySeconds: 10
           periodSeconds: 10
+      volumes:
+      - name: config
+        emptyDir: {}

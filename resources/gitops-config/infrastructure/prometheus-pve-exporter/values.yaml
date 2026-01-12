@@ -1,0 +1,38 @@
+# Prometheus PVE Exporter Configuration
+image:
+  repository: prompve/prometheus-pve-exporter
+  tag: "3.4.5"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# Proxmox connection
+proxmox:
+  endpoint: "https://10.0.10.200:8006"  # From proxmox.auto.tfvars
+  verify_ssl: false  # Self-signed cert
+
+# Resources
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Service
+service:
+  type: ClusterIP
+  port: 9221
+  name: pve-exporter
+
+# ServiceMonitor (Prometheus Operator)
+serviceMonitor:
+  enabled: true
+  interval: 60s  # Scrape every 60s (niet te vaak, Proxmox API is niet super snel)
+  scrapeTimeout: 30s
+  labels:
+    release: prometheus  # Match kube-prometheus-stack
+
+# Secrets (via ExternalSecret)
+existingSecret: "pve-exporter-credentials"

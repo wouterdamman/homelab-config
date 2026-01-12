@@ -1,0 +1,26 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pve-exporter
+  namespace: monitoring
+  labels:
+    app: pve-exporter
+    {{- range $key, $val := .Values.serviceMonitor.labels }}
+    {{ $key }}: {{ $val }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: pve-exporter
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.serviceMonitor.interval }}
+    scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+    path: /pve
+    params:
+      target:
+      - {{ .Values.proxmox.endpoint }}
+      module:
+      - default
+{{- end }}

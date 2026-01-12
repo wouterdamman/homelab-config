@@ -1,0 +1,26 @@
+##############################################
+# PROXMOX CONNECTION
+##############################################
+# Sensitive values are set via environment variables:
+#   export TF_VAR_proxmox_api_token="automation@pve!tofu=your-token"
+#   export TF_VAR_qdevice_root_password="your-password"
+##############################################
+
+proxmox = {
+  name         = "dmn-sk-pve-01"
+  cluster_name = "homelab"
+  endpoint     = "https://10.0.10.200:8006"
+  cluster_ip   = "10.0.10.200"
+  insecure     = true
+}
+
+##############################################
+# CLUSTER CONFIGURATION
+##############################################
+
+cluster_cidr    = "10.0.10"
+cluster_gateway = "10.0.10.193"
+
+host_nodes = [
+  "dmn-sk-pve-01"
+]

@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
     bucket = "homelab-prd"
-    key    = "tofu/bootstrap.tfstate"
+    key    = "tofu/infrastructure.tfstate"
 
     region   = "eu-central-003"
     endpoint = "https://s3.eu-central-003.backblazeb2.com"
@@ -15,21 +15,9 @@ terraform {
   }
 
   required_providers {
-    talos = {
-      source  = "siderolabs/talos"
-      version = "0.9.0"
-    }
     proxmox = {
       source  = "bpg/proxmox"
       version = "0.91.0"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "3.0.1"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.7.2"
     }
   }
 }
@@ -48,8 +36,3 @@ provider "proxmox" {
     }
   }
 }
-
-provider "kubernetes" {
-  config_path = var.kube_config_path
-}
-

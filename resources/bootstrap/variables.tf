@@ -66,21 +66,9 @@ variable "proxmox" {
   description = "Proxmox cluster configuration (non-sensitive)"
 }
 
-variable "proxmox_username" {
-  type        = string
-  description = "Proxmox username (e.g., root@pam). Set via TF_VAR_proxmox_username"
-  sensitive   = true
-}
-
-variable "proxmox_password" {
-  type        = string
-  description = "Proxmox password. Set via TF_VAR_proxmox_password"
-  sensitive   = true
-}
-
 variable "proxmox_api_token" {
   type        = string
-  description = "Proxmox API token. Set via TF_VAR_proxmox_api_token"
+  description = "Proxmox API token (e.g., automation@pve!tofu=<token>). Set via TF_VAR_proxmox_api_token"
   sensitive   = true
 }
 

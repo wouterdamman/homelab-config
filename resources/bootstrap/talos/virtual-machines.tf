@@ -50,6 +50,14 @@ resource "proxmox_virtual_environment_vm" "this" {
     type = "l26" # Linux Kernel 2.6 - 6.X.
   }
 
+  lifecycle {
+    ignore_changes = [
+      disk[0].file_id,  # Cannot be determined during import
+      initialization,   # Already initialized, avoid recreation
+      vga,              # Computed field
+    ]
+  }
+
   initialization {
     datastore_id = each.value.datastore_id
 

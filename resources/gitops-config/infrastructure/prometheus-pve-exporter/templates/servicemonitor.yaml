@@ -23,4 +23,8 @@ spec:
       - {{ .Values.proxmox.endpoint }}
       module:
       - default
+      cluster:
+      - "0"
+      node:
+      - "1"
 {{- end }}

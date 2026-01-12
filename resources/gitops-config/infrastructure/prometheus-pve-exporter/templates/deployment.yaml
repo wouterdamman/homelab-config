@@ -66,7 +66,6 @@ spec:
         args:
         - "--config.file=/etc/pve-exporter/pve.yml"
         - "--web.listen-address=:9221"
-        - "--no-collector.cluster"
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:

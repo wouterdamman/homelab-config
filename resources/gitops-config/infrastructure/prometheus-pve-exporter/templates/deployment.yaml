@@ -32,6 +32,7 @@ spec:
               token_name: ${TOKEN_NAME}
               token_value: ${TOKEN_VALUE}
               verify_ssl: {{ .Values.proxmox.verify_ssl }}
+              endpoint: {{ .Values.proxmox.endpoint }}
             EOF
 
             echo "Generated config (token_value hidden):"

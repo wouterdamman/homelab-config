@@ -3,14 +3,12 @@ kind: Service
 metadata:
   name: {{ .Values.service.name }}
   namespace: monitoring
-  labels:
-    app: pve-exporter
 spec:
   type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 9221
+      protocol: TCP
+      name: metrics
   selector:
     app: pve-exporter
-  ports:
-  - name: metrics
-    port: {{ .Values.service.port }}
-    targetPort: metrics
-    protocol: TCP

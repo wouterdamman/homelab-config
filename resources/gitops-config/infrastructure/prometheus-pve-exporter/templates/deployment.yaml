@@ -15,65 +15,38 @@ spec:
       labels:
         app: pve-exporter
     spec:
-      initContainers:
-      - name: generate-config
-        image: busybox:latest
-        command:
-          - sh
-          - -c
-          - |
-            # Extract token parts from full token string
-            TOKEN_NAME=$(echo "${PVE_TOKEN_FULL}" | cut -d'!' -f2 | cut -d'=' -f1)
-            TOKEN_VALUE=$(echo "${PVE_TOKEN_FULL}" | cut -d'=' -f2)
-
-            cat > /config/pve.yml <<EOF
-            default:
-              user: ${PVE_USER}
-              token_name: ${TOKEN_NAME}
-              token_value: ${TOKEN_VALUE}
-              verify_ssl: {{ .Values.proxmox.verify_ssl }}
-              endpoint: {{ .Values.proxmox.endpoint }}
-            EOF
-
-            echo "Generated config (token_value hidden):"
-            sed 's/token_value:.*/token_value: ***/' /config/pve.yml
-        env:
-          - name: PVE_USER
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.existingSecret }}
-                key: PVE_USER
-          - name: PVE_TOKEN_FULL
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.existingSecret }}
-                key: PVE_TOKEN_NAME
-        volumeMounts:
-          - name: config
-            mountPath: /config
-
       containers:
       - name: pve-exporter
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        args:
-          - "--config.file=/etc/pve-exporter/pve.yml"
-          - "--web.listen-address=:9221"
         ports:
-          - name: metrics
-            containerPort: 9221
-            protocol: TCP
-        volumeMounts:
-          - name: config
-            mountPath: /etc/pve-exporter
-            readOnly: true
+        - name: metrics
+          containerPort: 9221
+          protocol: TCP
+        env:
+        - name: PVE_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.existingSecret }}
+              key: PVE_USER
+        - name: PVE_TOKEN_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.existingSecret }}
+              key: PVE_TOKEN_NAME
+        - name: PVE_TOKEN_VALUE
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.existingSecret }}
+              key: PVE_TOKEN_VALUE
+        - name: PVE_VERIFY_SSL
+          value: "{{ .Values.proxmox.verify_ssl }}"
+        - name: PVE_HOST
+          value: "{{ .Values.proxmox.endpoint }}"
+        args:
+        - "--web.listen-address=:9221"
         resources:
-          requests:
-            cpu: {{ .Values.resources.requests.cpu }}
-            memory: {{ .Values.resources.requests.memory }}
-          limits:
-            cpu: {{ .Values.resources.limits.cpu }}
-            memory: {{ .Values.resources.limits.memory }}
+          {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: /
@@ -86,7 +59,3 @@ spec:
             port: metrics
           initialDelaySeconds: 10
           periodSeconds: 10
-
-      volumes:
-        - name: config
-          emptyDir: {}

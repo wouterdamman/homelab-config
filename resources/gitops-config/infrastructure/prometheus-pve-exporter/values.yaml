@@ -1,4 +1,3 @@
-# Prometheus PVE Exporter Configuration
 image:
   repository: prompve/prometheus-pve-exporter
   tag: "3.4.5"
@@ -8,8 +7,8 @@ replicaCount: 1
 
 # Proxmox connection
 proxmox:
-  endpoint: "10.0.10.200" # Proxmox host IP (exporter voegt https:// en :8006 toe)
-  verify_ssl: false # Zelf-ondertekend certificaat
+  endpoint: "10.0.10.200" # IP van je Proxmox node
+  verify_ssl: false
 
 # Resources
 resources:
@@ -20,7 +19,10 @@ resources:
     cpu: 200m
     memory: 128Mi
 
-# Service
+# Secret met token
+existingSecret: "pve-exporter-credentials"
+
+# Service config
 service:
   type: ClusterIP
   port: 9221
@@ -33,6 +35,3 @@ serviceMonitor:
   scrapeTimeout: 30s
   labels:
     release: prometheus
-
-# Secrets (via ExternalSecret)
-existingSecret: "pve-exporter-credentials"

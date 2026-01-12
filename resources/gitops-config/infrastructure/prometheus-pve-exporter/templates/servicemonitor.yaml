@@ -5,26 +5,19 @@ metadata:
   name: pve-exporter
   namespace: monitoring
   labels:
-    app: pve-exporter
-{{- range $key, $val := .Values.serviceMonitor.labels }}
-    {{ $key }}: {{ $val }}
-{{- end }}
+    release: {{ .Values.serviceMonitor.labels.release }}
 spec:
   selector:
     matchLabels:
       app: pve-exporter
+  namespaceSelector:
+    matchNames:
+      - monitoring
   endpoints:
-  - port: metrics
-    interval: {{ .Values.serviceMonitor.interval }}
-    scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
-    path: /pve
-    params:
-      target:
-      - {{ .Values.proxmox.endpoint }}
-      module:
-      - default
-      cluster:
-      - "0"
-      node:
-      - "1"
+    - port: metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      path: /pve
+      params:
+        module: ["default"]
 {{- end }}

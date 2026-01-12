@@ -15,91 +15,76 @@ spec:
       labels:
         app: pve-exporter
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        seccompProfile:
-          type: RuntimeDefault
       initContainers:
-        - name: generate-config
-          image: busybox:latest
-          command:
-            - sh
-            - -c
-            - |
-              # Extract token parts from full token string
-              # Format: user@realm!tokenname=tokenvalue
-              TOKEN_NAME=$(echo "${PVE_TOKEN_FULL}" | cut -d'!' -f2 | cut -d'=' -f1)
-              TOKEN_VALUE=$(echo "${PVE_TOKEN_FULL}" | cut -d'=' -f2)
+      - name: generate-config
+        image: busybox:latest
+        command:
+          - sh
+          - -c
+          - |
+            # Extract token parts from full token string
+            TOKEN_NAME=$(echo "${PVE_TOKEN_FULL}" | cut -d'!' -f2 | cut -d'=' -f1)
+            TOKEN_VALUE=$(echo "${PVE_TOKEN_FULL}" | cut -d'=' -f2)
 
-              cat > /config/pve.yml <<EOF
-              default:
-                user: ${PVE_USER}
-                token_name: ${TOKEN_NAME}
-                token_value: ${TOKEN_VALUE}
-                verify_ssl: {{ .Values.proxmox.verify_ssl }}
-              EOF
+            cat > /config/pve.yml <<EOF
+            default:
+              user: ${PVE_USER}
+              token_name: ${TOKEN_NAME}
+              token_value: ${TOKEN_VALUE}
+              verify_ssl: {{ .Values.proxmox.verify_ssl }}
+            EOF
 
-              echo "Generated config (token_value hidden):"
-              cat /config/pve.yml | sed 's/token_value:.*/token_value: ***/'
-          env:
-            - name: PVE_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.existingSecret }}
-                  key: PVE_USER
-            - name: PVE_TOKEN_FULL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.existingSecret }}
-                  key: PVE_TOKEN_NAME
-          volumeMounts:
-            - name: config
-              mountPath: /config
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            capabilities:
-              drop: ["ALL"]
-            seccompProfile:
-              type: RuntimeDefault
+            echo "Generated config (token_value hidden):"
+            sed 's/token_value:.*/token_value: ***/' /config/pve.yml
+        env:
+          - name: PVE_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.existingSecret }}
+                key: PVE_USER
+          - name: PVE_TOKEN_FULL
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.existingSecret }}
+                key: PVE_TOKEN_NAME
+        volumeMounts:
+          - name: config
+            mountPath: /config
 
       containers:
-        - name: pve-exporter
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: metrics
-              containerPort: 9221
-              protocol: TCP
-          args:
-            - "--config.file=/etc/pve-exporter/pve.yml"
-            - "--web.listen-address=:9221"
-          volumeMounts:
-            - name: config
-              mountPath: /etc/pve-exporter
-              readOnly: true
-          resources:
-{{- toYaml .Values.resources | nindent 10 }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /
-              port: metrics
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            capabilities:
-              drop: ["ALL"]
-            seccompProfile:
-              type: RuntimeDefault
+      - name: pve-exporter
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+          - "--config.file=/etc/pve-exporter/pve.yml"
+          - "--web.listen-address=:9221"
+        ports:
+          - name: metrics
+            containerPort: 9221
+            protocol: TCP
+        volumeMounts:
+          - name: config
+            mountPath: /etc/pve-exporter
+            readOnly: true
+        resources:
+          requests:
+            cpu: {{ .Values.resources.requests.cpu }}
+            memory: {{ .Values.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.resources.limits.cpu }}
+            memory: {{ .Values.resources.limits.memory }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: metrics
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: metrics
+          initialDelaySeconds: 10
+          periodSeconds: 10
 
       volumes:
         - name: config

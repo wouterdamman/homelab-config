@@ -8,8 +8,8 @@ replicaCount: 1
 
 # Proxmox connection
 proxmox:
-  endpoint: "10.0.10.200"
-  verify_ssl: false
+  endpoint: "10.0.10.200" # Proxmox host IP (exporter voegt https:// en :8006 toe)
+  verify_ssl: false # Zelf-ondertekend certificaat
 
 # Resources
 resources:

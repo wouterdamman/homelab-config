@@ -8,8 +8,8 @@ replicaCount: 1
 
 # Proxmox connection
 proxmox:
-  endpoint: "10.0.10.200"  # Proxmox host IP (exporter adds https:// and :8006)
-  verify_ssl: false  # Self-signed cert
+  endpoint: "10.0.10.200"
+  verify_ssl: false
 
 # Resources
 resources:
@@ -29,10 +29,10 @@ service:
 # ServiceMonitor (Prometheus Operator)
 serviceMonitor:
   enabled: true
-  interval: 60s  # Scrape every 60s (niet te vaak, Proxmox API is niet super snel)
+  interval: 60s
   scrapeTimeout: 30s
   labels:
-    release: prometheus  # Match kube-prometheus-stack
+    release: prometheus
 
 # Secrets (via ExternalSecret)
 existingSecret: "pve-exporter-credentials"

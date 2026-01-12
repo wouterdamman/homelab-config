@@ -6,7 +6,7 @@ metadata:
   labels:
     app: pve-exporter
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: pve-exporter
@@ -22,36 +22,37 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: generate-config
-          image: busybox:1.36
+          image: busybox:latest
           command:
             - sh
             - -c
             - |
-              set -eu
+              # Extract token parts from full token string
+              # Format: user@realm!tokenname=tokenvalue
+              TOKEN_NAME=$(echo "${PVE_TOKEN_FULL}" | cut -d'!' -f2 | cut -d'=' -f1)
+              TOKEN_VALUE=$(echo "${PVE_TOKEN_FULL}" | cut -d'=' -f2)
+
               cat > /config/pve.yml <<EOF
               default:
                 user: ${PVE_USER}
-                token_name: ${PVE_TOKEN_NAME}
-                token_value: ${PVE_TOKEN_VALUE}
-                verify_ssl: false
+                token_name: ${TOKEN_NAME}
+                token_value: ${TOKEN_VALUE}
+                verify_ssl: {{ .Values.proxmox.verify_ssl }}
               EOF
-              echo "Generated pve.yml (token hidden)"
+
+              echo "Generated config (token_value hidden):"
+              cat /config/pve.yml | sed 's/token_value:.*/token_value: ***/'
           env:
             - name: PVE_USER
               valueFrom:
                 secretKeyRef:
-                  name: pve-exporter-credentials
+                  name: {{ .Values.existingSecret }}
                   key: PVE_USER
-            - name: PVE_TOKEN_NAME
+            - name: PVE_TOKEN_FULL
               valueFrom:
                 secretKeyRef:
-                  name: pve-exporter-credentials
+                  name: {{ .Values.existingSecret }}
                   key: PVE_TOKEN_NAME
-            - name: PVE_TOKEN_VALUE
-              valueFrom:
-                secretKeyRef:
-                  name: pve-exporter-credentials
-                  key: PVE_TOKEN_VALUE
           volumeMounts:
             - name: config
               mountPath: /config
@@ -65,25 +66,21 @@ spec:
 
       containers:
         - name: pve-exporter
-          image: bcleonard/prometheus-pve-exporter:latest
-          args:
-            - "--config.file=/etc/pve-exporter/pve.yml"
-            - "--web.listen-address=:9221"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: metrics
               containerPort: 9221
               protocol: TCP
+          args:
+            - "--config.file=/etc/pve-exporter/pve.yml"
+            - "--web.listen-address=:9221"
           volumeMounts:
             - name: config
               mountPath: /etc/pve-exporter
               readOnly: true
           resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
+{{- toYaml .Values.resources | nindent 10 }}
           livenessProbe:
             httpGet:
               path: /

@@ -8,7 +8,7 @@ replicaCount: 1
 
 # Proxmox connection
 proxmox:
-  endpoint: "https://10.0.10.200:8006"  # From proxmox.auto.tfvars
+  endpoint: "10.0.10.200"  # Proxmox host IP (exporter adds https:// and :8006)
   verify_ssl: false  # Self-signed cert
 
 # Resources

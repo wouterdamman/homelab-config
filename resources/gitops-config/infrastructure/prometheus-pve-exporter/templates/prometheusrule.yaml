@@ -19,7 +19,7 @@ spec:
         severity: critical
         component: proxmox
       annotations:
-        summary: "Proxmox node {{ $labels.node }} is down"
+        summary: "Proxmox node {{`{{ $labels.node }}`}} is down"
         description: "Node has been offline for more than 2 minutes. Cluster may lose quorum."
 
     - alert: ProxmoxClusterNoQuorum
@@ -39,8 +39,8 @@ spec:
         severity: critical
         component: proxmox
       annotations:
-        summary: "Proxmox storage {{ $labels.id }} is >90% full"
-        description: "Storage {{ $labels.id }} on {{ $labels.node }} is at {{ $value | humanizePercentage }}."
+        summary: "Proxmox storage {{`{{ $labels.id }}`}} is >90% full"
+        description: "Storage {{`{{ $labels.id }}`}} on {{`{{ $labels.node }}`}} is at {{`{{ $value | humanizePercentage }}`}}."
 
     # WARNING ALERTS
     - alert: ProxmoxHighCPU
@@ -50,8 +50,8 @@ spec:
         severity: warning
         component: proxmox
       annotations:
-        summary: "Proxmox node {{ $labels.node }} high CPU usage"
-        description: "CPU usage is {{ $value | humanize }}% for 10+ minutes."
+        summary: "Proxmox node {{`{{ $labels.node }}`}} high CPU usage"
+        description: "CPU usage is {{`{{ $value | humanize }}`}}% for 10+ minutes."
 
     - alert: ProxmoxHighMemory
       expr: pve_node_memory_used_bytes / pve_node_memory_size_bytes * 100 > 90
@@ -60,8 +60,8 @@ spec:
         severity: warning
         component: proxmox
       annotations:
-        summary: "Proxmox node {{ $labels.node }} high memory usage"
-        description: "Memory usage is {{ $value | humanizePercentage }} for 10+ minutes."
+        summary: "Proxmox node {{`{{ $labels.node }}`}} high memory usage"
+        description: "Memory usage is {{`{{ $value | humanizePercentage }}`}} for 10+ minutes."
 
     - alert: ProxmoxVMDown
       expr: pve_vm_status{status="running"} == 0
@@ -70,7 +70,7 @@ spec:
         severity: warning
         component: proxmox
       annotations:
-        summary: "VM {{ $labels.name }} ({{ $labels.vmid }}) is down"
+        summary: "VM {{`{{ $labels.name }}`}} ({{`{{ $labels.vmid }}`}}) is down"
         description: "VM has been stopped/crashed for 5+ minutes."
 
     # QDEVICE ALERTS (added for ADR-027)

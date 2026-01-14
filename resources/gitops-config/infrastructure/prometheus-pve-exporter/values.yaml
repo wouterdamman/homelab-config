@@ -9,6 +9,7 @@ prometheus-pve-exporter:
     - "--no-collector.version"
     - "--no-collector.resources"
     - "--no-collector.replication"
+    - "--collector.subscription"
 
   env:
     pveAuthType: "token"

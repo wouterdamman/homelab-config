@@ -1,6 +1,10 @@
 prometheus-pve-exporter:
   replicaCount: 1
 
+  args:
+    - "--no-collector.cluster"
+    - "--no-collector.config"
+
   env:
     pveAuthType: "token"
     pveUser: "monitoring@pve"

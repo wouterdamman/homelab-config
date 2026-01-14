@@ -1,21 +1,10 @@
 prometheus-pve-exporter:
   replicaCount: 1
 
-  args:
-    - "--no-collector.cluster"
-    - "--no-collector.config"
-    - "--no-collector.node"
-    - "--no-collector.status"
-    - "--no-collector.version"
-    - "--no-collector.resources"
-    - "--no-collector.replication"
-    - "--collector.subscription"
-
   env:
-    pveAuthType: "token"
+    pveAuthType: "password"
     pveUser: "monitoring@pve"
-    pveTokenName: "prometheus"
-    pveTokenValue: ""
+    pvePassword: ""
     pveExistingSecretName: "pve-exporter-secret"
     pveVerifySsl: false
 

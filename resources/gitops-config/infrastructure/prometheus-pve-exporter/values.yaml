@@ -4,6 +4,11 @@ prometheus-pve-exporter:
   args:
     - "--no-collector.cluster"
     - "--no-collector.config"
+    - "--no-collector.node"
+    - "--no-collector.status"
+    - "--no-collector.version"
+    - "--no-collector.resources"
+    - "--no-collector.replication"
 
   env:
     pveAuthType: "token"

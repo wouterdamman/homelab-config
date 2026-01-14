@@ -14,8 +14,6 @@ spec:
         target: ['10.0.10.200']
         module: ['default']
       relabelings:
-        - sourceLabels: [__address__]
-          targetLabel: __param_target
         - sourceLabels: [__param_target]
           targetLabel: instance
         - targetLabel: __address__
@@ -27,8 +25,6 @@ spec:
         target: ['10.0.10.201']
         module: ['default']
       relabelings:
-        - sourceLabels: [__address__]
-          targetLabel: __param_target
         - sourceLabels: [__param_target]
           targetLabel: instance
         - targetLabel: __address__

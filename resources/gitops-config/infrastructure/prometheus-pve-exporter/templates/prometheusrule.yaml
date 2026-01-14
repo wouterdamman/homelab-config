@@ -1,0 +1,74 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus-pve-exporter
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: proxmox
+      interval: 60s
+      rules:
+        - alert: ProxmoxNodeDown
+          expr: pve_up{id=~"node/.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Proxmox node {{ $labels.id }} is down"
+            description: "Proxmox node {{ $labels.id }} has been down for more than 5 minutes."
+
+        - alert: ProxmoxVMDown
+          expr: pve_up{id=~"qemu/.*|lxc/.*"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Proxmox VM/CT {{ $labels.id }} is down"
+            description: "VM or container {{ $labels.id }} has been down for more than 5 minutes."
+
+        - alert: ProxmoxHighCPU
+          expr: (pve_cpu_usage_ratio{id=~"qemu/.*|lxc/.*"} * 100) > 90
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on {{ $labels.id }}"
+            description: "{{ $labels.id }} has CPU usage above 90% for more than 15 minutes."
+
+        - alert: ProxmoxHighMemory
+          expr: (pve_memory_usage_bytes{id=~"qemu/.*|lxc/.*"} / pve_memory_size_bytes{id=~"qemu/.*|lxc/.*"} * 100) > 90
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.id }}"
+            description: "{{ $labels.id }} has memory usage above 90% for more than 15 minutes."
+
+        - alert: ProxmoxStorageFull
+          expr: (pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes{id=~"storage/.*"} * 100) > 85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Storage {{ $labels.id }} is almost full"
+            description: "Storage {{ $labels.id }} is more than 85% full."
+
+        - alert: ProxmoxStorageCritical
+          expr: (pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes{id=~"storage/.*"} * 100) > 95
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Storage {{ $labels.id }} is critically full"
+            description: "Storage {{ $labels.id }} is more than 95% full."
+
+        - alert: ProxmoxClusterNoQuorum
+          expr: pve_cluster_quorate == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Proxmox cluster has lost quorum"
+            description: "The Proxmox cluster has lost quorum and is unable to function properly."

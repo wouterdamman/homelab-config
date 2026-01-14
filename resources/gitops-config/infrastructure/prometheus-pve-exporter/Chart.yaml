@@ -3,4 +3,7 @@ name: prometheus-pve-exporter
 description: Prometheus exporter for Proxmox VE
 type: application
 version: 1.0.0
-appVersion: "3.4.5"
+dependencies:
+  - name: prometheus-pve-exporter
+    version: "2.6.1"
+    repository: https://christianhuth.github.io/helm-charts

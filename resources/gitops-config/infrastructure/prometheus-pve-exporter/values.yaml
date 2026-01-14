@@ -1,37 +1,38 @@
-image:
-  repository: prompve/prometheus-pve-exporter
-  tag: "3.4.5"
-  pullPolicy: IfNotPresent
+prometheus-pve-exporter:
+  replicaCount: 1
 
-replicaCount: 1
+  env:
+    pveAuthType: "token"
+    pveUser: "monitoring@pve"
+    pveTokenName: "prometheus"
+    pveTokenValue: ""
+    pveExistingSecretName: "pve-exporter-secret"
+    pveVerifySsl: false
 
-# Proxmox connection
-proxmox:
-  endpoint: "10.0.10.200" # IP van je Proxmox node
-  verify_ssl: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
 
-# Resources
-resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 200m
-    memory: 128Mi
+  service:
+    type: ClusterIP
+    port: 80
 
-# Secret met token
-existingSecret: "pve-exporter-credentials"
-
-# Service config
-service:
-  type: ClusterIP
-  port: 9221
-  name: pve-exporter
-
-# ServiceMonitor (Prometheus Operator)
-serviceMonitor:
-  enabled: true
-  interval: 60s
-  scrapeTimeout: 30s
-  labels:
-    release: prometheus
+  serviceMonitor:
+    enabled: true
+    interval: 60s
+    additionalLabels:
+      release: prometheus
+    relabelings:
+      - sourceLabels: [__address__]
+        targetLabel: __param_target
+      - sourceLabels: [__param_target]
+        targetLabel: instance
+      - targetLabel: __address__
+        replacement: prometheus-pve-exporter:80
+    pveTargets:
+      - 10.0.10.200
+      - 10.0.10.201

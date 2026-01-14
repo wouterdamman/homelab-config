@@ -11,25 +11,28 @@ spec:
       interval: 60s
       path: /pve
       params:
-        target:
-          - 10.0.10.200
-          - 10.0.10.201
-        cluster:
-          - "0"
-        node:
-          - "1"
+        target: ['10.0.10.200']
+        module: ['default']
       relabelings:
-        - action: replace
-          sourceLabels:
-            - __address__
+        - sourceLabels: [__address__]
           targetLabel: __param_target
-        - action: replace
-          sourceLabels:
-            - __param_target
+        - sourceLabels: [__param_target]
           targetLabel: instance
-        - action: replace
+        - targetLabel: __address__
           replacement: prometheus-pve-exporter:80
-          targetLabel: __address__
+    - port: http
+      interval: 60s
+      path: /pve
+      params:
+        target: ['10.0.10.201']
+        module: ['default']
+      relabelings:
+        - sourceLabels: [__address__]
+          targetLabel: __param_target
+        - sourceLabels: [__param_target]
+          targetLabel: instance
+        - targetLabel: __address__
+          replacement: prometheus-pve-exporter:80
   namespaceSelector:
     matchNames:
       - monitoring

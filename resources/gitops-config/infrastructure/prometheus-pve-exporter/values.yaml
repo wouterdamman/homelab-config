@@ -22,17 +22,4 @@ prometheus-pve-exporter:
     port: 80
 
   serviceMonitor:
-    enabled: true
-    interval: 60s
-    additionalLabels:
-      release: prometheus
-    relabelings:
-      - sourceLabels: [__address__]
-        targetLabel: __param_target
-      - sourceLabels: [__param_target]
-        targetLabel: instance
-      - targetLabel: __address__
-        replacement: prometheus-pve-exporter:80
-    pveTargets:
-      - 10.0.10.200
-      - 10.0.10.201
+    enabled: false

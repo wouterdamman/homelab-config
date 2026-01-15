@@ -55,7 +55,7 @@ controller:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 500m
+      cpu: 200m
       memory: 1Gi
     requests:
       cpu: 50m
@@ -95,7 +95,7 @@ repoServer:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 500m
+      cpu: 100m
       memory: 256Mi
     requests:
       cpu: 20m

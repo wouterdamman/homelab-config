@@ -3,7 +3,7 @@ installCRDs: false
 # Controller (main component)
 resources:
   limits:
-    cpu: 500m
+    cpu: 200m
     memory: 256Mi
   requests:
     cpu: 50m

@@ -10,6 +10,7 @@ spec:
     - name: proxmox
       interval: 60s
       rules:
+
         - alert: ProxmoxNodeDown
           expr: pve_up{id=~"node/.*"} == 0
           for: 5m
@@ -28,9 +29,8 @@ spec:
           labels:
             severity: warning
           annotations:
-            summary: "Proxmox VM/CT {{ $labels.id }} is down"
-            description: "VM or container {{ $labels.id }} is unexpectedly down (was running within the last 4 hours)."
-
+            summary: "Proxmox VM/CT {{`{{`}} $labels.id {{`}}`}} is down"
+            description: "VM or container {{`{{`}} $labels.id {{`}}`}} is unexpectedly down (was running within the last 4 hours)."
 
         - alert: ProxmoxHighCPU
           expr: (pve_cpu_usage_ratio{id=~"qemu/.*|lxc/.*"} * 100) > 90

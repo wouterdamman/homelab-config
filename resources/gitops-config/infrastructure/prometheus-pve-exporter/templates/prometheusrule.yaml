@@ -20,13 +20,17 @@ spec:
             description: "Proxmox node {{`{{`}} $labels.id {{`}}`}} has been down for more than 5 minutes."
 
         - alert: ProxmoxVMDown
-          expr: pve_up{id=~"qemu/.*|lxc/.*"} == 0
+          expr: |
+            pve_up{id=~"qemu/.*|lxc/.*"} == 0
+            AND
+            max_over_time(pve_up{id=~"qemu/.*|lxc/.*"}[4h]) == 1
           for: 5m
           labels:
             severity: warning
           annotations:
-            summary: "Proxmox VM/CT {{`{{`}} $labels.id {{`}}`}} is down"
-            description: "VM or container {{`{{`}} $labels.id {{`}}`}} has been down for more than 5 minutes."
+            summary: "Proxmox VM/CT {{ $labels.id }} is down"
+            description: "VM or container {{ $labels.id }} is unexpectedly down (was running within the last 4 hours)."
+
 
         - alert: ProxmoxHighCPU
           expr: (pve_cpu_usage_ratio{id=~"qemu/.*|lxc/.*"} * 100) > 90

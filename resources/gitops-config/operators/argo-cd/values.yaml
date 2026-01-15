@@ -5,7 +5,7 @@ configs:
   cm:
     url: https://argocd.svc.damman.tech
     exec.enabled: true
-    admin.enabled: false  # Disable local admin, use GitHub SSO only
+    admin.enabled: false # Disable local admin, use GitHub SSO only
     # Exclude high-churn Cilium resources from tracking
     resource.exclusions: |
       - apiGroups: ['cilium.io']
@@ -24,7 +24,7 @@ configs:
             loadAllGroups: true
             useLoginAsID: true
   params:
-    server.insecure: true  # TLS terminated at Gateway
+    server.insecure: true # TLS terminated at Gateway
     # Performance tuning
     controller.status.processors: 20
     controller.operation.processors: 10
@@ -95,7 +95,7 @@ repoServer:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 100m
+      cpu: 150m
       memory: 256Mi
     requests:
       cpu: 20m

@@ -4,6 +4,12 @@
 # metadata:
 #   annotations:
 #     argocd.argoproj.io/sync-wave: "4"
+#   labels:
+#     app.kubernetes.io/name: emqx
+#     app.kubernetes.io/component: iot
+#     app.kubernetes.io/part-of: smart-home
+#     homelab.damman.tech/tier: tier-3
+#     homelab.damman.tech/managed-by: argocd
 #   name: emqx
 #   namespace: argocd
 #   finalizers:

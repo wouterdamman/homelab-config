@@ -4,7 +4,13 @@ metadata:
   name: prometheus-pve-exporter
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: prometheus-pve-exporter
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: observability-stack
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
 spec:
   project: infrastructure
   source:

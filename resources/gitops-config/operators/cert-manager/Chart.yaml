@@ -1,4 +1,5 @@
----
 apiVersion: v2
 name: cert-manager
-version: 0.0.0
+description: Certificate management controller for Kubernetes - automates TLS certificate management
+type: application
+version: 1.0.0

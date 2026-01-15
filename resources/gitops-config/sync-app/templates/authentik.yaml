@@ -3,7 +3,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: authentik
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: security-infrastructure
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
   name: authentik
   namespace: argocd
   finalizers:

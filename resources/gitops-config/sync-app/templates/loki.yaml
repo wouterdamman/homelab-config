@@ -3,7 +3,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: observability-stack
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
   name: loki
   namespace: argocd
   finalizers:

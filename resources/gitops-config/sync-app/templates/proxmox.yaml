@@ -5,7 +5,13 @@ metadata:
   name: proxmox
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app.kubernetes.io/name: proxmox
+    app.kubernetes.io/component: infrastructure
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

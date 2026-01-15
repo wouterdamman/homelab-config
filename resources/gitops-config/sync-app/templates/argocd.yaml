@@ -2,7 +2,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  annotations: {}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: argocd
+    app.kubernetes.io/component: gitops
+    app.kubernetes.io/part-of: argocd-gitops
+    homelab.damman.tech/tier: tier-0
+    homelab.damman.tech/managed-by: argocd
   name: argo-cd
   namespace: argocd
   finalizers:

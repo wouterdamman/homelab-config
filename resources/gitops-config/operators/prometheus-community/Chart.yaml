@@ -1,3 +1,5 @@
 apiVersion: v2
 name: prometheus-community
+description: Kube Prometheus Stack - Prometheus, Grafana, and Alertmanager
+type: application
 version: 1.0.0

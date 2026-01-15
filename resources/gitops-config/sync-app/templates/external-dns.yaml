@@ -3,7 +3,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: external-dns
+    app.kubernetes.io/component: networking
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-1
+    homelab.damman.tech/managed-by: argocd
   name: external-dns
   namespace: argocd
   finalizers:

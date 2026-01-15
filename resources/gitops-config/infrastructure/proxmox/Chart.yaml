@@ -1,4 +1,5 @@
 apiVersion: v2
 name: proxmox
-version: 1.0.0
 description: Proxmox VE Gateway API integration
+type: application
+version: 1.0.0

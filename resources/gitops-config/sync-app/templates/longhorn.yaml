@@ -4,6 +4,12 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-0
+    homelab.damman.tech/managed-by: argocd
   name: longhorn
   namespace: argocd
   finalizers:

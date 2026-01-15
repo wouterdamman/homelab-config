@@ -4,6 +4,12 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-1
+    homelab.damman.tech/managed-by: argocd
   name: cloudnative-pg
   namespace: argocd
   finalizers:

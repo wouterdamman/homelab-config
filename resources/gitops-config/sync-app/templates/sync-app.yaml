@@ -4,6 +4,12 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: sync-app
+    app.kubernetes.io/component: gitops
+    app.kubernetes.io/part-of: argocd-gitops
+    homelab.damman.tech/tier: tier-0
+    homelab.damman.tech/managed-by: argocd
   name: sync-app
   namespace: argocd
   finalizers:

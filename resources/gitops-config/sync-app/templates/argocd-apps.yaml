@@ -4,7 +4,14 @@ kind: Application
 metadata:
   name: argo-helm
   namespace: argocd
-  annotations: {}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: argocd-apps
+    app.kubernetes.io/component: gitops
+    app.kubernetes.io/part-of: argocd-gitops
+    homelab.damman.tech/tier: tier-0
+    homelab.damman.tech/managed-by: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

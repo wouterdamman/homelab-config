@@ -1,4 +1,5 @@
----
 apiVersion: v2
 name: cilium
+description: eBPF-based Networking, Security, and Observability for Kubernetes
+type: application
 version: 1.0.0

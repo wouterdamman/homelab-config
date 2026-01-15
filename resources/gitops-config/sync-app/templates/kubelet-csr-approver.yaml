@@ -4,6 +4,12 @@ kind: Application
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: kubelet-csr-approver
+    app.kubernetes.io/component: certificate-management
+    app.kubernetes.io/part-of: security-infrastructure
+    homelab.damman.tech/tier: tier-1
+    homelab.damman.tech/managed-by: argocd
   name: kubelet-csr-approver
   namespace: argocd
   finalizers:

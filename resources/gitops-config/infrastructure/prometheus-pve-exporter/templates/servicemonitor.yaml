@@ -14,10 +14,13 @@ spec:
         target: ['10.0.10.200']
         module: ['default']
       relabelings:
-        - sourceLabels: [__param_target]
+        - action: replace
+          sourceLabels:
+            - __param_target
           targetLabel: instance
-        - targetLabel: __address__
+        - action: replace
           replacement: prometheus-pve-exporter:80
+          targetLabel: __address__
     - port: http
       interval: 60s
       path: /pve
@@ -25,10 +28,13 @@ spec:
         target: ['10.0.10.201']
         module: ['default']
       relabelings:
-        - sourceLabels: [__param_target]
+        - action: replace
+          sourceLabels:
+            - __param_target
           targetLabel: instance
-        - targetLabel: __address__
+        - action: replace
           replacement: prometheus-pve-exporter:80
+          targetLabel: __address__
   namespaceSelector:
     matchNames:
       - monitoring

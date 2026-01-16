@@ -9,7 +9,7 @@ secretesMigratorContainer:
   tag: 4.40.5
 
 configmap:
-  enabled: true
+  enabled: false
 
 statefulset:
   resources:

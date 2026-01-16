@@ -16,17 +16,10 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: apps
-  sources:
-  - repoURL: https://charts.zigbee2mqtt.io/
-    chart: zigbee2mqtt
-    targetRevision: 2.7.2
-    helm:
-      valueFiles:
-      - $values/resources/gitops-config/applications/zigbee2mqtt/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-config
+  source:
+    repoURL: https://github.com/TheIronRock95/homelab-config
     targetRevision: HEAD
     path: resources/gitops-config/applications/zigbee2mqtt
-    ref: values
   destination:
     namespace: zigbee2mqtt
     server: https://kubernetes.default.svc

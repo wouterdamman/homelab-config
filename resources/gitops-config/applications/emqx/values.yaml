@@ -54,11 +54,11 @@ httproutes:
 - enabled: true
   name: emqx-dashboard-httproute
   namespace: emqx
-  hostname: dashboard-emqx.svc.damman.tech
+  hostname: emqx.app.damman.tech
   gateway:
-    name: svc-gateway
+    name: app-gateway
     namespace: kube-system
-    sectionName: svc-https-listener
+    sectionName: app-https-listener
   path: /
   backend:
     name: emqx

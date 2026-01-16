@@ -1,13 +1,17 @@
 image:
   tag: 2.6.2
 
-zigbee2mqtt:
-  timezone: Europe/Amsterdam
-  frontend:
-    port: 8080
+service:
+  type: ClusterIP
+
+secretesMigratorContainer:
+  repository: mikefarah/yq
+  tag: 4.40.5
+
+configmap:
+  enabled: true
 
 statefulset:
-  dnsPolicy: ClusterFirst
   resources:
     requests:
       cpu: 50m
@@ -19,25 +23,8 @@ statefulset:
     enabled: true
     size: 2Gi
     storageClassName: longhorn-standard
-
-secretesMigratorContainer:
-  repository: mikefarah/yq
-  tag: 4.40.5
-  securityContext: {}
-
-externalSecrets:
-  enabled: true
-  items:
-  - name: zigbee2mqtt-config
-    secretStoreRef: onepassword-connect
-    data:
-    - remoteKey: zigbee2mqtt-config
-      secretKey: configuration.yaml
-
-service:
-  annotations: {}
-  type: ClusterIP
-  port: 8080
+  secrets:
+    name: zigbee2mqtt-config
 
 httproutes:
 - enabled: true

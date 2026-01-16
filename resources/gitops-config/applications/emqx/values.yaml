@@ -14,8 +14,6 @@ persistence:
 
 emqxConfig:
   EMQX_CLUSTER__DISCOVERY_STRATEGY: dns
-  EMQX_CLUSTER__DNS__NAME: emqx-headless.emqx.svc.cluster.local
-  EMQX_CLUSTER__DNS__RECORD_TYPE: srv
 
 externalSecrets:
   enabled: true

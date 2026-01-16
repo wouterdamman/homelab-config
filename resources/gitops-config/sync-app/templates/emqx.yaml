@@ -16,10 +16,17 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: apps
-  source:
-    repoURL: https://github.com/TheIronRock95/homelab-config
+  sources:
+  - repoURL: https://repos.emqx.io/charts
+    chart: emqx
+    targetRevision: 5.8.8
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/applications/emqx/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-config
     targetRevision: HEAD
     path: resources/gitops-config/applications/emqx
+    ref: values
   destination:
     namespace: emqx
     server: https://kubernetes.default.svc

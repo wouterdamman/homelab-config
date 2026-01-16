@@ -16,6 +16,7 @@ spec:
       labels:
         {{- include "home-assistant.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "home-assistant.fullname" . }}
       {{- if .Values.hostNetwork }}
       hostNetwork: true
       {{- end }}

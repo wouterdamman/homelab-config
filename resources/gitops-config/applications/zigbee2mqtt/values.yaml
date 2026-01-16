@@ -1,7 +1,5 @@
 image:
-  repository: koenkk/zigbee2mqtt
   tag: 2.6.2
-  pullPolicy: IfNotPresent
 
 zigbee2mqtt:
   timezone: Europe/Amsterdam
@@ -10,12 +8,6 @@ zigbee2mqtt:
 
 statefulset:
   dnsPolicy: ClusterFirst
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  securityContext: {}
-  lifecycle: {}
-  command: []
   resources:
     requests:
       cpu: 50m
@@ -23,21 +15,14 @@ statefulset:
     limits:
       cpu: 200m
       memory: 256Mi
-  volumeMounts: []
-  volumes: []
-  secrets:
-    name: ""
   storage:
     enabled: true
     size: 2Gi
     storageClassName: longhorn-standard
-    existingVolume: ""
-    matchLabels: {}
-    matchExpressions: {}
 
 secretesMigratorContainer:
   repository: mikefarah/yq
-  tag: v4.40.5
+  tag: 4.40.5
   securityContext: {}
 
 externalSecrets:

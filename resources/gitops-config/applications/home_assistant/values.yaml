@@ -1,0 +1,117 @@
+image:
+  repository: ghcr.io/home-assistant/home-assistant
+  tag: "2025.1.6"
+  pullPolicy: IfNotPresent
+
+# Environment variables
+env:
+  - name: TZ
+    value: Europe/Amsterdam
+  # Database password for configuration.yaml secrets (!env_var POSTGRES_PASSWORD)
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: home-assistant-db-secret
+        key: POSTGRES_PASSWORD
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8123
+  annotations: {}
+
+# Disable ingress (we use Gateway API HTTPRoute)
+ingress:
+  enabled: false
+
+# Network configuration - CHANGE: No hostNetwork needed for Ethernet Zigbee
+hostNetwork: false
+dnsPolicy: ClusterFirst
+
+# Persistent storage for Home Assistant config
+persistence:
+  enabled: true
+  storageClass: longhorn-fast
+  size: 5Gi
+  accessMode: ReadWriteOnce
+
+# Use StatefulSet for stable pod identity
+controller:
+  type: StatefulSet
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1536Mi
+
+# Code-server addon for config editing
+addons:
+  codeserver:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 12321
+    ingress:
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# ExternalSecret for database credentials
+externalSecrets:
+  enabled: true
+  items:
+    - name: home-assistant-db-secret
+      secretStoreRef: onepassword-connect
+      templateData:
+        # PostgreSQL connection for CNPG homeassistant cluster
+        POSTGRES_HOST:
+          value: cnpg-homeassistant-rw.cnpg-system.svc.cluster.local
+          isSecret: false
+        POSTGRES_PORT:
+          value: "5432"
+          isSecret: false
+        POSTGRES_DB:
+          value: homeassistant
+          isSecret: false
+        POSTGRES_USER:
+          value: homeassistant
+          isSecret: false
+      data:
+        - remoteKey: cnpg-homeassistant-app
+          secretKey: POSTGRES_PASSWORD
+
+httproutes:
+- enabled: true
+  name: ha-httproute
+  namespace: home-assistant
+  hostname: ha.app.damman.tech
+  path: /
+  gateway:
+    name: app-gateway
+    namespace: kube-system
+    sectionName: app-https-listener
+  backend:
+    name: home-assistant
+    port: 8123
+
+- enabled: true
+  name: codeserver-httproute
+  namespace: home-assistant
+  hostname: codeserver.app.damman.tech
+  path: /
+  gateway:
+    name: app-gateway
+    namespace: kube-system
+    sectionName: app-https-listener
+  backend:
+    name: home-assistant-codeserver
+    port: 12321

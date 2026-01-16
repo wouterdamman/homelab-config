@@ -1,38 +1,31 @@
-# ---
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   annotations:
-#     argocd.argoproj.io/sync-wave: "4"
-#   labels:
-#     app.kubernetes.io/name: emqx
-#     app.kubernetes.io/component: iot
-#     app.kubernetes.io/part-of: smart-home
-#     homelab.damman.tech/tier: tier-3
-#     homelab.damman.tech/managed-by: argocd
-#   name: emqx
-#   namespace: argocd
-#   finalizers:
-#   - resources-finalizer.argocd.argoproj.io
-# spec:
-#   project: apps
-#   sources:
-#   - repoURL: https://repos.emqx.io/charts/
-#     chart: emqx
-#     targetRevision: 5.8.8
-#     helm:
-#       valueFiles:
-#       - $values/apps/emqx/values.yaml
-#   - repoURL: https://github.com/TheIronRock95/homelab-apps
-#     targetRevision: HEAD
-#     path: apps/emqx
-#     ref: values
-#   destination:
-#     namespace: emqx
-#     server: https://kubernetes.default.svc
-#   syncPolicy:
-#     syncOptions:
-#       - CreateNamespace=true
-#     automated:
-#       prune: true
-#       selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app.kubernetes.io/name: emqx
+    app.kubernetes.io/component: iot
+    app.kubernetes.io/part-of: smart-home
+    homelab.damman.tech/tier: tier-3
+    homelab.damman.tech/managed-by: argocd
+  name: emqx
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/applications/emqx
+  destination:
+    namespace: emqx
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

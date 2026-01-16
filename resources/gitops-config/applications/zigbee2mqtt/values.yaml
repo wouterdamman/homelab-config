@@ -1,0 +1,65 @@
+image:
+  repository: koenkk/zigbee2mqtt
+  tag: "1.42.0"
+  pullPolicy: IfNotPresent
+
+zigbee2mqtt:
+  timezone: Europe/Amsterdam
+  frontend:
+    port: 8080
+
+statefulset:
+  dnsPolicy: ClusterFirst
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  securityContext: {}
+  lifecycle: {}
+  command: []
+  # Resources for Zigbee2MQTT
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  volumeMounts: []
+  volumes: []
+  secrets:
+    name: ""
+  storage:
+    enabled: true
+    size: 2Gi
+    storageClassName: longhorn-standard
+    existingVolume: ""
+    matchLabels: {}
+    matchExpressions: {}
+
+secretesMigratorContainer:
+  repository: mikefarah/yq
+  tag: v4.40.5
+  securityContext: {}
+
+externalSecrets:
+  enabled: false
+  items: []
+
+service:
+  annotations: {}
+  type: ClusterIP
+  port: 8080
+
+httproutes:
+- enabled: true
+  name: zigbee-httproute
+  namespace: zigbee2mqtt
+  hostname: zigbee.app.damman.tech
+  path: /
+  gateway:
+    name: app-gateway
+    namespace: kube-system
+    sectionName: app-https-listener
+  backend:
+    name: zigbee2mqtt
+    port: 8080

@@ -1,0 +1,3 @@
+apiVersion: v2
+name: emqx
+version: 1.0.0

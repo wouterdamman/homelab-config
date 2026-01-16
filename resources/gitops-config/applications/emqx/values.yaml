@@ -1,0 +1,69 @@
+replicaCount: 3
+image:
+  repository: emqx/emqx
+  pullPolicy: IfNotPresent
+  tag: "5.8.8"
+
+podManagementPolicy: Parallel
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: longhorn-standard
+  accessMode: ReadWriteOnce
+
+emqxConfig:
+  EMQX_CLUSTER__DISCOVERY_STRATEGY: dns
+  EMQX_CLUSTER__DNS__NAME: emqx-headless.emqx.svc.cluster.local
+  EMQX_CLUSTER__DNS__RECORD_TYPE: srv
+
+externalSecrets:
+  enabled: true
+  items:
+  - name: emqx-dashboard-secret
+    secretStoreRef: onepassword-connect
+    templateData:
+      EMQX_DASHBOARD__DEFAULT_USERNAME:
+        value: admin
+        isSecret: false
+    data:
+    - remoteKey: emqx-dashboard-password
+      secretKey: EMQX_DASHBOARD__DEFAULT_PASSWORD
+
+envFromSecret: "emqx-dashboard-secret"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+service:
+  type: ClusterIP
+  clusterIP: None
+  mqtt: 1883
+  mqttssl: 8883
+  ws: 8083
+  wss: 8084
+  dashboard: 18083
+  externalTrafficPolicy: "Cluster"
+
+httproutes:
+- enabled: true
+  name: emqx-dashboard-httproute
+  namespace: emqx
+  hostname: dashboard-emqx.svc.damman.tech
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  path: /
+  backend:
+    name: emqx
+    port: 18083
+
+metrics:
+  enabled: false
+  type: prometheus

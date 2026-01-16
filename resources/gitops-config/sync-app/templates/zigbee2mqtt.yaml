@@ -1,38 +1,38 @@
-# ---
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   annotations:
-#     argocd.argoproj.io/sync-wave: "4"
-#   labels:
-#     app.kubernetes.io/name: zigbee2mqtt
-#     app.kubernetes.io/component: iot
-#     app.kubernetes.io/part-of: smart-home
-#     homelab.damman.tech/tier: tier-3
-#     homelab.damman.tech/managed-by: argocd
-#   name: zigbee2mqtt
-#   namespace: argocd
-#   finalizers:
-#   - resources-finalizer.argocd.argoproj.io
-# spec:
-#   project: apps
-#   sources:
-#   - repoURL: https://charts.zigbee2mqtt.io/
-#     chart: zigbee2mqtt
-#     targetRevision: 2.7.2
-#     helm:
-#       valueFiles:
-#       - $values/resources/gitops-config/applications/zigbee2mqtt/values.yaml
-#   - repoURL: https://github.com/TheIronRock95/homelab-config
-#     targetRevision: HEAD
-#     path: resources/gitops-config/applications/zigbee2mqtt
-#     ref: values
-#   destination:
-#     namespace: zigbee2mqtt
-#     server: https://kubernetes.default.svc
-#   syncPolicy:
-#     syncOptions:
-#       - CreateNamespace=true
-#     automated:
-#       prune: true
-#       selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app.kubernetes.io/name: zigbee2mqtt
+    app.kubernetes.io/component: iot
+    app.kubernetes.io/part-of: smart-home
+    homelab.damman.tech/tier: tier-3
+    homelab.damman.tech/managed-by: argocd
+  name: zigbee2mqtt
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  sources:
+  - repoURL: https://charts.zigbee2mqtt.io/
+    chart: zigbee2mqtt
+    targetRevision: 2.7.2
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/applications/zigbee2mqtt/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/applications/zigbee2mqtt
+    ref: values
+  destination:
+    namespace: zigbee2mqtt
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

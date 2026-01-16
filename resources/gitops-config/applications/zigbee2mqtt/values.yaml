@@ -24,7 +24,7 @@ statefulset:
     size: 2Gi
     storageClassName: longhorn-standard
   secrets:
-    name: zigbee2mqtt-config
+    name: ""
 
 externalSecrets:
   enabled: true
@@ -33,7 +33,7 @@ externalSecrets:
     secretStoreRef: onepassword-connect
     data:
     - remoteKey: zigbee2mqtt-config
-      secretKey: secret.yaml
+      secretKey: configuration.yaml
 
 httproutes:
 - enabled: true

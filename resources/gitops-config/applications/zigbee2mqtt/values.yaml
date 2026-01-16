@@ -33,7 +33,7 @@ externalSecrets:
     secretStoreRef: onepassword-connect
     data:
     - remoteKey: zigbee2mqtt-config
-      secretKey: configuration.yaml
+      secretKey: secret.yaml
 
 httproutes:
 - enabled: true

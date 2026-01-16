@@ -31,22 +31,7 @@ spec:
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
-      initContainers:
-        - name: copy-config
-          image: busybox:1.36
-          command:
-            - /bin/sh
-            - -c
-            - cp /app/readonly/configuration.yaml /app/data/configuration.yaml
-          volumeMounts:
-            - name: config-volume
-              mountPath: /app/readonly
-            - name: data-volume
-              mountPath: /app/data
       volumes:
-        - name: config-volume
-          secret:
-            secretName: zigbee2mqtt-config
         {{- if not .Values.statefulset.storage.enabled }}
         - name: data-volume
           emptyDir: {}

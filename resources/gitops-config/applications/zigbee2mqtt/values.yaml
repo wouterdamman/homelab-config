@@ -1,6 +1,6 @@
 image:
   repository: koenkk/zigbee2mqtt
-  tag: "1.42.0"
+  tag: 2.6.2
   pullPolicy: IfNotPresent
 
 zigbee2mqtt:
@@ -16,7 +16,6 @@ statefulset:
   securityContext: {}
   lifecycle: {}
   command: []
-  # Resources for Zigbee2MQTT
   resources:
     requests:
       cpu: 50m
@@ -42,8 +41,13 @@ secretesMigratorContainer:
   securityContext: {}
 
 externalSecrets:
-  enabled: false
-  items: []
+  enabled: true
+  items:
+  - name: zigbee2mqtt-config
+    secretStoreRef: onepassword-connect
+    data:
+    - remoteKey: zigbee2mqtt-config
+      secretKey: configuration.yaml
 
 service:
   annotations: {}

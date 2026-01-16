@@ -26,6 +26,15 @@ statefulset:
   secrets:
     name: zigbee2mqtt-config
 
+externalSecrets:
+  enabled: true
+  items:
+  - name: zigbee2mqtt-config
+    secretStoreRef: onepassword-connect
+    data:
+    - remoteKey: zigbee2mqtt-config
+      secretKey: configuration.yaml
+
 httproutes:
 - enabled: true
   name: zigbee-httproute

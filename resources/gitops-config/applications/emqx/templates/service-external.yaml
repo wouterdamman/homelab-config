@@ -1,0 +1,32 @@
+{{- if .Values.serviceExternal.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "emqx.fullname" . }}-external
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "emqx.labels" . | nindent 4 }}
+  {{- with .Values.serviceExternal.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: LoadBalancer
+  {{- if .Values.serviceExternal.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.serviceExternal.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.serviceExternal.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.serviceExternal.externalTrafficPolicy }}
+  {{- end }}
+  ports:
+  - name: mqtt
+    port: 1883
+    targetPort: 1883
+    protocol: TCP
+  - name: dashboard
+    port: 18083
+    targetPort: 18083
+    protocol: TCP
+  selector:
+    {{- include "emqx.selectorLabels" . | nindent 4 }}
+{{- end }}

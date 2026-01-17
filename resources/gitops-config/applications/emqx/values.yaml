@@ -67,3 +67,10 @@ httproutes:
 metrics:
   enabled: false
   type: prometheus
+
+serviceExternal:
+  enabled: true
+  loadBalancerIP: 10.0.10.242
+  externalTrafficPolicy: Local
+  annotations:
+    io.cilium/lb-ipam-ips: "10.0.10.242"

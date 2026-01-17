@@ -28,6 +28,7 @@ externalSecrets:
         isSecret: false
     data:
     - remoteKey: emqx-dashboard-password
+      property: password
       secretKey: EMQX_DASHBOARD__DEFAULT_PASSWORD
 
 envFromSecret: "emqx-dashboard-secret"

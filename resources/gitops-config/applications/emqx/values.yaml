@@ -26,6 +26,9 @@ externalSecrets:
       EMQX_DASHBOARD__DEFAULT_USERNAME:
         value: admin
         isSecret: false
+      EMQX_DASHBOARD__DEFAULT_PASSWORD:
+        value: EMQX_DASHBOARD__DEFAULT_PASSWORD
+        isSecret: true
     data:
     - remoteKey: emqx-dashboard-password
       property: password

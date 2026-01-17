@@ -75,6 +75,6 @@ metrics:
 serviceExternal:
   enabled: true
   loadBalancerIP: 10.0.10.242
-  externalTrafficPolicy: Local
+  externalTrafficPolicy: Cluster
   annotations:
     io.cilium/lb-ipam-ips: "10.0.10.242"

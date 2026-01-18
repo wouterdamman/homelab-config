@@ -21,9 +21,16 @@ dnsPolicy: ClusterFirstWithHostNet
 
 persistence:
   enabled: true
+  size: 10Gi
+  storageClassName: longhorn-standard
 
-controller:
-  type: Deployment
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
 
 addons:
   codeserver:
@@ -31,10 +38,21 @@ addons:
     service:
       type: ClusterIP
       port: 12321
-    ingress:
-      enabled: false
-      tls: []
-    additionalMounts: []
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+externalSecrets:
+  enabled: true
+  items:
+  - name: homeassistant-secrets
+    secretStoreRef: onepassword-connect
+    remoteKey: homeassistant-secrets
+    secretKey: secrets.yaml
 
 httproutes:
 - enabled: true

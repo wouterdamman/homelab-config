@@ -23,6 +23,12 @@ spec:
       dnsPolicy: {{ .Values.dnsPolicy }}
       {{- end }}
 
+      # Pod-level security context
+      securityContext:
+        fsGroup: 911
+        runAsUser: 911
+        runAsGroup: 911
+
       # Init container to fix permissions for code-server
       initContainers:
       - name: fix-permissions

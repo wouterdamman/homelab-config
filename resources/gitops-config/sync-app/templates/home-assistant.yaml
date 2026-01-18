@@ -26,6 +26,14 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
     automated:
       prune: true
       selfHeal: true
+  ignoreDifferences:
+  - group: apps
+    kind: StatefulSet
+    jsonPointers:
+    - /spec/volumeClaimTemplates
+    - /spec/template/spec/containers/0/resources/limits/cpu
+    - /spec/template/spec/containers/1/resources/limits/cpu

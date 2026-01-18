@@ -16,17 +16,10 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: apps
-  sources:
-  - repoURL: https://pajikos.github.io/home-assistant-helm-chart
-    chart: home-assistant
-    targetRevision: 0.3.40
-    helm:
-      valueFiles:
-      - $values/resources/gitops-config/applications/home_assistant/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-config
+  source:
+    repoURL: https://github.com/TheIronRock95/homelab-config
     targetRevision: HEAD
     path: resources/gitops-config/applications/home_assistant
-    ref: values
   destination:
     namespace: home-assistant
     server: https://kubernetes.default.svc

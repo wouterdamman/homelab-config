@@ -29,7 +29,7 @@ resources:
     cpu: 200m
     memory: 512Mi
   limits:
-    cpu: 1000m
+    cpu: "1"
     memory: 2Gi
 
 addons:

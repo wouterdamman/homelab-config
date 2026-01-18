@@ -72,10 +72,6 @@ spec:
           readOnly: true
         {{- end }}
         {{- end }}
-        securityContext:
-          runAsUser: 911
-          runAsGroup: 911
-          fsGroup: 911
         {{- if .Values.resources }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
@@ -128,10 +124,6 @@ spec:
         env:
         - name: TZ
           value: Europe/Amsterdam
-        securityContext:
-          runAsUser: 911
-          runAsGroup: 911
-          fsGroup: 911
         {{- if .Values.addons.codeserver.resources }}
         resources:
           {{- toYaml .Values.addons.codeserver.resources | nindent 10 }}

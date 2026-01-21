@@ -8,9 +8,11 @@ env:
   value: Europe/Amsterdam
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   port: 8123
-  annotations: {}
+  annotations:
+    io.cilium/lb-ipam-ips: "10.0.10.243"
+  loadBalancerIP: 10.0.10.243
 
 ingress:
   enabled: false

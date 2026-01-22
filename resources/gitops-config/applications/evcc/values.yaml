@@ -29,32 +29,5 @@ ingress:
   hostname: evcc.app.damman.tech
   className: cilium
 
-# Basic EVCC configuration
-# This will be mounted as /etc/evcc.yaml
-config:
-  network:
-    schema: http
-    host: 0.0.0.0
-    port: 7070
-
-  log: info
-
-  # Database for session history
-  database:
-    type: sqlite
-    dsn: /data/evcc.db
-
-  # MQTT integration (connects to EMQX)
-  mqtt:
-    broker: emqx.emqx.svc.cluster.local:1883
-    topic: evcc
-    # Credentials will be added later via ExternalSecret
-
-    # Telemetry (sponsor token will be added later)
-  sponsortoken: ""
-
-  # Loadpoints, chargers, meters, vehicles will be configured later
-  loadpoints: []
-  chargers: []
-  meters: []
-  vehicles: []
+# Configuration is managed via GUI
+# Config file is stored in /data/evcc.yaml on the persistent volume

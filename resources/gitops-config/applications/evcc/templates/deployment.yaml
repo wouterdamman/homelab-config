@@ -26,9 +26,6 @@ spec:
           containerPort: 7070
           protocol: TCP
         volumeMounts:
-        - name: config
-          mountPath: /etc/evcc.yaml
-          subPath: evcc.yaml
         - name: data
           mountPath: /data
         resources:
@@ -46,9 +43,6 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 5
       volumes:
-      - name: config
-        configMap:
-          name: evcc-config
       - name: data
         persistentVolumeClaim:
           claimName: evcc-data

@@ -24,16 +24,16 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Copying configuration from secret to data volume..."
-          cp /app/readonly/evcc.yaml /data/evcc.yaml
+          echo "Copying configuration from secret to /etc..."
+          cp /app/readonly/evcc.yaml /etc/evcc.yaml
           echo "Configuration copied successfully"
-          ls -la /data/
+          ls -la /etc/ | grep evcc
         volumeMounts:
         - name: config-volume
           mountPath: /app/readonly
           readOnly: true
-        - name: data
-          mountPath: /data
+        - name: etc
+          mountPath: /etc
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -42,14 +42,13 @@ spec:
       - name: evcc
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        env:
-        - name: EVCC_CONFIG
-          value: /data/evcc.yaml
         ports:
         - name: http
           containerPort: 7070
           protocol: TCP
         volumeMounts:
+        - name: etc
+          mountPath: /etc
         - name: data
           mountPath: /data
         resources:
@@ -70,6 +69,8 @@ spec:
       - name: config-volume
         secret:
           secretName: evcc-config
+      - name: etc
+        emptyDir: {}
       - name: data
         persistentVolumeClaim:
           claimName: evcc-data

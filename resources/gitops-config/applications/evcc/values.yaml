@@ -40,7 +40,7 @@ externalSecrets:
         value: EVCC_ADMIN_PASSWORD
         isSecret: true
     data:
-    - remoteKey: evcc-admin-password
+    - remoteKey: Evcc
       property: password
       secretKey: EVCC_ADMIN_PASSWORD
 

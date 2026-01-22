@@ -17,27 +17,6 @@ spec:
       labels:
         app.kubernetes.io/name: evcc
     spec:
-      initContainers:
-      - name: copy-config
-        image: busybox:1.36
-        command:
-        - /bin/sh
-        - -c
-        - |
-          echo "Copying configuration from secret to /etc..."
-          cp /app/readonly/evcc.yaml /etc/evcc.yaml
-          echo "Configuration copied successfully"
-          ls -la /etc/ | grep evcc
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/readonly
-          readOnly: true
-        - name: etc
-          mountPath: /etc
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ["ALL"]
       containers:
       - name: evcc
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -47,10 +26,12 @@ spec:
           containerPort: 7070
           protocol: TCP
         volumeMounts:
-        - name: etc
-          mountPath: /etc
+        - name: config-volume
+          mountPath: /etc/evcc.yaml
+          subPath: evcc.yaml
+          readOnly: true
         - name: data
-          mountPath: /data
+          mountPath: /root/.evcc
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
@@ -69,8 +50,6 @@ spec:
       - name: config-volume
         secret:
           secretName: evcc-config
-      - name: etc
-        emptyDir: {}
       - name: data
         persistentVolumeClaim:
           claimName: evcc-data

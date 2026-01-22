@@ -1,0 +1,67 @@
+# EVCC Configuration
+# Solar charging for electric vehicles
+
+image:
+  repository: evcc/evcc
+  tag: "0.133.1"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+storage:
+  size: 2Gi
+  storageClass: longhorn-standard
+
+service:
+  type: ClusterIP
+  port: 7070
+
+ingress:
+  enabled: true
+  hostname: evcc.app.damman.tech
+  className: cilium
+
+# Basic EVCC configuration
+# This will be mounted as /etc/evcc.yaml
+config:
+  network:
+    schema: http
+    host: 0.0.0.0
+    port: 7070
+
+  log: info
+
+  # Database for session history
+  database:
+    type: sqlite
+    dsn: /data/evcc.db
+
+  # MQTT integration (connects to EMQX)
+  mqtt:
+    broker: emqx.emqx.svc.cluster.local:1883
+    topic: evcc
+    # Credentials will be added later via ExternalSecret
+
+  # Minimal config - devices will be added later
+  site:
+    title: Homelab EVCC
+    residualPower: 0
+    prioritySoc: 50
+    bufferSoc: 90
+
+  # Telemetry (sponsor token will be added later)
+  sponsortoken: ""
+
+  # Loadpoints, chargers, meters, vehicles will be configured later
+  loadpoints: []
+  chargers: []
+  meters: []
+  vehicles: []

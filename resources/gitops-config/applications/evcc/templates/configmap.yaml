@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: evcc-config
+  namespace: evcc
+  labels:
+    app.kubernetes.io/name: evcc
+data:
+  evcc.yaml: |
+{{ .Values.config | toYaml | indent 4 }}

@@ -29,6 +29,21 @@ ingress:
   hostname: evcc.app.damman.tech
   className: cilium
 
+# External Secrets integration with 1Password
+externalSecrets:
+  enabled: true
+  items:
+  - name: evcc-admin-secret
+    secretStoreRef: onepassword-connect
+    templateData:
+      EVCC_ADMIN_PASSWORD:
+        value: EVCC_ADMIN_PASSWORD
+        isSecret: true
+    data:
+    - remoteKey: evcc-admin-password
+      property: password
+      secretKey: EVCC_ADMIN_PASSWORD
+
 # Basic EVCC configuration
 # This will be mounted as /etc/evcc.yaml
 config:

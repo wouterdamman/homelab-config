@@ -21,6 +21,13 @@ spec:
       - name: evcc
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.externalSecrets.enabled }}
+        envFrom:
+        {{- range .Values.externalSecrets.items }}
+        - secretRef:
+            name: {{ .name }}
+        {{- end }}
+        {{- end }}
         ports:
         - name: http
           containerPort: 7070

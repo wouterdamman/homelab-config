@@ -50,13 +50,6 @@ config:
     topic: evcc
     # Credentials will be added later via ExternalSecret
 
-  # Minimal config - devices will be added later
-  site:
-    title: Homelab EVCC
-    residualPower: 0
-    prioritySoc: 50
-    bufferSoc: 90
-
   # Telemetry (sponsor token will be added later)
   sponsortoken: ""
 

@@ -29,5 +29,13 @@ ingress:
   hostname: evcc.app.damman.tech
   className: cilium
 
-# Configuration is managed via GUI
-# Config file is stored in /data/evcc.yaml on the persistent volume
+# Configuration via ExternalSecret from 1Password
+# Config is copied from secret to /data/evcc.yaml on startup
+externalSecrets:
+  enabled: true
+  items:
+  - name: evcc-config
+    secretStoreRef: onepassword-connect
+    data:
+    - remoteKey: evcc-config
+      secretKey: evcc.yaml

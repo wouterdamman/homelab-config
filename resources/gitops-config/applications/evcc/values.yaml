@@ -48,10 +48,9 @@ config:
   mqtt:
     broker: emqx.emqx.svc.cluster.local:1883
     topic: evcc
-    homeassistant: true  # Enable Home Assistant MQTT discovery
     # Credentials will be added later via ExternalSecret
 
-  # Telemetry (sponsor token will be added later)
+    # Telemetry (sponsor token will be added later)
   sponsortoken: ""
 
   # Loadpoints, chargers, meters, vehicles will be configured later

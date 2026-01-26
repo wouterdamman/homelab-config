@@ -26,7 +26,7 @@ monitoring:
     release: prometheus
 
   grafanaDashboard:
-    create: false
+    create: true
     namespace: monitoring
     configMapName: "cnpg-grafana-dashboard"
     sidecarLabel: "grafana_dashboard"

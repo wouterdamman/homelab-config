@@ -55,10 +55,10 @@ controller:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 250m
+      cpu: 1000m
       memory: 1Gi
     requests:
-      cpu: 50m
+      cpu: 100m
       memory: 512Mi
   metrics:
     enabled: true
@@ -75,11 +75,11 @@ applicationSet:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 500m
+      memory: 128Mi
     requests:
-      cpu: 2m
-      memory: 32Mi
+      cpu: 10m
+      memory: 64Mi
   metrics:
     enabled: true
     serviceMonitor:
@@ -95,11 +95,11 @@ repoServer:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 1000m
+      memory: 512Mi
     requests:
       cpu: 100m
-      memory: 128Mi
+      memory: 256Mi
   metrics:
     enabled: true
     serviceMonitor:

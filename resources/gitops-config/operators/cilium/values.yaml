@@ -41,11 +41,11 @@ operator:
 rollOutCiliumPods: true
 resources:
   limits:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 1000m
+    memory: 512Mi
   requests:
-    cpu: 50m
-    memory: 128Mi
+    cpu: 100m
+    memory: 256Mi
 
 #debug:
 #  enabled: true

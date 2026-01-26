@@ -8,7 +8,7 @@ image:
   pullPolicy: IfNotPresent
 
 crds:
-  create: true
+  create: false
 
 # Resource configuration for the operator
 resources:

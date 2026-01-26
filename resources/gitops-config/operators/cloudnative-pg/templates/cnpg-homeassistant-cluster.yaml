@@ -46,7 +46,7 @@ spec:
       cpu: "200m"
       memory: 256Mi
     limits:
-      cpu: "1000m"
+      cpu: "1"
       memory: 512Mi
 
   # Backup configuration to Backblaze B2

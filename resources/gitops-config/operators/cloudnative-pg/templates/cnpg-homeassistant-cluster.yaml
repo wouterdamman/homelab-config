@@ -43,10 +43,10 @@ spec:
   # Resource configuration
   resources:
     requests:
-      cpu: 200m
+      cpu: "200m"
       memory: 256Mi
     limits:
-      cpu: 1000m
+      cpu: "1000m"
       memory: 512Mi
 
   # Backup configuration to Backblaze B2

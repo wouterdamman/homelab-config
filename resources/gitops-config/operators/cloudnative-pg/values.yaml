@@ -13,10 +13,10 @@ crds:
 # Resource configuration for the operator
 resources:
   requests:
-    cpu: 10m
+    cpu: 50m
     memory: 100Mi
   limits:
-    cpu: 100m
+    cpu: 500m
     memory: 256Mi
 
 # Monitoring configuration

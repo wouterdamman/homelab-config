@@ -1,6 +1,11 @@
 # tofu/talos/machine-config/worker.yaml.tftpl
 machine:
   type: worker
+  # Disk mount configuration for Longhorn storage
+  disks:
+    - device: /dev/sdb
+      partitions:
+        - mountpoint: /var/lib/longhorn
   kubelet:
     extraArgs:
       rotate-server-certificates: true
@@ -13,7 +18,7 @@ machine:
           - rshared
           - rw
   network:
-    hostname: ${hostname}
+    #hostname: ${hostname}
     interfaces:
       - interface: eth0
         dhcp: false

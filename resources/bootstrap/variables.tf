@@ -187,15 +187,17 @@ variable "controlplane_specs" {
 
 variable "worker_specs" {
   type = object({
-    cpu  = number
-    ram  = number
-    disk = number
+    cpu            = number
+    ram            = number
+    disk           = number
+    secondary_disk = optional(number)
   })
-  description = "Hardware specs for worker nodes (CPU cores, RAM in MB, disk in GB)"
+  description = "Hardware specs for worker nodes (CPU cores, RAM in MB, disk in GB, secondary_disk for Longhorn in GB)"
   default = {
-    cpu  = 2
-    ram  = 4096
-    disk = 250
+    cpu            = 2
+    ram            = 4096
+    disk           = 250
+    secondary_disk = 268
   }
 }
 

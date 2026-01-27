@@ -44,6 +44,21 @@ resource "proxmox_virtual_environment_vm" "this" {
     file_id      = proxmox_virtual_environment_download_file.this["${each.value.host_node}_${each.value.update == true ? local.update_image_id : local.image_id}"].id
   }
 
+  # Secondary disk for Longhorn storage (workers only)
+  dynamic "disk" {
+    for_each = each.value.secondary_disk_size != null ? [1] : []
+    content {
+      datastore_id = "storage"
+      interface    = "scsi1"
+      iothread     = false
+      cache        = "none"
+      discard      = "on"
+      ssd          = false
+      file_format  = "raw"
+      size         = each.value.secondary_disk_size
+    }
+  }
+
   boot_order = ["scsi0"]
 
   operating_system {
@@ -52,9 +67,9 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   lifecycle {
     ignore_changes = [
-      disk[0].file_id,  # Cannot be determined during import
-      initialization,   # Already initialized, avoid recreation
-      vga,              # Computed field
+      disk[0].file_id, # Cannot be determined during import
+      initialization,  # Already initialized, avoid recreation
+      vga,             # Computed field
     ]
   }
 

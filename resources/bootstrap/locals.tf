@@ -59,6 +59,9 @@ locals {
       ram_dedicated = cfg.machine_type == "controlplane" ? var.controlplane_specs.ram : var.worker_specs.ram
       disk_size     = cfg.machine_type == "controlplane" ? var.controlplane_specs.disk : var.worker_specs.disk
 
+      # Secondary disk for workers only (Longhorn storage)
+      secondary_disk_size = cfg.machine_type == "worker" ? var.worker_specs.secondary_disk : null
+
       # Mark node for upgrade if it's in the upgrade list
       update = contains(var.nodes_to_upgrade, name)
 
@@ -111,12 +114,12 @@ locals {
 
 locals {
   cluster_config = {
-    name               = var.cluster_name
-    endpoint           = format("%s.%d", var.cluster_cidr, var.ip_offset)
-    gateway            = var.cluster_gateway
-    talos_version      = substr(var.talos_version, 0, 5)
-    proxmox_cluster    = var.proxmox_cluster
-    vip                = var.cluster_vip
+    name                = var.cluster_name
+    endpoint            = format("%s.%d", var.cluster_cidr, var.ip_offset)
+    gateway             = var.cluster_gateway
+    talos_version       = substr(var.talos_version, 0, 5)
+    proxmox_cluster     = var.proxmox_cluster
+    vip                 = var.cluster_vip
     gateway_api_version = var.gateway_api_version
   }
 }

@@ -43,3 +43,21 @@ parameters:
   numberOfReplicas: "1"
   staleReplicaTimeout: "30"
   dataLocality: "disabled"
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: longhorn-monitoring
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: driver.longhorn.io
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+parameters:
+  numberOfReplicas: "1"
+  staleReplicaTimeout: "30"
+  dataLocality: "strict-local"
+  # No recurringJobSelector - no backups or snapshots
+  # No replicaAutoBalance - keep data local
+  disableRevisionCounter: "true"

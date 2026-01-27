@@ -7,15 +7,15 @@ fullnameOverride: prometheus
 # Prometheus
 prometheus:
   prometheusSpec:
-    retention: 60d
-    retentionSize: "35GB"
+    retention: 14d
+    retentionSize: "20GB"
 
     # Storage
     storageSpec:
       volumeClaimTemplate:
         spec:
           storageClassName: longhorn-standard
-          accessModes: ["ReadWriteOnce"]
+          accessModes: [ "ReadWriteOnce" ]
           resources:
             requests:
               storage: 40Gi
@@ -31,10 +31,10 @@ prometheus:
 
     # Tolerations for control-plane
     tolerations:
-      - key: node-role.kubernetes.io/control-plane
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
 
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false
@@ -48,7 +48,7 @@ alertmanager:
       volumeClaimTemplate:
         spec:
           storageClassName: longhorn-standard
-          accessModes: ["ReadWriteOnce"]
+          accessModes: [ "ReadWriteOnce" ]
           resources:
             requests:
               storage: 2Gi
@@ -62,14 +62,14 @@ alertmanager:
         memory: 256Mi
 
     tolerations:
-      - key: node-role.kubernetes.io/control-plane
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
 
     # Mount Pushover secret
     secrets:
-      - alertmanager-pushover-secret
+    - alertmanager-pushover-secret
 
   # Alertmanager config - Pushover integration
   config:
@@ -77,51 +77,51 @@ alertmanager:
       resolve_timeout: 5m
 
     route:
-      group_by: ['alertname', 'namespace']
+      group_by: [ 'alertname', 'namespace' ]
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 4h
       receiver: 'pushover-warning'
       routes:
-        # Watchdog goes to null (dead man's switch, not for push notifications)
-        - receiver: 'null'
-          matchers:
-            - alertname = "Watchdog"
-        # InfoInhibitor goes to null
-        - receiver: 'null'
-          matchers:
-            - alertname = "InfoInhibitor"
-        # Critical alerts
-        - receiver: 'pushover-critical'
-          matchers:
-            - severity = "critical"
-        # Warning alerts (default)
-        - receiver: 'pushover-warning'
-          matchers:
-            - severity = "warning"
+      # Watchdog goes to null (dead man's switch, not for push notifications)
+      - receiver: 'null'
+        matchers:
+        - alertname = "Watchdog"
+      # InfoInhibitor goes to null
+      - receiver: 'null'
+        matchers:
+        - alertname = "InfoInhibitor"
+      # Critical alerts
+      - receiver: 'pushover-critical'
+        matchers:
+        - severity = "critical"
+      # Warning alerts (default)
+      - receiver: 'pushover-warning'
+        matchers:
+        - severity = "warning"
 
     receivers:
-      # Null receiver for alerts we don't want to send
-      - name: 'null'
+    # Null receiver for alerts we don't want to send
+    - name: 'null'
 
-      - name: 'pushover-critical'
-        pushover_configs:
-          - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
-            token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
-            priority: 1
-            title: '{{ template "pushover.title" . }}'
-            message: '{{ template "pushover.message" . }}'
+    - name: 'pushover-critical'
+      pushover_configs:
+      - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
+        token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
+        priority: 1
+        title: '{{ template "pushover.title" . }}'
+        message: '{{ template "pushover.message" . }}'
 
-      - name: 'pushover-warning'
-        pushover_configs:
-          - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
-            token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
-            priority: 0
-            title: '{{ template "pushover.title" . }}'
-            message: '{{ template "pushover.message" . }}'
+    - name: 'pushover-warning'
+      pushover_configs:
+      - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
+        token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
+        priority: 0
+        title: '{{ template "pushover.title" . }}'
+        message: '{{ template "pushover.message" . }}'
 
     templates:
-      - '/etc/alertmanager/config/*.tmpl'
+    - '/etc/alertmanager/config/*.tmpl'
 
   # Custom templates
   templateFiles:
@@ -158,10 +158,10 @@ grafana:
 
   # Tolerations
   tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Equal
-      value: "true"
-      effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
 
   # Grafana.ini settings
   grafana.ini:
@@ -178,11 +178,11 @@ grafana:
 
   # Additional data sources (Loki)
   additionalDataSources:
-    - name: Loki
-      type: loki
-      url: http://loki.monitoring:3100
-      access: proxy
-      isDefault: false
+  - name: Loki
+    type: loki
+    url: http://loki.monitoring:3100
+    access: proxy
+    isDefault: false
 
   # Sidecar for dashboard discovery
   sidecar:
@@ -195,24 +195,24 @@ grafana:
 # Prometheus Node Exporter
 prometheus-node-exporter:
   tolerations:
-    - effect: NoSchedule
-      operator: Exists
+  - effect: NoSchedule
+    operator: Exists
 
 # Kube State Metrics
 kube-state-metrics:
   tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Equal
-      value: "true"
-      effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
 
 # etcd metrics - Talos exposes etcd metrics on port 2381
 kubeEtcd:
   enabled: true
   endpoints:
-    - 10.0.10.130
-    - 10.0.10.131
-    - 10.0.10.132
+  - 10.0.10.130
+  - 10.0.10.131
+  - 10.0.10.132
   service:
     enabled: true
     port: 2381
@@ -237,4 +237,4 @@ kubeScheduler:
     https: true
     insecureSkipVerify: true
 kubeProxy:
-  enabled: false  # Using Cilium kube-proxy replacement
+  enabled: false # Using Cilium kube-proxy replacement

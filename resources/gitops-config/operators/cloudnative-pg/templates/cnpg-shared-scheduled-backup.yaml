@@ -10,7 +10,8 @@ spec:
     name: cnpg-shared
 
   # Daily backup at 03:00 UTC
-  schedule: "0 3 * * *"
+  # Format: second minute hour day month dayofweek
+  schedule: "0 0 3 * * *"
 
   # Backup configuration
   backupOwnerReference: self

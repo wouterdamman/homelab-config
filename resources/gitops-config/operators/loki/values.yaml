@@ -48,7 +48,7 @@ singleBinary:
 
   persistence:
     enabled: true
-    storageClass: longhorn-standard
+    storageClass: longhorn-monitoring
     size: 30Gi
 
   resources:

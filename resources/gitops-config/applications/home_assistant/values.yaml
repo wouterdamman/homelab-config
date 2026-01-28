@@ -11,8 +11,8 @@ service:
   type: LoadBalancer
   port: 8123
   annotations:
-    io.cilium/lb-ipam-ips: "10.0.10.243"
-  loadBalancerIP: 10.0.10.243
+    io.cilium/lb-ipam-ips: "10.0.10.242"
+  loadBalancerIP: 10.0.10.242
 
 ingress:
   enabled: false

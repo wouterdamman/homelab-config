@@ -26,8 +26,7 @@ spec:
       # Pod-level security context
       securityContext:
         fsGroup: 911
-        runAsUser: 911
-        runAsGroup: 911
+        fsGroupChangePolicy: "OnRootMismatch"
 
       # Init container to fix permissions for code-server
       initContainers:
@@ -38,8 +37,9 @@ spec:
         - -c
         - |
           echo "Fixing /config permissions for UID 911 (abc user)..."
-          chown -R 911:911 /config
-          chmod -R u+w /config
+          chown -R :911 /config
+          chmod -R g+rw /config
+          find /config -type d -exec chmod g+s {} \;
           echo "Permissions fixed successfully"
         volumeMounts:
         - name: config
@@ -53,6 +53,11 @@ spec:
       - name: home-assistant
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # Container-level security context - override pod-level to run as root
+        # This is needed for Home Assistant to install Python packages
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
         ports:
         - name: http
           containerPort: 8123

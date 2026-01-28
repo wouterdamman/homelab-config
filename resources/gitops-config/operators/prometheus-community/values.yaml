@@ -7,8 +7,8 @@ fullnameOverride: prometheus
 # Prometheus
 prometheus:
   prometheusSpec:
-    retention: 14d
-    retentionSize: "20GB"
+    retention: 30d
+    retentionSize: "35GB"
 
     # Storage
     storageSpec:
@@ -35,7 +35,6 @@ prometheus:
       operator: Equal
       value: "true"
       effect: NoSchedule
-
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
@@ -66,7 +65,6 @@ alertmanager:
       operator: Equal
       value: "true"
       effect: NoSchedule
-
     # Mount Pushover secret
     secrets:
     - alertmanager-pushover-secret
@@ -162,7 +160,6 @@ grafana:
     operator: Equal
     value: "true"
     effect: NoSchedule
-
   # Grafana.ini settings
   grafana.ini:
     server:
@@ -183,7 +180,6 @@ grafana:
     url: http://loki.monitoring:3100
     access: proxy
     isDefault: false
-
   # Sidecar for dashboard discovery
   sidecar:
     dashboards:

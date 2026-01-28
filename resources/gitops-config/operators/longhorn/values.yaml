@@ -31,33 +31,6 @@ defaultSettings:
   concurrentReplicaRebuildPerNodeLimit: 5
   defaultDataLocality: best-effort
 
-longhornManager:
-  resources:
-    requests:
-      cpu: 25m
-      memory: 64Mi
-    limits:
-      cpu: 250m
-      memory: 256Mi
-
-longhornDriver:
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
-longhornUI:
-  resources:
-    requests:
-      cpu: 5m
-      memory: 32Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
 # Prometheus metrics
 metrics:
   serviceMonitor:

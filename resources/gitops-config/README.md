@@ -72,7 +72,7 @@ resources/gitops-config/
 - Kubernetes cluster with kubeconfig (from bootstrap step)
 - 1Password Connect credentials in **KubernetesSecrets** vault
 - GitHub App credentials in **KubernetesSecrets** vault
-- Backblaze B2 credentials in **Homelab** vault (for S3 backend)
+- Hetzner Object Storage credentials in **Homelab** vault (for S3 backend)
 
 ### Cluster Requirements
 - Talos Kubernetes cluster must be running
@@ -109,7 +109,7 @@ The script will automatically:
 
 ### 2. Set Environment Variables
 
-Load Backblaze B2 credentials for S3 backend:
+Load Hetzner Object Storage credentials for S3 backend:
 
 ```bash
 # Using 1Password CLI

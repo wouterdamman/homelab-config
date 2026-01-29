@@ -15,7 +15,7 @@ Access the complete homelab documentation in the **[Homelab Database](https://ww
 ### Operations & Maintenance
 - **[Secrets Management - 1Password](https://www.notion.so/2d6b49ed6b9181b0b331f641f915b5b5)** - Credential management & External Secrets
 - **[Talos Upgrade Procedure](https://www.notion.so/2d6b49ed6b91813ebe8bd18f4fb7a150)** - Rolling upgrades
-- **[S3 Backend Setup](https://www.notion.so/2d3b49ed6b9181b3b6bfe2760e755dc9)** - Backblaze B2 configuration
+- **[S3 Backend Setup](https://www.notion.so/2d3b49ed6b9181b3b6bfe2760e755dc9)** - Hetzner Object Storage configuration
 
 ### Storage & Backup
 - **[Longhorn Production-Grade Plan](https://www.notion.so/2d7b49ed6b918118be02fa588f4d2ec1)** - Storage configuration & backup strategy
@@ -42,5 +42,5 @@ For technical implementation details, see:
 - [Cilium Documentation](https://docs.cilium.io/)
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [Longhorn Documentation](https://longhorn.io/docs/)
-- [Backblaze B2 Documentation](https://www.backblaze.com/b2/docs/)
+- [Hetzner Object Storage Documentation](https://docs.hetzner.com/storage/object-storage/)
 - [Proxmox VE Documentation](https://pve.proxmox.com/pve-docs/)

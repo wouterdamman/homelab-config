@@ -52,13 +52,13 @@ homelab-config/
 | **Storage** | Longhorn | v1.10.1 |
 | **IaC** | OpenTofu | Latest |
 | **Secrets** | 1Password + External Secrets | Latest |
-| **Backup** | Backblaze B2 | - |
+| **Backup** | Hetzner Object Storage | - |
 
 ## Key Features
 
 - **GitOps-driven**: All cluster state managed through ArgoCD
 - **Secure secrets**: 1Password integration via External Secrets Operator
-- **Production storage**: Longhorn with S3 backups to Backblaze B2
+- **Production storage**: Longhorn with S3 backups to Hetzner Object Storage
 - **3-tier storage**: Fast (3 replicas), Standard (2 replicas), Archive (1 replica)
 - **Automated DR**: Backup validation and restore testing scripts
 - **Infrastructure as Code**: Full cluster reproducibility via OpenTofu

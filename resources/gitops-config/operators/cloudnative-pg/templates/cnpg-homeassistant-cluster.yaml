@@ -53,7 +53,7 @@ spec:
   backup:
     barmanObjectStore:
       destinationPath: s3://homelab-prd/cnpg-backup/homeassistant/
-      endpointURL: https://s3.eu-central-003.backblazeb2.com
+      endpointURL: https://nbg1.your-objectstorage.com
       s3Credentials:
         accessKeyId:
           name: cnpg-s3-secret

@@ -3,8 +3,8 @@ terraform {
     bucket = "homelab-prd"
     key    = "tofu/bootstrap.tfstate"
 
-    region   = "eu-central-003"
-    endpoint = "https://s3.eu-central-003.backblazeb2.com"
+    region   = "nbg1"
+    endpoint = "https://nbg1.your-objectstorage.com"
 
     use_path_style = true
 

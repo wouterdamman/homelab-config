@@ -8,7 +8,7 @@ tolerations:
   effect: NoSchedule
 
 defaultBackupStore:
-  backupTarget: s3://homelab-prd@eu-central-003/longhorn-backup/
+  backupTarget: s3://homelab-prd@nbg1/longhorn-backup/
   backupTargetCredentialSecret: longhorn-s3-secret
   pollInterval: 300
 

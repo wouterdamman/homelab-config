@@ -41,7 +41,7 @@ The bootstrap configuration:
 ### Required Access
 
 - Proxmox VE cluster access (username + password/API token)
-- Backblaze B2 bucket for S3 backend (or alternative S3-compatible storage)
+- Hetzner Object Storage bucket for S3 backend (or alternative S3-compatible storage)
 - SSH access to Proxmox nodes (for VM provisioning)
 
 ## Quick Start
@@ -66,8 +66,8 @@ source ./scripts/load-secrets.sh
   - `op://Homelab/Proxmox/username`
   - `op://Homelab/Proxmox/password`
   - `op://Homelab/Proxmox/api_token`
-  - `op://Homelab/Backblaze-B2/key_id`
-  - `op://Homelab/Backblaze-B2/secret_key`
+  - `op://Homelab/hetzner-homelab-prd/username`
+  - `op://Homelab/hetzner-homelab-prd/password`
 
 Adjust item names in `scripts/load-secrets.sh` to match your 1Password vault structure.
 
@@ -87,8 +87,8 @@ export TF_VAR_proxmox_username="root@pam"
 export TF_VAR_proxmox_password="your-password"
 export TF_VAR_proxmox_api_token="root@pam!tofu=your-token"
 
-export AWS_ACCESS_KEY_ID="your-b2-key-id"
-export AWS_SECRET_ACCESS_KEY="your-b2-secret-key"
+export AWS_ACCESS_KEY_ID="your-hetzner-access-key"
+export AWS_SECRET_ACCESS_KEY="your-hetzner-secret-key"
 ```
 
 ### 2. Configure Cluster Settings
@@ -308,17 +308,18 @@ talosctl -n <node-ip> dmesg | grep -i error
 
 If `tofu init` fails with S3 errors:
 - Verify AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set
-- Check bucket exists in Backblaze B2
+- Check bucket exists in Hetzner Object Storage
 - Confirm endpoint URL is correct for your region
 
 ## State Management
 
 ### S3 Backend
 
-State is stored in Backblaze B2 (S3-compatible):
+State is stored in Hetzner Object Storage (S3-compatible):
 - Bucket: `homelab-prd`
 - Key: `tofu/bootstrap.tfstate`
-- Region: `eu-central-003`
+- Region: `nbg1`
+- Endpoint: `https://nbg1.your-objectstorage.com`
 
 ### Local Testing
 

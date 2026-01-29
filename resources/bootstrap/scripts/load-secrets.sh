@@ -49,18 +49,18 @@ if [[ $? -ne 0 ]]; then
 fi
 export TF_VAR_qdevice_root_password
 
-# Backblaze B2 S3 backend from 1Password "Homelab" vault
-echo "  Loading Backblaze B2 credentials..."
-AWS_ACCESS_KEY_ID=$(op read "op://Homelab/Backblaze-homelab-prd/username" 2>&1 | tr -d '\n\r')
+# Hetzner Object Storage S3 backend from 1Password "Homelab" vault
+echo "  Loading Hetzner Object Storage credentials..."
+AWS_ACCESS_KEY_ID=$(op read "op://Homelab/hetzner-homelab-prd/username" 2>&1 | tr -d '\n\r')
 if [[ $? -ne 0 ]]; then
-    echo "❌ Error loading Backblaze key ID: $AWS_ACCESS_KEY_ID"
+    echo "❌ Error loading Hetzner access key: $AWS_ACCESS_KEY_ID"
     return 1 2>/dev/null || exit 1
 fi
 export AWS_ACCESS_KEY_ID
 
-AWS_SECRET_ACCESS_KEY=$(op read "op://Homelab/Backblaze-homelab-prd/credential" 2>&1 | tr -d '\n\r')
+AWS_SECRET_ACCESS_KEY=$(op read "op://Homelab/hetzner-homelab-prd/password" 2>&1 | tr -d '\n\r')
 if [[ $? -ne 0 ]]; then
-    echo "❌ Error loading Backblaze secret key: $AWS_SECRET_ACCESS_KEY"
+    echo "❌ Error loading Hetzner secret key: $AWS_SECRET_ACCESS_KEY"
     return 1 2>/dev/null || exit 1
 fi
 export AWS_SECRET_ACCESS_KEY

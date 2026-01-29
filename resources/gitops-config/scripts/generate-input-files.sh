@@ -213,7 +213,7 @@ spec:
       data:
         AWS_ACCESS_KEY_ID: '{{ .keyid }}'
         AWS_SECRET_ACCESS_KEY: '{{ .secretkey }}'
-        AWS_ENDPOINTS: 'https://s3.eu-central-003.backblazeb2.com'
+        AWS_ENDPOINTS: 'https://nbg1.your-objectstorage.com'
   data:
   - secretKey: keyid
     remoteRef:

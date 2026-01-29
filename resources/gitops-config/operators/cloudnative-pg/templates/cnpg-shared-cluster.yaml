@@ -55,7 +55,7 @@ spec:
       cpu: 500m
       memory: 512Mi
 
-  # Backup configuration to Backblaze B2
+  # Backup configuration to Hetzner Object Storage
   backup:
     barmanObjectStore:
       destinationPath: s3://homelab-prd/cnpg-backup/shared/

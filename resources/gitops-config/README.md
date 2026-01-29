@@ -267,17 +267,17 @@ tofu state list | grep deploy_root_app
 
 If `tofu init` fails with S3 errors:
 - Verify AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set
-- Check Backblaze B2 bucket exists: `homelab-prd`
-- Confirm endpoint is correct: `s3.eu-central-003.backblazeb2.com`
+- Check Hetzner Object Storage bucket exists: `homelab-prd`
+- Confirm endpoint is correct: `nbg1.your-objectstorage.com`
 
 ## State Management
 
 ### S3 Backend
 
-State is stored in Backblaze B2 (S3-compatible):
+State is stored in Hetzner Object Storage (S3-compatible):
 - Bucket: `homelab-prd`
 - Key: `tofu/gitops-config.tfstate`
-- Region: `eu-central-003`
+- Region: `nbg1`
 
 **Credentials**: Uses same AWS_* environment variables as bootstrap.
 

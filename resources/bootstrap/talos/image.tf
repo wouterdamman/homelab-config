@@ -23,28 +23,41 @@ data "http" "updated_schematic_id" {
   request_body = local.update_schematic
 }
 
-# NOTE: Proxmox VE user-agent may be blocked by Talos Factory during initial download
+# NOTE: Resource commented out due to Proxmox provider bug #1724
+# Talos Factory blocks Proxmox VE user-agent during metadata checks
+# Provider fails with 403 BEFORE checking for existing files
+# Import is not supported by this resource type
+#
+# Testing confirmed the issue affects ALL Talos versions (tested v1.12.0 and v1.12.2)
+# This is a universal user-agent blocking issue, not version-specific
+#
+# WORKAROUND - Manual image management:
+# 1. Download image directly on Proxmox:
+#    ssh root@10.0.10.200 "cd /var/lib/vz/template/iso && \
+#      wget -O talos-<schematic>-<version>-nocloud-amd64.img \
+#      'https://factory.talos.dev/image/<schematic>/<version>/nocloud-amd64.raw.gz'"
+#
+# 2. VMs will use existing images from /var/lib/vz/template/iso/
+#
+# Re-enable this resource when provider issue is fixed upstream
+# Current image: v1.12.2 (downloaded Jan 28, 2026)
 # See: https://github.com/bpg/terraform-provider-proxmox/issues/1724
-# Workaround: Manually pre-download new images once, then Terraform manages them
-# Download: ssh root@proxmox "cd /var/lib/vz/template/iso && wget -O talos-<schematic>-<version>-nocloud-amd64.img \
-#   'https://factory.talos.dev/image/<schematic>/<version>/nocloud-amd64.raw.gz'"
 
-resource "proxmox_virtual_environment_download_file" "this" {
-  for_each = toset(distinct([for k, v in var.nodes : "${v.host_node}_${v.update == true ? local.update_image_id : local.image_id}"]))
-
-  node_name    = split("_", each.key)[0]
-  content_type = "iso"
-  datastore_id = var.image.proxmox_datastore
-
-  file_name               = "talos-${split("_", each.key)[1]}-${split("_", each.key)[2]}-${var.image.platform}-${var.image.arch}.img"
-  url                     = "${var.image.factory_url}/image/${split("_", each.key)[1]}/${split("_", each.key)[2]}/${var.image.platform}-${var.image.arch}.raw.gz"
-  decompression_algorithm = "gz"
-  overwrite               = false
-  overwrite_unmanaged     = true  # Manage manually uploaded images
-  verify                  = false
-
-  # Ignore failures if image already exists manually
-  lifecycle {
-    ignore_changes = [url]
-  }
-}
+# resource "proxmox_virtual_environment_download_file" "this" {
+#   for_each = toset(distinct([for k, v in var.nodes : "${v.host_node}_${v.update == true ? local.update_image_id : local.image_id}"]))
+#
+#   node_name    = split("_", each.key)[0]
+#   content_type = "iso"
+#   datastore_id = var.image.proxmox_datastore
+#
+#   file_name               = "talos-${split("_", each.key)[1]}-${split("_", each.key)[2]}-${var.image.platform}-${var.image.arch}.img"
+#   url                     = "${var.image.factory_url}/image/${split("_", each.key)[1]}/${split("_", each.key)[2]}/${var.image.platform}-${var.image.arch}.raw.gz"
+#   decompression_algorithm = "gz"
+#   overwrite               = false
+#   overwrite_unmanaged     = true
+#   verify                  = false
+#
+#   lifecycle {
+#     ignore_changes = [url]
+#   }
+# }

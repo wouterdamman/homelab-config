@@ -40,7 +40,8 @@ provider "proxmox" {
   insecure  = var.proxmox.insecure
 
   ssh {
-    agent = true
+    agent    = true
+    username = "automation"
 
     node {
       name    = var.proxmox.name

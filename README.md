@@ -46,7 +46,7 @@ homelab-config/
 | Component | Technology | Version |
 |-----------|------------|---------|
 | **Virtualization** | Proxmox VE | Latest |
-| **Kubernetes** | Talos Linux | v1.12.0 |
+| **Kubernetes** | Talos Linux | v1.12.2 |
 | **Networking** | Cilium + Gateway API | v1.18.5 |
 | **GitOps** | ArgoCD | Latest |
 | **Storage** | Longhorn | v1.10.1 |

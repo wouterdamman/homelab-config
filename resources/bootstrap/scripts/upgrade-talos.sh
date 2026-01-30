@@ -12,12 +12,16 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-TFVARS_FILE="../proxmox.auto.tfvars"
-TALOSCONFIG="$(pwd)/../output/talos-config.yaml"
-KUBECONFIG="$(pwd)/../output/kube-config.yaml"
+TFVARS_FILE="$(dirname "$(dirname "$0")")/proxmox.auto.tfvars"
+TALOSCONFIG="$(dirname "$(dirname "$0")")/output/talos-config.yaml"
+KUBECONFIG="$(dirname "$(dirname "$0")")/output/kube-config.yaml"
+SCHEMATIC_FILE="$(dirname "$(dirname "$0")")/talos/image/schematic.yaml"
+
+# Hardcoded schematic ID (stable across versions)
+SCHEMATIC_ID="e37cea50363b49e1887745d13c0a9fcb282499ee982535f2369db3fa1ce770c1"
 
 # Default wait times (in seconds)
-WORKER_WAIT_TIME=300    # 5 minutes between workers
+WORKER_WAIT_TIME=120    # 2 minutes between workers
 CP_WAIT_TIME=600        # 10 minutes between control planes
 
 # Parse command line arguments
@@ -27,6 +31,8 @@ DRY_RUN=false
 SKIP_WORKERS=false
 SKIP_CONTROL_PLANES=false
 AUTO_APPROVE=false
+SINGLE_NODE=""
+SINGLE_NODE_IP=""
 
 usage() {
     echo "Usage: $0 --current <version> --target <version> [options]"
@@ -35,6 +41,8 @@ usage() {
     echo "  --current <version>       Current Talos version (e.g., v1.11.6)"
     echo "  --target <version>        Target Talos version (e.g., v1.12.0)"
     echo "  --dry-run                 Show what would be done without making changes"
+    echo "  --node <name>             Upgrade only this node (e.g., prd-cp-01)"
+    echo "  --node-ip <ip>            Upgrade only this IP (e.g., 10.0.10.130)"
     echo "  --skip-workers            Skip worker node upgrades"
     echo "  --skip-control-planes     Skip control plane upgrades"
     echo "  --auto-approve            Skip confirmation prompts (use with caution!)"
@@ -45,6 +53,7 @@ usage() {
     echo "Example:"
     echo "  $0 --current v1.11.6 --target v1.12.0"
     echo "  $0 --current v1.11.6 --target v1.12.0 --dry-run"
+    echo "  $0 --current v1.11.6 --target v1.12.0 --node prd-cp-01"
     echo "  $0 --current v1.11.6 --target v1.12.0 --skip-workers"
     exit 1
 }
@@ -84,6 +93,14 @@ while [[ $# -gt 0 ]]; do
             CP_WAIT_TIME="$2"
             shift 2
             ;;
+        --node)
+            SINGLE_NODE="$2"
+            shift 2
+            ;;
+        --node-ip)
+            SINGLE_NODE_IP="$2"
+            shift 2
+            ;;
         -h|--help)
             usage
             ;;
@@ -98,6 +115,12 @@ done
 if [[ -z "$CURRENT_VERSION" ]] || [[ -z "$TARGET_VERSION" ]]; then
     echo -e "${RED}Error: --current and --target are required${NC}"
     usage
+fi
+
+# Validate single-node options
+if [[ -n "$SINGLE_NODE" && -n "$SINGLE_NODE_IP" ]]; then
+    echo -e "${RED}Error: Cannot specify both --node and --node-ip${NC}"
+    exit 1
 fi
 
 # Helper functions
@@ -150,9 +173,9 @@ get_cluster_state() {
     local worker_count=$(grep -E "^worker_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
 
     # Extract IP configuration from tfvars
-    CLUSTER_CIDR=$(grep -E "^cluster_cidr\s*=" "$TFVARS_FILE" | sed 's/.*=\s*"\(.*\)".*/\1/')
+    CLUSTER_CIDR=$(grep -E "^cluster_cidr\s*=" "$TFVARS_FILE" | sed 's/.*"\(.*\)".*/\1/')
     IP_OFFSET=$(grep -E "^ip_offset\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
-    ENV=$(grep -E "^env\s*=" "$TFVARS_FILE" | sed 's/.*=\s*"\(.*\)".*/\1/')
+    ENV=$(grep -E "^env\s*=" "$TFVARS_FILE" | sed 's/.*"\(.*\)".*/\1/')
 
     if [[ -z "$CLUSTER_CIDR" ]] || [[ -z "$IP_OFFSET" ]] || [[ -z "$ENV" ]]; then
         log_error "Failed to extract cluster_cidr, ip_offset, or env from tfvars"
@@ -186,75 +209,65 @@ get_node_ip() {
     echo "${CLUSTER_CIDR}.$((IP_OFFSET + node_index))"
 }
 
-# Update tfvars file
-update_tfvars() {
-    local field="$1"
-    local value="$2"
-
-    if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would update $field to: $value"
-        return
-    fi
-
-    # Use sed to update the tfvars file
-    case "$field" in
-        "talos_version")
-            sed -i.bak "s|^talos_version\s*=.*|talos_version = \"$value\"|" "$TFVARS_FILE"
-            ;;
-        "talos_update_version")
-            # Check if line exists
-            if grep -q "^talos_update_version" "$TFVARS_FILE"; then
-                if [[ "$value" == "null" ]]; then
-                    sed -i.bak "/^talos_update_version/d" "$TFVARS_FILE"
-                else
-                    sed -i.bak "s|^talos_update_version\s*=.*|talos_update_version = \"$value\"|" "$TFVARS_FILE"
-                fi
-            else
-                # Add after talos_version
-                sed -i.bak "/^talos_version/a\\
-talos_update_version = \"$value\"" "$TFVARS_FILE"
-            fi
-            ;;
-        "nodes_to_upgrade")
-            # Check if line exists
-            if grep -q "^nodes_to_upgrade" "$TFVARS_FILE"; then
-                sed -i.bak "s|^nodes_to_upgrade\s*=.*|nodes_to_upgrade = $value|" "$TFVARS_FILE"
-            else
-                # Add at end of file
-                echo "nodes_to_upgrade = $value" >> "$TFVARS_FILE"
-            fi
-            ;;
-    esac
+# Build installer image URL for Factory
+get_installer_image() {
+    local version="$1"
+    echo "factory.talos.dev/installer/${SCHEMATIC_ID}:${version}"
 }
 
-# Apply terraform changes
-apply_terraform() {
-    local description="$1"
+# Upgrade a single node using talosctl
+upgrade_node() {
+    local node_name="$1"
+    local node_ip="$2"
+    local installer_image="$3"
 
-    log_info "Applying: $description"
+    log_info "Upgrading $node_name ($node_ip) to $TARGET_VERSION..."
 
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would run: tofu plan"
-        return
+        log_info "[DRY RUN] Would cordon node: $node_name"
+        log_info "[DRY RUN] Would drain node: $node_name"
+        log_info "[DRY RUN] Would run: talosctl upgrade --nodes $node_ip --image $installer_image --wait --timeout 30m"
+        return 0
     fi
 
-    cd "$(dirname "$TFVARS_FILE")"
+    export TALOSCONFIG
+    export KUBECONFIG
 
-    # Run plan
-    if ! tofu plan -out=tfplan; then
-        log_error "Terraform plan failed"
-        exit 1
+    # Step 1: Cordon the node to prevent new pods from being scheduled
+    log_info "Cordoning $node_name..."
+    if ! kubectl cordon "$node_name" >/dev/null 2>&1; then
+        log_error "Failed to cordon $node_name"
+        return 1
+    fi
+    log_success "$node_name cordoned"
+
+    # Step 2: Drain the node (graceful pod eviction)
+    log_info "Draining $node_name (this may take a few minutes)..."
+    if ! kubectl drain "$node_name" \
+        --ignore-daemonsets \
+        --delete-emptydir-data \
+        --grace-period=120 \
+        --timeout=10m \
+        --force 2>&1 | grep -v "evicting pod"; then
+        log_warning "Drain completed with warnings, continuing..."
+    fi
+    log_success "$node_name drained"
+
+    # Step 3: Execute upgrade with --wait for monitoring
+    log_info "Upgrading Talos OS on $node_name..."
+    if ! talosctl upgrade \
+        --nodes "$node_ip" \
+        --image "$installer_image" \
+        --wait \
+        --timeout 30m; then
+        log_error "Upgrade failed for $node_name"
+        # Try to uncordon even if upgrade failed
+        kubectl uncordon "$node_name" >/dev/null 2>&1 || true
+        return 1
     fi
 
-    # Apply
-    if ! tofu apply tfplan; then
-        log_error "Terraform apply failed"
-        rm -f tfplan
-        exit 1
-    fi
-
-    rm -f tfplan
-    log_success "Applied successfully"
+    log_success "$node_name Talos OS upgraded successfully"
+    return 0
 }
 
 # Wait for node to be ready
@@ -293,6 +306,26 @@ wait_for_node() {
     return 1
 }
 
+# Uncordon node to allow scheduling again
+uncordon_node() {
+    local node_name="$1"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY RUN] Would uncordon node: $node_name"
+        return 0
+    fi
+
+    export KUBECONFIG
+
+    log_info "Uncordoning $node_name..."
+    if ! kubectl uncordon "$node_name" >/dev/null 2>&1; then
+        log_warning "Failed to uncordon $node_name (it may already be uncordoned)"
+        return 0
+    fi
+    log_success "$node_name is now schedulable"
+    return 0
+}
+
 # Verify cluster health
 verify_cluster_health() {
     log_info "Verifying cluster health..."
@@ -311,15 +344,48 @@ verify_cluster_health() {
         return 1
     fi
 
-    # Check critical pods
-    local critical_pods=$(kubectl get pods -n kube-system --no-headers | grep -E "(cilium|etcd)" | grep -v "Running" | wc -l)
-    if [[ $critical_pods -gt 0 ]]; then
-        log_error "$critical_pods critical pod(s) are not Running"
-        return 1
-    fi
+    # Wait for critical pods to become Running (max 5 minutes)
+    log_info "Waiting for critical pods to become Running..."
+    local max_wait=300  # 5 minutes
+    local elapsed=0
+    local interval=10
 
-    log_success "Cluster is healthy"
-    return 0
+    while [[ $elapsed -lt $max_wait ]]; do
+        local critical_pods=$(kubectl get pods -n kube-system --no-headers | grep -E "(cilium|etcd)" | grep -v "Running" | wc -l)
+
+        if [[ $critical_pods -eq 0 ]]; then
+            log_success "All critical pods are Running"
+            log_success "Cluster is healthy"
+            return 0
+        fi
+
+        echo -n "."
+        sleep "$interval"
+        elapsed=$((elapsed + interval))
+    done
+
+    echo ""
+    log_error "Critical pods did not become Running within ${max_wait}s"
+    kubectl get pods -n kube-system | grep -E "(cilium|etcd)" | grep -v "Running" || true
+    return 1
+}
+
+# Check if node is already on target version
+check_node_version() {
+    local node_name="$1"
+    local node_ip="$2"
+    local target_version="$3"
+
+    export TALOSCONFIG
+
+    # Get current version from node
+    local current_ver=$(talosctl version --nodes "$node_ip" 2>/dev/null | grep "Tag:" | tail -1 | awk '{print $2}')
+
+    if [[ "$current_ver" == "$target_version" ]]; then
+        return 0  # Already on target version
+    else
+        return 1  # Needs upgrade
+    fi
 }
 
 # Upgrade workers
@@ -331,17 +397,14 @@ upgrade_workers() {
 
     log_info "Starting worker node upgrades..."
 
-    local upgraded_nodes=()
+    local installer_image=$(get_installer_image "$TARGET_VERSION")
+    log_info "Using installer image: $installer_image"
+
+    local worker_count=${#WORKER_NODES[@]}
+    local worker_idx=0
 
     for worker in "${WORKER_NODES[@]}"; do
-        log_info "Upgrading worker: $worker"
-
-        # Add to upgrade list
-        upgraded_nodes+=("\"$worker\"")
-        local nodes_json="[$(IFS=,; echo "${upgraded_nodes[*]}")]"
-
-        update_tfvars "nodes_to_upgrade" "$nodes_json"
-        apply_terraform "Upgrade $worker"
+        worker_idx=$((worker_idx + 1))
 
         # Calculate IP for this worker (CPs come first, then workers)
         local worker_num=$(echo "$worker" | grep -oE '[0-9]+$')
@@ -349,9 +412,37 @@ upgrade_workers() {
         local node_index=$((cp_count + worker_num - 1))
         local worker_ip=$(get_node_ip "$node_index")
 
-        # Wait for node
-        if ! wait_for_node "$worker" "$worker_ip" "$WORKER_WAIT_TIME"; then
+        # Skip if single-node mode is active and this isn't the target node
+        if [[ -n "$SINGLE_NODE" && "$worker" != "$SINGLE_NODE" ]]; then
+            continue
+        fi
+        if [[ -n "$SINGLE_NODE_IP" && "$worker_ip" != "$SINGLE_NODE_IP" ]]; then
+            continue
+        fi
+
+        # Check if node is already on target version
+        if check_node_version "$worker" "$worker_ip" "$TARGET_VERSION"; then
+            log_info "$worker is already on $TARGET_VERSION, skipping..."
+            continue
+        fi
+
+        log_info "Upgrading worker: $worker"
+
+        # Execute upgrade via talosctl
+        if ! upgrade_node "$worker" "$worker_ip" "$installer_image"; then
             log_error "Worker $worker upgrade failed or timed out"
+            exit 1
+        fi
+
+        # Wait for node to be Ready
+        if ! wait_for_node "$worker" "$worker_ip" "$WORKER_WAIT_TIME"; then
+            log_error "Worker $worker did not become Ready"
+            exit 1
+        fi
+
+        # Uncordon the node to allow scheduling again
+        if ! uncordon_node "$worker"; then
+            log_error "Failed to uncordon $worker"
             exit 1
         fi
 
@@ -364,7 +455,7 @@ upgrade_workers() {
         log_success "Worker $worker upgraded successfully"
 
         # Wait before next worker (except for the last one)
-        if [[ "$worker" != "${WORKER_NODES[-1]}" ]]; then
+        if [[ $worker_idx -lt $worker_count ]]; then
             log_info "Waiting ${WORKER_WAIT_TIME}s before next worker..."
             [[ "$DRY_RUN" == false ]] && sleep "$WORKER_WAIT_TIME"
         fi
@@ -382,39 +473,77 @@ upgrade_control_planes() {
 
     log_info "Starting control plane upgrades..."
 
-    # Get already upgraded nodes (workers)
-    local upgraded_nodes=()
-    for worker in "${WORKER_NODES[@]}"; do
-        upgraded_nodes+=("\"$worker\"")
-    done
+    local installer_image=$(get_installer_image "$TARGET_VERSION")
+    log_info "Using installer image: $installer_image"
+
+    local cp_count=${#CP_NODES[@]}
+    local cp_idx=0
 
     for cp in "${CP_NODES[@]}"; do
-        log_info "Upgrading control plane: $cp"
-
-        # Add to upgrade list
-        upgraded_nodes+=("\"$cp\"")
-        local nodes_json="[$(IFS=,; echo "${upgraded_nodes[*]}")]"
-
-        update_tfvars "nodes_to_upgrade" "$nodes_json"
-        apply_terraform "Upgrade $cp"
+        cp_idx=$((cp_idx + 1))
 
         # Calculate IP for this CP (CPs are indexed from 0)
         local cp_num=$(echo "$cp" | grep -oE '[0-9]+$')
         local node_index=$((cp_num - 1))
         local cp_ip=$(get_node_ip "$node_index")
 
-        # Wait for node
-        if ! wait_for_node "$cp" "$cp_ip" "$CP_WAIT_TIME"; then
+        # Skip if single-node mode is active and this isn't the target node
+        if [[ -n "$SINGLE_NODE" && "$cp" != "$SINGLE_NODE" ]]; then
+            continue
+        fi
+        if [[ -n "$SINGLE_NODE_IP" && "$cp_ip" != "$SINGLE_NODE_IP" ]]; then
+            continue
+        fi
+
+        # Check if node is already on target version
+        if check_node_version "$cp" "$cp_ip" "$TARGET_VERSION"; then
+            log_info "$cp is already on $TARGET_VERSION, skipping..."
+            continue
+        fi
+
+        log_info "Upgrading control plane: $cp"
+
+        # Execute upgrade via talosctl
+        if ! upgrade_node "$cp" "$cp_ip" "$installer_image"; then
             log_error "Control plane $cp upgrade failed or timed out"
             exit 1
         fi
 
-        # Extra verification for CPs - check etcd health
+        # Wait for node to be Ready
+        if ! wait_for_node "$cp" "$cp_ip" "$CP_WAIT_TIME"; then
+            log_error "Control plane $cp did not become Ready"
+            exit 1
+        fi
+
+        # Uncordon the node to allow scheduling again
+        if ! uncordon_node "$cp"; then
+            log_error "Failed to uncordon $cp"
+            exit 1
+        fi
+
+        # Extra verification for CPs - check etcd health with retry
         if [[ "$DRY_RUN" == false ]]; then
-            log_info "Checking etcd health..."
+            log_info "Checking etcd health (max 60s)..."
             export TALOSCONFIG
-            if ! talosctl --nodes "$cp_ip" service etcd status 2>/dev/null | grep -q "STATE.*Running"; then
-                log_warning "etcd may not be healthy on $cp, but continuing..."
+            local etcd_max_wait=60
+            local etcd_elapsed=0
+            local etcd_interval=5
+            local etcd_healthy=false
+
+            while [[ $etcd_elapsed -lt $etcd_max_wait ]]; do
+                if talosctl --nodes "$cp_ip" service etcd status 2>/dev/null | grep -q "HEALTH.*OK"; then
+                    log_success "etcd is healthy on $cp"
+                    etcd_healthy=true
+                    break
+                fi
+                sleep "$etcd_interval"
+                etcd_elapsed=$((etcd_elapsed + etcd_interval))
+                echo -n "."
+            done
+
+            if [[ "$etcd_healthy" == false ]]; then
+                echo ""
+                log_warning "etcd health check timed out on $cp, but continuing (cluster may still be healthy)..."
             fi
         fi
 
@@ -427,7 +556,7 @@ upgrade_control_planes() {
         log_success "Control plane $cp upgraded successfully"
 
         # Wait before next CP (except for the last one)
-        if [[ "$cp" != "${CP_NODES[-1]}" ]]; then
+        if [[ $cp_idx -lt $cp_count ]]; then
             log_info "Waiting ${CP_WAIT_TIME}s before next control plane..."
             [[ "$DRY_RUN" == false ]] && sleep "$CP_WAIT_TIME"
         fi
@@ -440,14 +569,85 @@ upgrade_control_planes() {
 finalize_upgrade() {
     log_info "Finalizing upgrade..."
 
-    # Update base version to target
-    update_tfvars "talos_version" "$TARGET_VERSION"
-    update_tfvars "talos_update_version" "null"
-    update_tfvars "nodes_to_upgrade" "[]"
+    if [[ "$DRY_RUN" == true ]]; then
+        log_info "[DRY RUN] Would verify all nodes on $TARGET_VERSION"
+        log_success "Upgrade finalized (dry-run)"
+        return
+    fi
 
-    apply_terraform "Finalize upgrade to $TARGET_VERSION"
+    # Verify upgraded nodes are on target version
+    # Only check nodes that should have been upgraded in this run
+    local upgraded_nodes_ips=""
+    local upgraded_count=0
 
-    log_success "Upgrade finalized - all nodes now on $TARGET_VERSION"
+    # Add control plane IPs if we upgraded them
+    if [[ "$SKIP_CONTROL_PLANES" == false ]]; then
+        for cp in "${CP_NODES[@]}"; do
+            local cp_num=$(echo "$cp" | grep -oE '[0-9]+$')
+            local node_index=$((cp_num - 1))
+            local cp_ip=$(get_node_ip "$node_index")
+
+            # Skip if single-node mode and not the target
+            if [[ -n "$SINGLE_NODE" && "$cp" != "$SINGLE_NODE" ]]; then
+                continue
+            fi
+            if [[ -n "$SINGLE_NODE_IP" && "$cp_ip" != "$SINGLE_NODE_IP" ]]; then
+                continue
+            fi
+
+            upgraded_nodes_ips+="${cp_ip},"
+            upgraded_count=$((upgraded_count + 1))
+        done
+    fi
+
+    # Add worker IPs if we upgraded them
+    if [[ "$SKIP_WORKERS" == false ]]; then
+        for worker in "${WORKER_NODES[@]}"; do
+            local worker_num=$(echo "$worker" | grep -oE '[0-9]+$')
+            local cp_count=$(grep -E "^controlplane_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
+            local node_index=$((cp_count + worker_num - 1))
+            local worker_ip=$(get_node_ip "$node_index")
+
+            # Skip if single-node mode and not the target
+            if [[ -n "$SINGLE_NODE" && "$worker" != "$SINGLE_NODE" ]]; then
+                continue
+            fi
+            if [[ -n "$SINGLE_NODE_IP" && "$worker_ip" != "$SINGLE_NODE_IP" ]]; then
+                continue
+            fi
+
+            upgraded_nodes_ips+="${worker_ip},"
+            upgraded_count=$((upgraded_count + 1))
+        done
+    fi
+
+    if [[ $upgraded_count -eq 0 ]]; then
+        log_info "No nodes were upgraded in this run"
+        log_success "Upgrade finalized"
+        return
+    fi
+
+    upgraded_nodes_ips=${upgraded_nodes_ips%,}  # Remove trailing comma
+
+    log_info "Verifying $upgraded_count upgraded node(s) are on $TARGET_VERSION..."
+    export TALOSCONFIG
+
+    if talosctl version --nodes "$upgraded_nodes_ips" 2>/dev/null | grep -q "$TARGET_VERSION"; then
+        log_success "All upgraded nodes verified on $TARGET_VERSION"
+    else
+        log_warning "Version verification had issues, but upgrades completed successfully"
+    fi
+
+    echo ""
+    if [[ $upgraded_count -gt 0 ]]; then
+        log_info "NEXT STEPS:"
+        log_info "1. Check cluster status: kubectl get nodes -o wide"
+        log_info "2. Optionally update proxmox.auto.tfvars: talos_version = \"$TARGET_VERSION\""
+        log_info "3. Optionally sync Terraform state: cd resources/bootstrap && tofu apply"
+    fi
+    echo ""
+
+    log_success "Upgrade finalized - $upgraded_count node(s) upgraded to $TARGET_VERSION"
 }
 
 # Main upgrade flow
@@ -460,6 +660,14 @@ main() {
     echo "Current Version: $CURRENT_VERSION"
     echo "Target Version:  $TARGET_VERSION"
     echo "Dry Run:         $DRY_RUN"
+
+    if [[ -n "$SINGLE_NODE" ]]; then
+        echo "Single Node:     $SINGLE_NODE"
+    fi
+    if [[ -n "$SINGLE_NODE_IP" ]]; then
+        echo "Single Node IP:  $SINGLE_NODE_IP"
+    fi
+
     echo ""
 
     check_prerequisites
@@ -468,9 +676,57 @@ main() {
     echo ""
     echo "Upgrade Plan:"
     echo "-------------"
-    [[ "$SKIP_WORKERS" == false ]] && echo "1. Upgrade ${#WORKER_NODES[@]} worker node(s): ${WORKER_NODES[*]}"
-    [[ "$SKIP_CONTROL_PLANES" == false ]] && echo "2. Upgrade ${#CP_NODES[@]} control plane(s): ${CP_NODES[*]}"
-    echo "3. Finalize upgrade"
+
+    # Single-node mode: show only the specific node
+    if [[ -n "$SINGLE_NODE" || -n "$SINGLE_NODE_IP" ]]; then
+        local found=false
+
+        # Check if it's a worker
+        if [[ "$SKIP_WORKERS" == false ]]; then
+            for worker in "${WORKER_NODES[@]}"; do
+                local worker_num=$(echo "$worker" | grep -oE '[0-9]+$')
+                local cp_count=$(grep -E "^controlplane_count\s*=" "$TFVARS_FILE" | grep -oE '[0-9]+')
+                local node_index=$((cp_count + worker_num - 1))
+                local worker_ip=$(get_node_ip "$node_index")
+
+                if [[ -n "$SINGLE_NODE" && "$worker" == "$SINGLE_NODE" ]] || \
+                   [[ -n "$SINGLE_NODE_IP" && "$worker_ip" == "$SINGLE_NODE_IP" ]]; then
+                    echo "1. Upgrade worker node: $worker ($worker_ip)"
+                    found=true
+                    break
+                fi
+            done
+        fi
+
+        # Check if it's a control plane
+        if [[ "$SKIP_CONTROL_PLANES" == false ]]; then
+            for cp in "${CP_NODES[@]}"; do
+                local cp_num=$(echo "$cp" | grep -oE '[0-9]+$')
+                local node_index=$((cp_num - 1))
+                local cp_ip=$(get_node_ip "$node_index")
+
+                if [[ -n "$SINGLE_NODE" && "$cp" == "$SINGLE_NODE" ]] || \
+                   [[ -n "$SINGLE_NODE_IP" && "$cp_ip" == "$SINGLE_NODE_IP" ]]; then
+                    echo "1. Upgrade control plane: $cp ($cp_ip)"
+                    found=true
+                    break
+                fi
+            done
+        fi
+
+        if [[ "$found" == false ]]; then
+            log_error "Node not found: ${SINGLE_NODE}${SINGLE_NODE_IP}"
+            exit 1
+        fi
+
+        echo "2. Finalize upgrade"
+    else
+        # Full cluster mode: show all nodes
+        [[ "$SKIP_WORKERS" == false ]] && echo "1. Upgrade ${#WORKER_NODES[@]} worker node(s): ${WORKER_NODES[*]}"
+        [[ "$SKIP_CONTROL_PLANES" == false ]] && echo "2. Upgrade ${#CP_NODES[@]} control plane(s): ${CP_NODES[*]}"
+        echo "3. Finalize upgrade"
+    fi
+
     echo ""
 
     if [[ "$AUTO_APPROVE" == false ]]; then
@@ -482,10 +738,9 @@ main() {
         fi
     fi
 
-    # Set upgrade version in tfvars
-    log_info "Configuring upgrade to $TARGET_VERSION..."
-    update_tfvars "talos_update_version" "$TARGET_VERSION"
-    update_tfvars "nodes_to_upgrade" "[]"
+    log_info "Starting Talos upgrade using talosctl..."
+    log_info "Installer image: factory.talos.dev/installer/${SCHEMATIC_ID}:${TARGET_VERSION}"
+    echo ""
 
     # Run upgrade phases
     upgrade_workers

@@ -14,17 +14,17 @@ machine:
           - rshared
           - rw
   network:
-    #hostname: ${hostname}
     interfaces:
-      - interface: eth0
-        dhcp: false
-        addresses:
-          - ${ip}/${cidr}
-        vip:
-          ip: ${vip}
-        routes:
-          - network: 0.0.0.0/0
-            gateway: ${gateway}
+    - deviceSelector:
+        physical: true
+      addresses:
+      - ${ip}/${cidr}
+      routes:
+      - network: 0.0.0.0/0
+        gateway: ${gateway}
+      dhcp: false
+      vip:
+        ip: ${vip}
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}
@@ -70,3 +70,21 @@ cluster:
   - name: cilium-bootstrap
     contents: |
       ${indent(6, cilium_install)}
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: ${hostname}
+auto: off
+---
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+- address: 10.0.10.193
+- address: 8.8.8.8
+---
+apiVersion: v1alpha1
+kind: TimeSyncConfig
+ntp:
+  servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org

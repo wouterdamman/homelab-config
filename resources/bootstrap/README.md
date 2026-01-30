@@ -123,7 +123,7 @@ worker_specs = {
 }
 
 # Versions
-talos_version  = "v1.12.0"
+talos_version  = "v1.12.2"
 cilium_version = "v1.18.5"
 gateway_api_version = "v1.1.0"
 ```
@@ -211,18 +211,18 @@ Use the provided script for safe, automated rolling upgrades:
 cd scripts/
 
 # Dry-run to see what would happen
-./upgrade-talos.sh --current v1.11.6 --target v1.12.0 --dry-run
+./upgrade-talos.sh --current v1.12.2 --target v1.13.0 --dry-run
 
 # Perform the upgrade (workers first, then control planes)
-./upgrade-talos.sh --current v1.11.6 --target v1.12.0
+./upgrade-talos.sh --current v1.12.2 --target v1.13.0
 
 # Skip workers (upgrade only control planes)
-./upgrade-talos.sh --current v1.11.6 --target v1.12.0 --skip-workers
+./upgrade-talos.sh --current v1.12.2 --target v1.13.0 --skip-workers
 
 # Custom wait times between nodes
 ./upgrade-talos.sh \\
-  --current v1.11.6 \\
-  --target v1.12.0 \\
+  --current v1.12.2 \\
+  --target v1.13.0 \\
   --worker-wait 600 \\    # 10 min between workers
   --cp-wait 900           # 15 min between CPs
 ```
@@ -384,7 +384,7 @@ To test with local backend, comment out the `backend "s3"` block in `providers.t
 - `ip_offset`: IP starting offset (1-254)
 - `host_nodes`: List of Proxmox node names
 - `proxmox`: Proxmox cluster configuration
-- `talos_version`: Talos OS version (e.g., "v1.12.0")
+- `talos_version`: Talos OS version (e.g., "v1.12.2")
 - `talos_schematic_path`: Path to schematic.yaml
 - `cilium_install_path`: Path to Cilium install manifest
 - `cilium_values_path`: Path to Cilium values file

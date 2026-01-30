@@ -18,15 +18,33 @@ machine:
           - rshared
           - rw
   network:
-    #hostname: ${hostname}
     interfaces:
-      - interface: eth0
-        dhcp: false
-        addresses:
-          - ${ip}/${cidr}
-        routes:
-          - network: 0.0.0.0/0
-            gateway: ${gateway}
+    - deviceSelector:
+        physical: true
+      addresses:
+      - ${ip}/${cidr}
+      routes:
+      - network: 0.0.0.0/0
+        gateway: ${gateway}
+      dhcp: false
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: ${hostname}
+auto: off
+---
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+- address: 10.0.10.193
+- address: 8.8.8.8
+---
+apiVersion: v1alpha1
+kind: TimeSyncConfig
+ntp:
+  servers:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org

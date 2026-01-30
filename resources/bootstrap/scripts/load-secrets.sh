@@ -16,11 +16,14 @@ if ! command -v op &> /dev/null; then
     return 1 2>/dev/null || exit 1
 fi
 
-# Check if user is signed in
+# Check if user is signed in, auto-signin if needed
 if ! op whoami &> /dev/null; then
-    echo "❌ Please sign in to 1Password first:"
-    echo "  eval \$(op signin)"
-    return 1 2>/dev/null || exit 1
+    echo "🔓 Signing in to 1Password..."
+    eval $(op signin)
+    if ! op whoami &> /dev/null; then
+        echo "❌ Failed to sign in to 1Password"
+        return 1 2>/dev/null || exit 1
+    fi
 fi
 
 echo "🔐 Loading secrets from 1Password..."
@@ -49,6 +52,11 @@ if [[ $? -ne 0 ]]; then
 fi
 export TF_VAR_qdevice_root_password
 
+# Configure SSH to use 1Password SSH agent for automation user
+echo "  Configuring 1Password SSH agent..."
+SSH_AUTH_SOCK=~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+export SSH_AUTH_SOCK
+
 # Hetzner Object Storage S3 backend from 1Password "Homelab" vault
 echo "  Loading Hetzner Object Storage credentials..."
 AWS_ACCESS_KEY_ID=$(op read "op://Homelab/hetzner-homelab-prd/username" 2>&1 | tr -d '\n\r')
@@ -73,5 +81,6 @@ echo "  - TF_VAR_proxmox_api_token (hidden)"
 echo "  - TF_VAR_qdevice_root_password (hidden)"
 echo "  - AWS_ACCESS_KEY_ID"
 echo "  - AWS_SECRET_ACCESS_KEY (hidden)"
+echo "  - SSH_AUTH_SOCK (1Password SSH agent)"
 echo ""
 echo "You can now run: tofu plan, tofu apply, etc."

@@ -2,7 +2,7 @@ replicaCount: 3
 image:
   repository: emqx/emqx
   pullPolicy: IfNotPresent
-  tag: "5.10.3"
+  tag: "5.8.9"
 
 podManagementPolicy: Parallel
 

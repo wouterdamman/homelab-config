@@ -1,0 +1,88 @@
+---
+# Job to initialize firefly database and user
+# This runs once to set up the database if it doesn't exist
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cnpg-shared-firefly-init
+  namespace: cnpg-system
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    metadata:
+      name: cnpg-shared-firefly-init
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: init-firefly-db
+          image: postgres:16.4
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Initializing firefly database..."
+
+              # Wait for database to be ready
+              until pg_isready -h cnpg-shared-rw.cnpg-system.svc.cluster.local -U postgres; do
+                echo "Waiting for database..."
+                sleep 2
+              done
+
+              # Create database if it doesn't exist
+              psql -h cnpg-shared-rw.cnpg-system.svc.cluster.local -U postgres <<'EOSQL'
+              SELECT 'Creating database firefly...' AS status;
+
+              -- Create database if it doesn't exist
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'firefly') THEN
+                  CREATE DATABASE firefly OWNER postgres;
+                  RAISE NOTICE 'Database firefly created';
+                ELSE
+                  RAISE NOTICE 'Database firefly already exists';
+                END IF;
+              END
+              $$;
+
+              -- Grant privileges
+              GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly;
+
+              SELECT 'Database setup complete' AS status;
+              EOSQL
+
+              # Connect to firefly database and set permissions
+              psql -h cnpg-shared-rw.cnpg-system.svc.cluster.local -U postgres -d firefly <<'EOSQL'
+              SELECT 'Setting up permissions...' AS status;
+
+              -- Grant schema permissions
+              GRANT ALL ON SCHEMA public TO firefly;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO firefly;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO firefly;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO firefly;
+
+              -- Grant permissions on existing objects (if any)
+              GRANT ALL ON ALL TABLES IN SCHEMA public TO firefly;
+              GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO firefly;
+              GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO firefly;
+
+              -- Set user password from environment variable
+              ALTER USER firefly WITH PASSWORD :'FIREFLY_PASSWORD';
+
+              SELECT 'Permissions setup complete' AS status;
+              EOSQL
+
+              echo "Firefly database initialization complete!"
+          env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cnpg-shared-superuser
+                  key: password
+            - name: FIREFLY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cnpg-shared-firefly
+                  key: password

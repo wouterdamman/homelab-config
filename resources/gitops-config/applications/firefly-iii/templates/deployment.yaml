@@ -80,29 +80,13 @@ spec:
                   name: firefly-secrets
                   key: APP_KEY
 
-            # OAuth2 configuration (Authentik via generic OIDC)
-            - name: LOGIN_PROVIDER
-              value: "oidc"
-            - name: OAUTH_USE_OIDC
-              value: "true"
-            - name: OIDC_NAME
-              value: "Authentik"
-            - name: OIDC_DISPLAY_NAME_CLAIMS
-              value: "name,preferred_username"
-            - name: OIDC_CLIENT_ID
-              valueFrom:
-                secretKeyRef:
-                  name: firefly-secrets
-                  key: OAUTH_AUTHENTIK_CLIENT_ID
-            - name: OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: firefly-secrets
-                  key: OAUTH_AUTHENTIK_CLIENT_SECRET
-            - name: OIDC_ISSUER
-              value: "https://sso.svc.damman.tech/application/o/firefly-iii/"
-            - name: OIDC_DISCOVER
-              value: "true"
+            # Remote User Authentication (Forward Auth with Authentik)
+            - name: AUTHENTICATION_GUARD
+              value: "remote_user_guard"
+            - name: AUTHENTICATION_GUARD_HEADER
+              value: "HTTP_X_AUTHENTIK_EMAIL"
+            - name: AUTHENTICATION_GUARD_EMAIL
+              value: "HTTP_X_AUTHENTIK_EMAIL"
 
             # Disable SQLite check
             - name: DKR_CHECK_SQLITE

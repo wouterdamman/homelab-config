@@ -10,7 +10,8 @@ metadata:
 spec:
   parentRefs:
     - name: app-gateway
-      namespace: cilium-gateway
+      namespace: kube-system
+      sectionName: app-https-listener
   hostnames:
     - "{{ .Values.ingress.hostname }}"
   rules:

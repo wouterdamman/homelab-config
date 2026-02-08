@@ -80,35 +80,31 @@ spec:
                   name: firefly-secrets
                   key: APP_KEY
 
-            # OAuth2 configuration (Authentik)
-            - name: AUTHENTICATION_GUARD
-              value: "remote_user_guard"
-            - name: AUTHENTICATION_GUARD_HEADER
-              value: "HTTP_REMOTE_USER"
-            - name: AUTHENTICATION_GUARD_EMAIL
-              value: "HTTP_X_AUTHENTIK_EMAIL"
-
-            # OAuth Custom Driver for Authentik
-            - name: CUSTOM_OAUTH_CLIENT_ID
+            # OAuth2 configuration (Authentik via generic OIDC)
+            - name: LOGIN_PROVIDER
+              value: "oidc"
+            - name: OAUTH_USE_OIDC
+              value: "true"
+            - name: OIDC_NAME
+              value: "Authentik"
+            - name: OIDC_DISPLAY_NAME_CLAIMS
+              value: "name,preferred_username"
+            - name: OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: firefly-secrets
                   key: OAUTH_AUTHENTIK_CLIENT_ID
-            - name: CUSTOM_OAUTH_CLIENT_SECRET
+            - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: firefly-secrets
                   key: OAUTH_AUTHENTIK_CLIENT_SECRET
-            - name: CUSTOM_OAUTH_AUTHORIZE_URI
-              value: "https://sso.svc.damman.tech/application/o/authorize/"
-            - name: CUSTOM_OAUTH_TOKEN_URI
-              value: "https://sso.svc.damman.tech/application/o/token/"
-            - name: CUSTOM_OAUTH_RESOURCE_OWNER_DETAILS_URI
-              value: "https://sso.svc.damman.tech/application/o/userinfo/"
-
-            # Disable local login (force OAuth)
-            - name: DISABLE_FRAME_HEADER
+            - name: OIDC_ISSUER
+              value: "https://sso.svc.damman.tech/application/o/firefly-iii/"
+            - name: OIDC_DISCOVER
               value: "true"
+
+            # Disable SQLite check
             - name: DKR_CHECK_SQLITE
               value: "false"
 

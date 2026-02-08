@@ -22,23 +22,13 @@ spec:
       - host all all 192.168.0.0/16 scram-sha-256
 
   # Bootstrap with superuser from ExternalSecret
+  # Note: Database and user initialization is handled by GitOps jobs (cnpg-init-*.yaml)
   bootstrap:
     initdb:
       database: postgres
       owner: postgres
       secret:
         name: cnpg-shared-superuser
-      postInitApplicationSQL:
-        - CREATE DATABASE authentik OWNER postgres;
-        - CREATE DATABASE netbox OWNER postgres;
-        - CREATE DATABASE firefly OWNER postgres;
-      postInitSQL:
-        - CREATE USER authentik WITH LOGIN;
-        - CREATE USER netbox WITH LOGIN;
-        - CREATE USER firefly WITH LOGIN;
-        - GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;
-        - GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
-        - GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly;
 
   # Superuser secret reference
   superuserSecret:

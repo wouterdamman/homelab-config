@@ -80,14 +80,6 @@ spec:
                   name: firefly-secrets
                   key: APP_KEY
 
-            # Remote User Authentication (Forward Auth with Authentik)
-            - name: AUTHENTICATION_GUARD
-              value: "remote_user_guard"
-            - name: AUTHENTICATION_GUARD_HEADER
-              value: "HTTP_X_AUTHENTIK_EMAIL"
-            - name: AUTHENTICATION_GUARD_EMAIL
-              value: "HTTP_X_AUTHENTIK_EMAIL"
-
             # Disable SQLite check
             - name: DKR_CHECK_SQLITE
               value: "false"

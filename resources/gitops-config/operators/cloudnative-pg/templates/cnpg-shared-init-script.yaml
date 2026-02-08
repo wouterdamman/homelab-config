@@ -33,6 +33,18 @@ data:
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO netbox;
     GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO netbox;
 
+    -- Grant schema permissions for firefly user
+    \c firefly
+    GRANT ALL ON SCHEMA public TO firefly;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO firefly;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO firefly;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO firefly;
+
+    -- If tables already exist, grant permissions on them
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO firefly;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO firefly;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO firefly;
+
   set-user-password.sql: |
     -- Template for setting user passwords
     -- Execute this manually with:

@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: firefly-data
+  namespace: firefly-iii
+  labels:
+    app.kubernetes.io/name: firefly-iii
+    app.kubernetes.io/component: finance
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ .Values.storage.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}

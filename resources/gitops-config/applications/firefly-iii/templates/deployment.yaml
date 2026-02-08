@@ -1,0 +1,143 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly
+  namespace: firefly-iii
+  labels:
+    app.kubernetes.io/name: firefly-iii
+    app.kubernetes.io/component: finance
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: firefly-iii
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: firefly-iii
+        app.kubernetes.io/component: finance
+    spec:
+      containers:
+        - name: firefly
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # App configuration
+            - name: APP_ENV
+              value: "production"
+            - name: APP_URL
+              value: "{{ .Values.app.url }}"
+            - name: TRUSTED_PROXIES
+              value: "**"
+            - name: TZ
+              value: "{{ .Values.app.timezone }}"
+            - name: APP_LOCALE
+              value: "{{ .Values.app.locale }}"
+
+            # Database configuration (from secret)
+            - name: DB_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_CONNECTION
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_PORT
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_DATABASE
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: DB_PASSWORD
+
+            # App key (from secret)
+            - name: APP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: APP_KEY
+
+            # OAuth2 configuration (Authentik)
+            - name: AUTHENTICATION_GUARD
+              value: "remote_user_guard"
+            - name: AUTHENTICATION_GUARD_HEADER
+              value: "HTTP_REMOTE_USER"
+            - name: AUTHENTICATION_GUARD_EMAIL
+              value: "HTTP_X_AUTHENTIK_EMAIL"
+
+            # OAuth Custom Driver for Authentik
+            - name: CUSTOM_OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: OAUTH_AUTHENTIK_CLIENT_ID
+            - name: CUSTOM_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: firefly-secrets
+                  key: OAUTH_AUTHENTIK_CLIENT_SECRET
+            - name: CUSTOM_OAUTH_AUTHORIZE_URI
+              value: "https://sso.svc.damman.tech/application/o/authorize/"
+            - name: CUSTOM_OAUTH_TOKEN_URI
+              value: "https://sso.svc.damman.tech/application/o/token/"
+            - name: CUSTOM_OAUTH_RESOURCE_OWNER_DETAILS_URI
+              value: "https://sso.svc.damman.tech/application/o/userinfo/"
+
+            # Disable local login (force OAuth)
+            - name: DISABLE_FRAME_HEADER
+              value: "true"
+            - name: DKR_CHECK_SQLITE
+              value: "false"
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - name: firefly-data
+              mountPath: /var/www/html/storage/upload
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+      volumes:
+        - name: firefly-data
+          persistentVolumeClaim:
+            claimName: firefly-data

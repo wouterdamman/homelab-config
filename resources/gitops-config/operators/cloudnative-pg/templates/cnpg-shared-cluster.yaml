@@ -31,11 +31,14 @@ spec:
       postInitApplicationSQL:
         - CREATE DATABASE authentik OWNER postgres;
         - CREATE DATABASE netbox OWNER postgres;
+        - CREATE DATABASE firefly OWNER postgres;
       postInitSQL:
         - CREATE USER authentik WITH LOGIN;
         - CREATE USER netbox WITH LOGIN;
+        - CREATE USER firefly WITH LOGIN;
         - GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;
         - GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
+        - GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly;
 
   # Superuser secret reference
   superuserSecret:

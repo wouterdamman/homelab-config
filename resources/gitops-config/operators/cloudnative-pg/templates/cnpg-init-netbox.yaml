@@ -1,5 +1,4 @@
 ---
-# Idempotent job to initialize netbox database and user
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -12,10 +11,11 @@ spec:
   ttlSecondsAfterFinished: 300
   template:
     spec:
+      serviceAccountName: cnpg-init
       restartPolicy: Never
       containers:
         - name: init-netbox
-          image: postgres:16.4
+          image: bitnami/kubectl:latest
           command:
             - /bin/bash
             - -c
@@ -23,70 +23,37 @@ spec:
               set -e
               echo "=== Initializing netbox database ==="
 
-              # Wait for database
-              until pg_isready -h cnpg-shared-rw -U postgres; do
-                echo "Waiting for PostgreSQL..."
-                sleep 2
-              done
+              PRIMARY_POD=$(kubectl get pods -n cnpg-system -l cnpg.io/cluster=cnpg-shared,role=primary -o jsonpath='{.items[0].metadata.name}')
+              echo "Using primary pod: $PRIMARY_POD"
 
-              # Initialize database and user
-              psql -h cnpg-shared-rw -U postgres <<'EOSQL'
-              -- Create database if not exists
-              SELECT 'Checking netbox database...' AS status;
+              NETBOX_PW=$(kubectl get secret cnpg-shared-netbox -n cnpg-system -o jsonpath='{.data.password}' | base64 -d)
+
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres <<'EOSQL'
               DO $$ BEGIN
                 IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'netbox') THEN
                   CREATE DATABASE netbox OWNER postgres;
                   RAISE NOTICE 'Created database: netbox';
-                ELSE
-                  RAISE NOTICE 'Database netbox already exists';
                 END IF;
               END $$;
-
-              -- Create user if not exists
               DO $$ BEGIN
                 IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'netbox') THEN
                   CREATE USER netbox WITH LOGIN;
                   RAISE NOTICE 'Created user: netbox';
-                ELSE
-                  RAISE NOTICE 'User netbox already exists';
                 END IF;
               END $$;
-
-              -- Set password (always, even if user exists)
-              ALTER USER netbox WITH PASSWORD :'NETBOX_PASSWORD';
-
-              -- Grant database privileges
               GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
-
-              SELECT 'Database privileges granted' AS status;
               EOSQL
 
-              # Set schema permissions
-              psql -h cnpg-shared-rw -U postgres -d netbox <<'EOSQL'
-              SELECT 'Setting schema permissions...' AS status;
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c "ALTER USER netbox WITH PASSWORD '$NETBOX_PW';"
 
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d netbox <<'EOSQL'
               GRANT ALL ON SCHEMA public TO netbox;
               ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO netbox;
               ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO netbox;
               ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO netbox;
-
-              -- Grant on existing objects
               GRANT ALL ON ALL TABLES IN SCHEMA public TO netbox;
               GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO netbox;
               GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO netbox;
-
-              SELECT 'Schema permissions complete' AS status;
               EOSQL
 
               echo "=== NetBox initialization complete ==="
-          env:
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cnpg-shared-superuser
-                  key: password
-            - name: NETBOX_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cnpg-shared-netbox
-                  key: password

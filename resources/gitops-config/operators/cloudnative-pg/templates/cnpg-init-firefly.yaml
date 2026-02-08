@@ -35,41 +35,27 @@ spec:
               # Get firefly password
               FIREFLY_PW=$(kubectl get secret cnpg-shared-firefly -n cnpg-system -o jsonpath='{.data.password}' | base64 -d)
 
-              # Initialize database and user
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres <<'EOSQL'
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'firefly') THEN
-                  CREATE DATABASE firefly OWNER postgres;
-                  RAISE NOTICE 'Created database: firefly';
-                ELSE
-                  RAISE NOTICE 'Database firefly already exists';
-                END IF;
-              END $$;
+              # Initialize database and user (idempotent)
+              echo "Creating database if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'firefly') THEN CREATE DATABASE firefly OWNER postgres; RAISE NOTICE 'Created database: firefly'; ELSE RAISE NOTICE 'Database firefly already exists'; END IF; END \$\$;"
 
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'firefly') THEN
-                  CREATE USER firefly WITH LOGIN;
-                  RAISE NOTICE 'Created user: firefly';
-                ELSE
-                  RAISE NOTICE 'User firefly already exists';
-                END IF;
-              END $$;
+              echo "Creating user if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'firefly') THEN CREATE USER firefly WITH LOGIN; RAISE NOTICE 'Created user: firefly'; ELSE RAISE NOTICE 'User firefly already exists'; END IF; END \$\$;"
 
-              GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly;
-              EOSQL
+              echo "Granting privileges..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly;"
 
               # Set password
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c "ALTER USER firefly WITH PASSWORD '$FIREFLY_PW';"
+              echo "Setting user password..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "ALTER USER firefly WITH PASSWORD '$FIREFLY_PW';"
 
               # Set schema permissions
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d firefly <<'EOSQL'
-              GRANT ALL ON SCHEMA public TO firefly;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO firefly;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO firefly;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO firefly;
-              GRANT ALL ON ALL TABLES IN SCHEMA public TO firefly;
-              GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO firefly;
-              GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO firefly;
-              EOSQL
+              echo "Setting schema permissions..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d firefly -c \
+                "GRANT ALL ON SCHEMA public TO firefly; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO firefly; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO firefly; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO firefly; GRANT ALL ON ALL TABLES IN SCHEMA public TO firefly; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO firefly; GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO firefly;"
 
               echo "=== Firefly initialization complete ==="

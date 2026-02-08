@@ -28,32 +28,24 @@ spec:
 
               AUTHENTIK_PW=$(kubectl get secret cnpg-shared-authentik -n cnpg-system -o jsonpath='{.data.password}' | base64 -d)
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres <<'EOSQL'
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'authentik') THEN
-                  CREATE DATABASE authentik OWNER postgres;
-                  RAISE NOTICE 'Created database: authentik';
-                END IF;
-              END $$;
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'authentik') THEN
-                  CREATE USER authentik WITH LOGIN;
-                  RAISE NOTICE 'Created user: authentik';
-                END IF;
-              END $$;
-              GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;
-              EOSQL
+              echo "Creating database if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'authentik') THEN CREATE DATABASE authentik OWNER postgres; RAISE NOTICE 'Created database: authentik'; ELSE RAISE NOTICE 'Database authentik already exists'; END IF; END \$\$;"
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c "ALTER USER authentik WITH PASSWORD '$AUTHENTIK_PW';"
+              echo "Creating user if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'authentik') THEN CREATE USER authentik WITH LOGIN; RAISE NOTICE 'Created user: authentik'; ELSE RAISE NOTICE 'User authentik already exists'; END IF; END \$\$;"
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d authentik <<'EOSQL'
-              GRANT ALL ON SCHEMA public TO authentik;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authentik;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authentik;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO authentik;
-              GRANT ALL ON ALL TABLES IN SCHEMA public TO authentik;
-              GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authentik;
-              GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO authentik;
-              EOSQL
+              echo "Granting privileges..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "GRANT ALL PRIVILEGES ON DATABASE authentik TO authentik;"
+
+              echo "Setting user password..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "ALTER USER authentik WITH PASSWORD '$AUTHENTIK_PW';"
+
+              echo "Setting schema permissions..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d authentik -c \
+                "GRANT ALL ON SCHEMA public TO authentik; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO authentik; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO authentik; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO authentik; GRANT ALL ON ALL TABLES IN SCHEMA public TO authentik; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authentik; GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO authentik;"
 
               echo "=== Authentik initialization complete ==="

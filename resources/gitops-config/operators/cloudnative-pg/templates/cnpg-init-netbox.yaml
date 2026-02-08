@@ -28,32 +28,24 @@ spec:
 
               NETBOX_PW=$(kubectl get secret cnpg-shared-netbox -n cnpg-system -o jsonpath='{.data.password}' | base64 -d)
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres <<'EOSQL'
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'netbox') THEN
-                  CREATE DATABASE netbox OWNER postgres;
-                  RAISE NOTICE 'Created database: netbox';
-                END IF;
-              END $$;
-              DO $$ BEGIN
-                IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'netbox') THEN
-                  CREATE USER netbox WITH LOGIN;
-                  RAISE NOTICE 'Created user: netbox';
-                END IF;
-              END $$;
-              GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;
-              EOSQL
+              echo "Creating database if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'netbox') THEN CREATE DATABASE netbox OWNER postgres; RAISE NOTICE 'Created database: netbox'; ELSE RAISE NOTICE 'Database netbox already exists'; END IF; END \$\$;"
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c "ALTER USER netbox WITH PASSWORD '$NETBOX_PW';"
+              echo "Creating user if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'netbox') THEN CREATE USER netbox WITH LOGIN; RAISE NOTICE 'Created user: netbox'; ELSE RAISE NOTICE 'User netbox already exists'; END IF; END \$\$;"
 
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d netbox <<'EOSQL'
-              GRANT ALL ON SCHEMA public TO netbox;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO netbox;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO netbox;
-              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO netbox;
-              GRANT ALL ON ALL TABLES IN SCHEMA public TO netbox;
-              GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO netbox;
-              GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO netbox;
-              EOSQL
+              echo "Granting privileges..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;"
+
+              echo "Setting user password..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "ALTER USER netbox WITH PASSWORD '$NETBOX_PW';"
+
+              echo "Setting schema permissions..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d netbox -c \
+                "GRANT ALL ON SCHEMA public TO netbox; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO netbox; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO netbox; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO netbox; GRANT ALL ON ALL TABLES IN SCHEMA public TO netbox; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO netbox; GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO netbox;"
 
               echo "=== NetBox initialization complete ==="

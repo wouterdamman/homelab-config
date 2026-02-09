@@ -80,17 +80,6 @@ spec:
               key: SECRET_KEY
         - name: TIME_ZONE
           value: "{{ .Values.config.timeZone }}"
-        volumeMounts:
-        - name: media
-          mountPath: /opt/netbox/netbox/media
         resources:
           {{- toYaml .Values.worker.resources | nindent 10 }}
-      volumes:
-      - name: media
-        {{- if .Values.persistence.enabled }}
-        persistentVolumeClaim:
-          claimName: netbox-media
-        {{- else }}
-        emptyDir: {}
-        {{- end }}
 {{- end }}

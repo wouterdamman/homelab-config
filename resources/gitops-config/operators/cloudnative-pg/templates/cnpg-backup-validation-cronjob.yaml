@@ -1,0 +1,252 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cnpg-backup-validation
+  namespace: cnpg-system
+spec:
+  # Every Sunday at 04:00 UTC (after daily backup at 03:00)
+  schedule: "0 4 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0  # Don't retry on failure
+      ttlSecondsAfterFinished: 3600  # Keep for 1 hour
+      template:
+        spec:
+          serviceAccountName: cnpg-backup-validation
+          restartPolicy: Never
+          containers:
+            - name: validate-backups
+              image: bitnami/kubectl:latest
+              env:
+                - name: PUSHOVER_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: cnpg-backup-validation-pushover
+                      key: user-key
+                - name: PUSHOVER_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: cnpg-backup-validation-pushover
+                      key: api-token
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+
+                  # Function to send Pushover notification
+                  send_pushover() {
+                    local title="$1"
+                    local message="$2"
+                    local priority="$3"  # -2=lowest, -1=low, 0=normal, 1=high, 2=emergency
+
+                    echo "Sending Pushover notification: $title"
+                    RESPONSE=$(curl -s -X POST https://api.pushover.net/1/messages.json \
+                      -d "token=${PUSHOVER_TOKEN}" \
+                      -d "user=${PUSHOVER_USER}" \
+                      -d "title=${title}" \
+                      -d "message=${message}" \
+                      -d "priority=${priority}")
+                    echo "Pushover response: $RESPONSE"
+                  }
+
+                  # Function to validate a cluster backup
+                  validate_cluster() {
+                    local cluster_name="$1"
+                    local cluster_namespace="cnpg-system"
+                    local test_namespace="backup-validation-${cluster_name}-$(date +%s)"
+                    local validation_result="success"
+                    local error_details=""
+
+                    echo "=== Starting validation for cluster: $cluster_name ==="
+
+                    # Get last successful backup timestamp from cluster status
+                    LAST_BACKUP_TIME=$(kubectl get cluster cnpg-${cluster_name} -n $cluster_namespace -o jsonpath='{.status.lastSuccessfulBackup}')
+
+                    if [ -z "$LAST_BACKUP_TIME" ]; then
+                      echo "ERROR: No successful backup found for cluster"
+                      send_pushover \
+                        "⚠️ Backup Validation Warning" \
+                        "No successful backup found in cluster status for: cnpg-${cluster_name}" \
+                        "0"
+                      return 1
+                    fi
+
+                    echo "Last successful backup from S3: $LAST_BACKUP_TIME"
+                    BACKUP_TIME=$LAST_BACKUP_TIME
+
+                    # Create test namespace
+                    echo "Creating test namespace: $test_namespace"
+                    kubectl create namespace $test_namespace
+
+                    # Copy S3 credentials to test namespace
+                    echo "Copying S3 credentials to test namespace..."
+                    kubectl get secret cnpg-s3-secret -n $cluster_namespace -o json | \
+                      jq 'del(.metadata.namespace,.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.ownerReferences)' | \
+                      kubectl apply -n $test_namespace -f -
+
+                    # Create test cluster with restore from S3 backup
+                    echo "Creating test cluster with restore from S3 (Hetzner Object Storage)..."
+                    cat <<EOF | kubectl apply -f -
+                  apiVersion: postgresql.cnpg.io/v1
+                  kind: Cluster
+                  metadata:
+                    name: test-restore
+                    namespace: $test_namespace
+                  spec:
+                    instances: 1
+                    imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+                    storage:
+                      size: 10Gi
+                      storageClass: longhorn-monitoring
+
+                    bootstrap:
+                      recovery:
+                        source: cnpg-${cluster_name}
+
+                    externalClusters:
+                      - name: cnpg-${cluster_name}
+                        barmanObjectStore:
+                          destinationPath: s3://homelab-prd/cnpg-backup/${cluster_name}/
+                          endpointURL: https://nbg1.your-objectstorage.com
+                          s3Credentials:
+                            accessKeyId:
+                              name: cnpg-s3-secret
+                              key: ACCESS_KEY_ID
+                            secretAccessKey:
+                              name: cnpg-s3-secret
+                              key: ACCESS_SECRET_KEY
+                          wal:
+                            compression: gzip
+                          data:
+                            compression: gzip
+                  EOF
+
+                    # Wait for cluster to be ready (max 10 minutes)
+                    echo "Waiting for test cluster to be ready..."
+                    TIMEOUT=600
+                    ELAPSED=0
+                    while [ $ELAPSED -lt $TIMEOUT ]; do
+                      PHASE=$(kubectl get cluster test-restore -n $test_namespace -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+                      READY=$(kubectl get cluster test-restore -n $test_namespace -o jsonpath='{.status.instances}' 2>/dev/null || echo "0")
+
+                      echo "Cluster phase: $PHASE, Ready instances: $READY"
+
+                      if [ "$PHASE" = "Cluster in healthy state" ] && [ "$READY" = "1" ]; then
+                        echo "Test cluster is ready!"
+                        break
+                      fi
+
+                      sleep 10
+                      ELAPSED=$((ELAPSED + 10))
+                    done
+
+                    if [ $ELAPSED -ge $TIMEOUT ]; then
+                      echo "ERROR: Timeout waiting for cluster to be ready"
+                      error_details="Timeout waiting for cluster to become ready after 10 minutes"
+                      validation_result="failure"
+                    else
+                      # Validate data integrity
+                      echo "Validating data integrity..."
+
+                      # Get primary pod
+                      PRIMARY_POD=$(kubectl get pods -n $test_namespace -l cnpg.io/cluster=test-restore,role=primary -o jsonpath='{.items[0].metadata.name}')
+
+                      if [ -z "$PRIMARY_POD" ]; then
+                        echo "ERROR: Could not find primary pod"
+                        error_details="Primary pod not found after restore"
+                        validation_result="failure"
+                      else
+                        echo "Primary pod: $PRIMARY_POD"
+
+                        # Test connection and list databases
+                        echo "Testing database connection..."
+                        DATABASES=$(kubectl exec -n $test_namespace $PRIMARY_POD -c postgres -- psql -U postgres -t -c "SELECT datname FROM pg_database WHERE datistemplate = false;" 2>&1)
+
+                        if [ $? -ne 0 ]; then
+                          echo "ERROR: Failed to connect to database"
+                          error_details="Failed to connect to restored database"
+                          validation_result="failure"
+                        else
+                          echo "Databases found:"
+                          echo "$DATABASES"
+
+                          # Count databases (should have postgres + app databases)
+                          DB_COUNT=$(echo "$DATABASES" | grep -v "^$" | wc -l)
+                          echo "Total databases: $DB_COUNT"
+
+                          if [ $DB_COUNT -lt 2 ]; then
+                            echo "WARNING: Expected more databases"
+                            error_details="Only found $DB_COUNT databases, expected at least 2"
+                            validation_result="warning"
+                          else
+                            echo "Data integrity check passed!"
+                          fi
+                        fi
+                      fi
+                    fi
+
+                    # Cleanup
+                    echo "Cleaning up test namespace..."
+                    kubectl delete namespace $test_namespace --wait=false
+
+                    # Send result notification
+                    if [ "$validation_result" = "success" ]; then
+                      send_pushover \
+                        "✅ Backup Validation Success" \
+                        "Cluster: cnpg-${cluster_name}\nBackup Source: Hetzner S3\nBackup Time: $BACKUP_TIME\nDatabases: $DB_COUNT\n\nRestore test from S3 completed successfully!" \
+                        "-1"
+                    elif [ "$validation_result" = "warning" ]; then
+                      send_pushover \
+                        "⚠️ Backup Validation Warning" \
+                        "Cluster: cnpg-${cluster_name}\nBackup Time: $BACKUP_TIME\nWarning: $error_details" \
+                        "0"
+                    else
+                      send_pushover \
+                        "❌ Backup Validation FAILED" \
+                        "Cluster: cnpg-${cluster_name}\nBackup Time: $BACKUP_TIME\nError: $error_details\n\nImmediate attention required!" \
+                        "1"
+                      return 1
+                    fi
+
+                    echo "=== Validation completed for $cluster_name with result: $validation_result ==="
+                    return 0
+                  }
+
+                  # Main execution
+                  echo "Starting CNPG Backup Validation"
+                  echo "Date: $(date)"
+
+                  OVERALL_SUCCESS=true
+
+                  # Validate cnpg-shared cluster
+                  if ! validate_cluster "shared"; then
+                    OVERALL_SUCCESS=false
+                  fi
+
+                  echo ""
+                  echo "---"
+                  echo ""
+
+                  # Validate cnpg-homeassistant cluster
+                  if ! validate_cluster "homeassistant"; then
+                    OVERALL_SUCCESS=false
+                  fi
+
+                  # Cleanup any leftover test namespaces from previous runs (in case of crashes)
+                  echo ""
+                  echo "Cleaning up any leftover test namespaces..."
+                  kubectl get namespaces -o name | grep "namespace/backup-validation-" | xargs -r kubectl delete --wait=false || true
+
+                  # Final result
+                  if [ "$OVERALL_SUCCESS" = true ]; then
+                    echo "All backup validations completed successfully!"
+                    exit 0
+                  else
+                    echo "One or more backup validations failed!"
+                    exit 1
+                  fi

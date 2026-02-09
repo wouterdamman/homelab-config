@@ -40,12 +40,12 @@ httproutes:
 - enabled: true
   name: zigbee-httproute
   namespace: zigbee2mqtt
-  hostname: zigbee.app.damman.tech
+  hostname: zigbee.svc.damman.tech
   path: /
   gateway:
-    name: app-gateway
+    name: svc-gateway
     namespace: kube-system
-    sectionName: app-https-listener
+    sectionName: svc-https-listener
   backend:
     name: zigbee2mqtt
     port: 8080

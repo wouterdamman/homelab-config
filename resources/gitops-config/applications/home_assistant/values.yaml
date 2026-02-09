@@ -73,12 +73,12 @@ httproutes:
 - enabled: true
   name: codeserver-httproute
   namespace: home-assistant
-  hostname: codeserver.app.damman.tech
+  hostname: codeserver.svc.damman.tech
   path: /
   gateway:
-    name: app-gateway
+    name: svc-gateway
     namespace: kube-system
-    sectionName: app-https-listener
+    sectionName: svc-https-listener
   backend:
     name: home-assistant-codeserver
     port: 12321

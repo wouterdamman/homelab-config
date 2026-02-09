@@ -32,15 +32,43 @@ data:
     SOCIAL_AUTH_OIDC_SCOPE = {{ .Values.sso.scopes | splitList " " | toJson }}
     SOCIAL_AUTH_OIDC_USERNAME_KEY = 'preferred_username'
 
-    # Custom pipeline to handle missing user fields
-    def ensure_user_fields(backend, details, response, user=None, *args, **kwargs):
-        """Ensure required user fields have values"""
-        if not details.get('last_name'):
-            # Use first_name as last_name if family_name is missing
-            details['last_name'] = details.get('first_name', 'User')
-        if not details.get('first_name'):
-            details['first_name'] = details.get('username', 'Unknown')
-        return {'details': details}
+    # Custom user details extraction that handles missing fields
+    def get_user_details(strategy, details, backend, user=None, *args, **kwargs):
+        """Extract user details from OIDC response with fallbacks for required fields"""
+        # Get the original details
+        out = {
+            'username': details.get('username'),
+            'email': details.get('email', ''),
+            'first_name': details.get('first_name', ''),
+            'last_name': details.get('last_name', ''),
+        }
+
+        # Handle missing last_name (required by NetBox)
+        if not out['last_name']:
+            # Try to split full name if available
+            full_name = details.get('fullname') or details.get('first_name', '')
+            name_parts = full_name.split(' ', 1) if full_name else []
+
+            if len(name_parts) == 2:
+                out['first_name'] = name_parts[0]
+                out['last_name'] = name_parts[1]
+            elif len(name_parts) == 1:
+                out['first_name'] = name_parts[0]
+                out['last_name'] = name_parts[0]  # Use same as first_name
+            else:
+                out['first_name'] = out.get('username', 'User')
+                out['last_name'] = out.get('username', 'User')
+
+        return {'details': out}
+
+    # Override the user_details pipeline function
+    import sys
+    from types import ModuleType
+
+    # Create a module to hold our custom function
+    custom_pipeline = ModuleType('netbox_custom_pipeline')
+    custom_pipeline.get_user_details = get_user_details
+    sys.modules['netbox_custom_pipeline'] = custom_pipeline
 
     SOCIAL_AUTH_PIPELINE = (
         'social_core.pipeline.social_auth.social_details',
@@ -48,11 +76,10 @@ data:
         'social_core.pipeline.social_auth.auth_allowed',
         'social_core.pipeline.social_auth.social_user',
         'social_core.pipeline.user.get_username',
-        ensure_user_fields,  # Custom pipeline step (function reference)
         'social_core.pipeline.user.create_user',
         'social_core.pipeline.social_auth.associate_user',
         'social_core.pipeline.social_auth.load_extra_data',
-        'social_core.pipeline.user.user_details',
+        'netbox_custom_pipeline.get_user_details',  # Custom user details handler
     )
 
     # User attribute mapping

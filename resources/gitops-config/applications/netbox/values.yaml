@@ -14,7 +14,7 @@ config:
 sso:
   enabled: true
   provider: oidc
-  clientId: netbox
+  clientId: xS0lvZfCpBNuTlbYF4a16Xvo0kEa5W4QmYzkVMOi
   issuerUrl: https://sso.svc.damman.tech/application/o/netbox/
   authorizationUrl: https://sso.svc.damman.tech/application/o/authorize/
   tokenUrl: https://sso.svc.damman.tech/application/o/token/

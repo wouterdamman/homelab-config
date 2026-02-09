@@ -6,6 +6,8 @@ metadata:
   namespace: netbox
 data:
   extra.py: |
+    import os
+
     # OIDC/OAuth2 Configuration for Authentik
     REMOTE_AUTH_ENABLED = True
     REMOTE_AUTH_BACKEND = 'social_core.backends.open_id_connect.OpenIdConnectAuth'
@@ -20,6 +22,7 @@ data:
     # OIDC settings
     SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = '{{ .Values.sso.issuerUrl }}'
     SOCIAL_AUTH_OIDC_KEY = '{{ .Values.sso.clientId }}'
+    SOCIAL_AUTH_OIDC_SECRET = os.environ.get('SOCIAL_AUTH_OIDC_SECRET')
 
     # Login URLs
     LOGIN_URL = '/oauth/login/oidc/'

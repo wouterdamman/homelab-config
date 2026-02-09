@@ -1,0 +1,152 @@
+image:
+  repository: netboxcommunity/netbox
+  tag: v4.2.0
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# NetBox configuration
+config:
+  allowedHosts: "*"
+  timeZone: "Europe/Amsterdam"
+
+# SSO/OIDC Configuration (Authentik)
+sso:
+  enabled: true
+  provider: oidc
+  clientId: netbox
+  issuerUrl: https://sso.svc.damman.tech/application/o/netbox/
+  authorizationUrl: https://sso.svc.damman.tech/application/o/authorize/
+  tokenUrl: https://sso.svc.damman.tech/application/o/token/
+  userinfoUrl: https://sso.svc.damman.tech/application/o/userinfo/
+  logoutUrl: https://sso.svc.damman.tech/application/o/netbox/end-session/
+  scopes: "openid profile email"
+
+# Redis (for caching and background tasks)
+redis:
+  enabled: true
+  host: netbox-redis
+  port: 6379
+
+# PostgreSQL connection
+database:
+  host: cnpg-shared-rw.cnpg-system.svc.cluster.local
+  port: 5432
+  name: netbox
+  user: netbox
+
+# External Secrets
+externalSecrets:
+  enabled: true
+  items:
+  - name: netbox-secrets
+    secretStoreRef: onepassword-connect
+    templateData:
+      # Database
+      DB_HOST:
+        value: cnpg-shared-rw.cnpg-system.svc.cluster.local
+        isSecret: false
+      DB_PORT:
+        value: "5432"
+        isSecret: false
+      DB_NAME:
+        value: netbox
+        isSecret: false
+      DB_USER:
+        value: netbox
+        isSecret: false
+      DB_PASSWORD:
+        value: DB_PASSWORD
+        isSecret: true
+      # Redis
+      REDIS_HOST:
+        value: netbox-redis
+        isSecret: false
+      REDIS_PORT:
+        value: "6379"
+        isSecret: false
+      # NetBox secret key
+      SECRET_KEY:
+        value: SECRET_KEY
+        isSecret: true
+      # Superuser
+      SUPERUSER_NAME:
+        value: admin
+        isSecret: false
+      SUPERUSER_EMAIL:
+        value: admin@damman.tech
+        isSecret: false
+      SUPERUSER_PASSWORD:
+        value: SUPERUSER_PASSWORD
+        isSecret: true
+      SUPERUSER_API_TOKEN:
+        value: SUPERUSER_API_TOKEN
+        isSecret: true
+      # OIDC
+      OIDC_CLIENT_SECRET:
+        value: OIDC_CLIENT_SECRET
+        isSecret: true
+    data:
+    - remoteKey: cnpg-shared-netbox
+      property: password
+      secretKey: DB_PASSWORD
+    - remoteKey: netbox-secret-key
+      property: key
+      secretKey: SECRET_KEY
+    - remoteKey: netbox-superuser
+      property: password
+      secretKey: SUPERUSER_PASSWORD
+    - remoteKey: netbox-superuser
+      property: api_token
+      secretKey: SUPERUSER_API_TOKEN
+    - remoteKey: netbox-oidc
+      property: client_secret
+      secretKey: OIDC_CLIENT_SECRET
+
+# Service
+service:
+  type: ClusterIP
+  port: 8080
+
+# HTTPRoute
+httproutes:
+- enabled: true
+  name: netbox-httproute
+  namespace: netbox
+  hostname: netbox.svc.damman.tech
+  path: /
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  backend:
+    name: netbox
+    port: 8080
+
+# Persistence for media files
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: longhorn-standard
+  accessMode: ReadWriteOnce
+
+# Resources
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+
+# Worker resources
+worker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

@@ -1,0 +1,39 @@
+{{- if .Values.sso.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: netbox-config
+  namespace: netbox
+data:
+  extra.py: |
+    # OIDC/OAuth2 Configuration for Authentik
+    REMOTE_AUTH_ENABLED = True
+    REMOTE_AUTH_BACKEND = 'social_core.backends.open_id_connect.OpenIdConnectAuth'
+    REMOTE_AUTH_AUTO_CREATE_USER = True
+
+    # Social auth configuration
+    AUTHENTICATION_BACKENDS = (
+        'social_core.backends.open_id_connect.OpenIdConnectAuth',
+        'netbox.authentication.RemoteUserBackend',
+    )
+
+    # OIDC settings
+    SOCIAL_AUTH_OIDC_OIDC_ENDPOINT = '{{ .Values.sso.issuerUrl }}'
+    SOCIAL_AUTH_OIDC_KEY = '{{ .Values.sso.clientId }}'
+
+    # Login URLs
+    LOGIN_URL = '/oauth/login/oidc/'
+    LOGIN_REDIRECT_URL = '/'
+
+    # Additional OIDC configuration
+    SOCIAL_AUTH_OIDC_SCOPE = {{ .Values.sso.scopes | splitList " " | toJson }}
+    SOCIAL_AUTH_OIDC_USERNAME_KEY = 'preferred_username'
+
+    # User attribute mapping
+    SOCIAL_AUTH_OIDC_USER_FIELDS = {
+        'username': 'preferred_username',
+        'email': 'email',
+        'first_name': 'given_name',
+        'last_name': 'family_name',
+    }
+{{- end }}

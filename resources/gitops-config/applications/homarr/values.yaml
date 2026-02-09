@@ -1,0 +1,110 @@
+image:
+  repository: ghcr.io/homarr-labs/homarr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+# Homarr configuration
+config:
+  baseUrl: https://homarr.svc.damman.tech
+  timeZone: Europe/Amsterdam
+
+# Database configuration (PostgreSQL via CNPG)
+database:
+  host: cnpg-shared-rw.cnpg-system.svc.cluster.local
+  port: 5432
+  name: homarr
+  user: homarr
+
+# OIDC/SSO Configuration (Authentik)
+sso:
+  enabled: true
+  provider: oidc
+  clientId: homarr-client-id-placeholder  # Will be updated with actual client ID
+  issuerUrl: https://sso.svc.damman.tech/application/o/homarr
+  clientName: Authentik
+  scopes: "openid email profile groups"
+  groupsAttribute: groups
+  autoLogin: false
+
+# External Secrets
+externalSecrets:
+  enabled: true
+  items:
+  - name: homarr-secrets
+    secretStoreRef: onepassword-connect
+    templateData:
+      # Database
+      DB_HOST:
+        value: cnpg-shared-rw.cnpg-system.svc.cluster.local
+        isSecret: false
+      DB_PORT:
+        value: "5432"
+        isSecret: false
+      DB_NAME:
+        value: homarr
+        isSecret: false
+      DB_USER:
+        value: homarr
+        isSecret: false
+      DB_PASSWORD:
+        value: DB_PASSWORD
+        isSecret: true
+      # Database URL (required by Homarr)
+      DATABASE_URL:
+        value: "postgresql://homarr:DB_PASSWORD@cnpg-shared-rw.cnpg-system.svc.cluster.local:5432/homarr"
+        isSecret: true
+      # OIDC
+      AUTH_OIDC_CLIENT_ID:
+        value: homarr-client-id-placeholder
+        isSecret: false
+      AUTH_OIDC_CLIENT_SECRET:
+        value: OIDC_CLIENT_SECRET
+        isSecret: true
+      AUTH_OIDC_ISSUER:
+        value: https://sso.svc.damman.tech/application/o/homarr
+        isSecret: false
+    data:
+    - remoteKey: cnpg-shared-homarr
+      property: password
+      secretKey: DB_PASSWORD
+    - remoteKey: homarr-oidc
+      property: client_secret
+      secretKey: OIDC_CLIENT_SECRET
+
+# Service
+service:
+  type: ClusterIP
+  port: 7575
+
+# HTTPRoute
+httproutes:
+- enabled: true
+  name: homarr-httproute
+  namespace: homarr
+  hostname: homarr.svc.damman.tech
+  path: /
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  backend:
+    name: homarr
+    port: 7575
+
+# Persistence for Homarr data
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClassName: longhorn-standard
+  accessMode: ReadWriteOnce
+
+# Resources
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

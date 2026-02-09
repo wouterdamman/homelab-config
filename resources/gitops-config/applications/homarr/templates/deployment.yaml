@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homarr
+  namespace: homarr
+  labels:
+    app.kubernetes.io/name: homarr
+    app.kubernetes.io/component: web
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homarr
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homarr
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+      - name: homarr
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 7575
+          name: http
+          protocol: TCP
+        env:
+        # Database configuration
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: homarr-secrets
+              key: DATABASE_URL
+        # Base URL
+        - name: BASE_URL
+          value: "{{ .Values.config.baseUrl }}"
+        # Timezone
+        - name: TZ
+          value: "{{ .Values.config.timeZone }}"
+        {{- if .Values.sso.enabled }}
+        # OIDC Configuration
+        - name: AUTH_PROVIDERS
+          value: "oidc"
+        - name: AUTH_OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: homarr-secrets
+              key: AUTH_OIDC_CLIENT_ID
+        - name: AUTH_OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: homarr-secrets
+              key: AUTH_OIDC_CLIENT_SECRET
+        - name: AUTH_OIDC_ISSUER
+          valueFrom:
+            secretKeyRef:
+              name: homarr-secrets
+              key: AUTH_OIDC_ISSUER
+        - name: AUTH_OIDC_CLIENT_NAME
+          value: "{{ .Values.sso.clientName }}"
+        - name: AUTH_OIDC_SCOPE_OVERWRITE
+          value: "{{ .Values.sso.scopes }}"
+        - name: AUTH_OIDC_GROUPS_ATTRIBUTE
+          value: "{{ .Values.sso.groupsAttribute }}"
+        {{- if .Values.sso.autoLogin }}
+        - name: AUTH_OIDC_AUTO_LOGIN
+          value: "true"
+        {{- end }}
+        {{- end }}
+        volumeMounts:
+        - name: data
+          mountPath: /app/data/configs
+        - name: icons
+          mountPath: /app/public/icons
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: data
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: homarr-data
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      - name: icons
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: homarr-icons
+        {{- else }}
+        emptyDir: {}
+        {{- end }}

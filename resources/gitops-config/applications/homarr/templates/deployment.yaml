@@ -41,6 +41,12 @@ spec:
         # Timezone
         - name: TZ
           value: "{{ .Values.config.timeZone }}"
+        # Encryption key (required)
+        - name: SECRET_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: homarr-secrets
+              key: SECRET_ENCRYPTION_KEY
         {{- if .Values.sso.enabled }}
         # OIDC Configuration
         - name: AUTH_PROVIDERS

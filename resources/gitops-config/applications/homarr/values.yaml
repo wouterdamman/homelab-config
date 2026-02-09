@@ -22,7 +22,7 @@ sso:
   enabled: true
   provider: oidc
   clientId: xsQOrUUzKH2dO7AEcMXJmTrZ2IfUrrk68fLvCCzT
-  issuerUrl: https://sso.app.damman.tech/application/o/homarr
+  issuerUrl: https://sso.app.damman.tech/application/o/homarr/
   clientName: Authentik
   scopes: "openid email profile groups"
   groupsAttribute: groups
@@ -63,7 +63,7 @@ externalSecrets:
         value: OIDC_CLIENT_SECRET
         isSecret: true
       AUTH_OIDC_ISSUER:
-        value: https://sso.app.damman.tech/application/o/homarr
+        value: https://sso.app.damman.tech/application/o/homarr/
         isSecret: false
     data:
     - remoteKey: cnpg-shared-homarr

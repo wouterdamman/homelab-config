@@ -7,7 +7,7 @@ replicaCount: 1
 
 # Homarr configuration
 config:
-  baseUrl: https://homarr.svc.damman.tech
+  baseUrl: https://homarr.app.damman.tech
   timeZone: Europe/Amsterdam
 
 # Database configuration (PostgreSQL via CNPG)
@@ -21,8 +21,8 @@ database:
 sso:
   enabled: true
   provider: oidc
-  clientId: homarr-client-id-placeholder  # Will be updated with actual client ID
-  issuerUrl: https://sso.svc.damman.tech/application/o/homarr
+  clientId: xsQOrUUzKH2dO7AEcMXJmTrZ2IfUrrk68fLvCCzT
+  issuerUrl: https://sso.app.damman.tech/application/o/homarr
   clientName: Authentik
   scopes: "openid email profile groups"
   groupsAttribute: groups
@@ -57,13 +57,13 @@ externalSecrets:
         isSecret: true
       # OIDC
       AUTH_OIDC_CLIENT_ID:
-        value: homarr-client-id-placeholder
+        value: xsQOrUUzKH2dO7AEcMXJmTrZ2IfUrrk68fLvCCzT
         isSecret: false
       AUTH_OIDC_CLIENT_SECRET:
         value: OIDC_CLIENT_SECRET
         isSecret: true
       AUTH_OIDC_ISSUER:
-        value: https://sso.svc.damman.tech/application/o/homarr
+        value: https://sso.app.damman.tech/application/o/homarr
         isSecret: false
     data:
     - remoteKey: cnpg-shared-homarr
@@ -83,12 +83,12 @@ httproutes:
 - enabled: true
   name: homarr-httproute
   namespace: homarr
-  hostname: homarr.svc.damman.tech
+  hostname: homarr.app.damman.tech
   path: /
   gateway:
-    name: svc-gateway
+    name: app-gateway
     namespace: kube-system
-    sectionName: svc-https-listener
+    sectionName: app-https-listener
   backend:
     name: homarr
     port: 7575

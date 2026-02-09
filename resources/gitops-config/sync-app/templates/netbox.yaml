@@ -1,0 +1,31 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app.kubernetes.io/name: netbox
+    app.kubernetes.io/component: infrastructure
+    app.kubernetes.io/part-of: network-management
+    homelab.damman.tech/tier: tier-3
+    homelab.damman.tech/managed-by: argocd
+  name: netbox
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  source:
+    repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/applications/netbox
+  destination:
+    namespace: netbox
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -20,6 +20,3 @@ spec:
 
   # Target for backup (prefer standby to reduce primary load)
   target: prefer-standby
-
-  # Retention policy: keep backups for 30 days
-  retentionPolicy: "30d"

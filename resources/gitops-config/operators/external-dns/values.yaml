@@ -33,11 +33,11 @@ txtSuffix: ""
 # Resource limits
 resources:
   limits:
-    cpu: 100m
-    memory: 64Mi
+    cpu: 250m
+    memory: 128Mi
   requests:
-    cpu: 5m
-    memory: 32Mi
+    cpu: 10m
+    memory: 64Mi
 
 provider:
   name: webhook

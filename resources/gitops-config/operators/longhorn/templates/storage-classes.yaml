@@ -58,6 +58,7 @@ parameters:
   numberOfReplicas: "1"
   staleReplicaTimeout: "30"
   dataLocality: "strict-local"
-  # No recurringJobSelector - no backups or snapshots
+  # Disable automatic backups/snapshots for monitoring data
+  recurringJobSelector: "[]"
   # No replicaAutoBalance - keep data local
   disableRevisionCounter: "true"

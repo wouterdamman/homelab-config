@@ -41,7 +41,7 @@ resource "proxmox_virtual_environment_vm" "this" {
     ssd          = false
     file_format  = "raw"
     size         = each.value.disk_size
-    file_id      = proxmox_virtual_environment_download_file.this["${each.value.host_node}_${each.value.update == true ? local.update_image_id : local.image_id}"].id
+    file_id      = null # Managed manually, ignored in lifecycle
   }
 
   # Secondary disk for Longhorn storage (workers only)
@@ -67,7 +67,7 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   lifecycle {
     ignore_changes = [
-      disk[0].file_id, # Cannot be determined during import
+      disk[0].file_id, # Manually managed, see image.tf
       initialization,  # Already initialized, avoid recreation
       vga,             # Computed field
     ]

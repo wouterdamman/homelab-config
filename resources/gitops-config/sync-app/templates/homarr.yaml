@@ -1,31 +1,31 @@
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "5"
-  labels:
-    app.kubernetes.io/name: homarr
-    app.kubernetes.io/component: dashboard
-    app.kubernetes.io/part-of: homelab-management
-    homelab.damman.tech/tier: tier-3
-    homelab.damman.tech/managed-by: argocd
-  name: homarr
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: apps
-  source:
-    repoURL: https://github.com/TheIronRock95/homelab-config
-    targetRevision: HEAD
-    path: resources/gitops-config/applications/homarr
-  destination:
-    namespace: homarr
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-    automated:
-      prune: true
-      selfHeal: true
+# ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "5"
+#   labels:
+#     app.kubernetes.io/name: homarr
+#     app.kubernetes.io/component: dashboard
+#     app.kubernetes.io/part-of: homelab-management
+#     homelab.damman.tech/tier: tier-3
+#     homelab.damman.tech/managed-by: argocd
+#   name: homarr
+#   namespace: argocd
+#   finalizers:
+#     - resources-finalizer.argocd.argoproj.io
+# spec:
+#   project: apps
+#   source:
+#     repoURL: https://github.com/TheIronRock95/homelab-config
+#     targetRevision: HEAD
+#     path: resources/gitops-config/applications/homarr
+#   destination:
+#     namespace: homarr
+#     server: https://kubernetes.default.svc
+#   syncPolicy:
+#     syncOptions:
+#       - CreateNamespace=true
+#     automated:
+#       prune: true
+#       selfHeal: true

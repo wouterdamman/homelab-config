@@ -1,12 +1,54 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
 
   "argocd": {
     "fileMatch": [
       "resources/gitops-config/sync-app/templates/.*\\.yaml"
     ]
-  }
-} 
+  },
+
+  "terraform": {
+    "enabled": true
+  },
+
+  "schedule": ["before 6am on Monday"],
+
+  "packageRules": [
+    {
+      "description": "Group tier-2+ Helm chart updates",
+      "matchManagers": ["argocd"],
+      "excludePackageNames": [
+        "argo-cd", "argocd-apps", "cilium", "longhorn",
+        "cert-manager", "cloudnative-pg", "external-dns",
+        "external-secrets", "kubelet-csr-approver", "connect"
+      ],
+      "groupName": "Helm charts (tier-2+)"
+    },
+    {
+      "description": "Automerge patch updates for non-critical Helm charts",
+      "matchManagers": ["argocd"],
+      "matchUpdateTypes": ["patch"],
+      "excludePackageNames": [
+        "argo-cd", "argocd-apps", "cilium", "longhorn",
+        "cert-manager", "cloudnative-pg", "external-dns",
+        "external-secrets", "kubelet-csr-approver", "connect",
+        "kube-prometheus-stack"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Disable patch updates for kube-prometheus-stack",
+      "matchPackageNames": ["kube-prometheus-stack"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
+    },
+    {
+      "description": "Group all Terraform provider updates",
+      "matchManagers": ["terraform"],
+      "groupName": "Terraform providers"
+    }
+  ]
+}

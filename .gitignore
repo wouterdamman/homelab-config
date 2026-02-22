@@ -48,3 +48,5 @@ terraform.rc
 *.bak
 *.claude
 
+# Ignore Hetzner bootstrap config (work in progress)
+resources/bootstrap/hetzner/

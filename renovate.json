@@ -14,6 +14,21 @@
 
   "packageRules": [
     {
+      "description": "Add [Tier: 0] prefix to tier-0 PR titles",
+      "matchManagers": ["argocd"],
+      "matchPackageNames": ["argo-cd", "argocd-apps", "cilium", "longhorn"],
+      "commitMessagePrefix": "[Tier: 0] chore(deps):"
+    },
+    {
+      "description": "Add [Tier: 1] prefix to tier-1 PR titles",
+      "matchManagers": ["argocd"],
+      "matchPackageNames": [
+        "cert-manager", "cloudnative-pg", "external-dns",
+        "external-secrets", "kubelet-csr-approver", "connect"
+      ],
+      "commitMessagePrefix": "[Tier: 1] chore(deps):"
+    },
+    {
       "description": "Group tier-2+ Helm chart and image updates",
       "matchManagers": ["argocd", "helm-values"],
       "excludePackageNames": [
@@ -21,7 +36,8 @@
         "cert-manager", "cloudnative-pg", "external-dns",
         "external-secrets", "kubelet-csr-approver", "connect"
       ],
-      "groupName": "Helm charts (tier-2+)"
+      "groupName": "Helm charts (tier-2+)",
+      "commitMessagePrefix": "[Tier: 2+] chore(deps):"
     },
     {
       "description": "Automerge patch updates for non-critical Helm charts and images",
@@ -44,7 +60,8 @@
     {
       "description": "Group all Terraform provider updates",
       "matchManagers": ["terraform"],
-      "groupName": "Terraform providers"
+      "groupName": "Terraform providers",
+      "commitMessagePrefix": "[Tier: Infra] chore(deps):"
     }
   ]
 }

@@ -29,18 +29,7 @@
       "commitMessagePrefix": "[Tier: 1] chore(deps):"
     },
     {
-      "description": "Group tier-2+ Helm chart and image updates",
-      "matchManagers": ["argocd", "helm-values"],
-      "excludePackageNames": [
-        "argo-cd", "argocd-apps", "cilium", "longhorn",
-        "cert-manager", "cloudnative-pg", "external-dns",
-        "external-secrets", "kubelet-csr-approver", "connect"
-      ],
-      "groupName": "Helm charts (tier-2+)",
-      "commitMessagePrefix": "[Tier: 2+] chore(deps):"
-    },
-    {
-      "description": "Automerge patch updates for non-critical Helm charts and images",
+      "description": "Group tier-2+ patch updates into a single automerged PR",
       "matchManagers": ["argocd", "helm-values"],
       "matchUpdateTypes": ["patch"],
       "excludePackageNames": [
@@ -49,7 +38,20 @@
         "external-secrets", "kubelet-csr-approver", "connect",
         "kube-prometheus-stack"
       ],
+      "groupName": "Helm charts (tier-2+) - patches",
+      "commitMessagePrefix": "[Tier: 2+] chore(deps):",
       "automerge": true
+    },
+    {
+      "description": "Individual PRs for tier-2+ minor and major updates",
+      "matchManagers": ["argocd", "helm-values"],
+      "matchUpdateTypes": ["minor", "major"],
+      "excludePackageNames": [
+        "argo-cd", "argocd-apps", "cilium", "longhorn",
+        "cert-manager", "cloudnative-pg", "external-dns",
+        "external-secrets", "kubelet-csr-approver", "connect"
+      ],
+      "commitMessagePrefix": "[Tier: 2+] chore(deps):"
     },
     {
       "description": "Ignore emqx/emqx docker image updates",

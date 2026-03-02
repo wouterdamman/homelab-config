@@ -10,16 +10,12 @@
     ]
   },
 
-  "terraform": {
-    "enabled": true
-  },
-
   "schedule": ["before 6am on Monday"],
 
   "packageRules": [
     {
-      "description": "Group tier-2+ Helm chart updates",
-      "matchManagers": ["argocd"],
+      "description": "Group tier-2+ Helm chart and image updates",
+      "matchManagers": ["argocd", "helm-values"],
       "excludePackageNames": [
         "argo-cd", "argocd-apps", "cilium", "longhorn",
         "cert-manager", "cloudnative-pg", "external-dns",
@@ -28,8 +24,8 @@
       "groupName": "Helm charts (tier-2+)"
     },
     {
-      "description": "Automerge patch updates for non-critical Helm charts",
-      "matchManagers": ["argocd"],
+      "description": "Automerge patch updates for non-critical Helm charts and images",
+      "matchManagers": ["argocd", "helm-values"],
       "matchUpdateTypes": ["patch"],
       "excludePackageNames": [
         "argo-cd", "argocd-apps", "cilium", "longhorn",

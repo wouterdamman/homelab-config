@@ -12,12 +12,14 @@
 
   "schedule": ["before 6am on Monday"],
 
+  "prTitle": "{{commitMessagePrefix}} [{{updateType}}] chore(deps): {{commitMessageAction}} {{commitMessageTopic}}{{commitMessageExtra}}",
+
   "packageRules": [
     {
       "description": "Add [Tier: 0] prefix to tier-0 PR titles",
       "matchManagers": ["argocd"],
       "matchPackageNames": ["argo-cd", "argocd-apps", "cilium", "longhorn"],
-      "commitMessagePrefix": "[Tier: 0] chore(deps):"
+      "commitMessagePrefix": "[Tier: 0]"
     },
     {
       "description": "Add [Tier: 1] prefix to tier-1 PR titles",
@@ -26,7 +28,7 @@
         "cert-manager", "cloudnative-pg", "external-dns",
         "external-secrets", "kubelet-csr-approver", "connect"
       ],
-      "commitMessagePrefix": "[Tier: 1] chore(deps):"
+      "commitMessagePrefix": "[Tier: 1]"
     },
     {
       "description": "Group tier-2+ patch updates into a single automerged PR",
@@ -39,7 +41,7 @@
         "kube-prometheus-stack"
       ],
       "groupName": "Helm charts (tier-2+) - patches",
-      "commitMessagePrefix": "[Tier: 2+] chore(deps):",
+      "commitMessagePrefix": "[Tier: 2+]",
       "automerge": true
     },
     {
@@ -51,7 +53,7 @@
         "cert-manager", "cloudnative-pg", "external-dns",
         "external-secrets", "kubelet-csr-approver", "connect"
       ],
-      "commitMessagePrefix": "[Tier: 2+] chore(deps):"
+      "commitMessagePrefix": "[Tier: 2+]"
     },
     {
       "description": "Ignore emqx/emqx docker image updates",
@@ -68,7 +70,7 @@
       "description": "Group all Terraform provider updates",
       "matchManagers": ["terraform"],
       "groupName": "Terraform providers",
-      "commitMessagePrefix": "[Tier: Infra] chore(deps):"
+      "commitMessagePrefix": "[Tier: Infra]"
     }
   ]
 }

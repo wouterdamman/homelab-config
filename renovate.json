@@ -52,6 +52,11 @@
       "automerge": true
     },
     {
+      "description": "Ignore emqx/emqx docker image updates",
+      "matchPackageNames": ["emqx/emqx"],
+      "enabled": false
+    },
+    {
       "description": "Disable patch updates for kube-prometheus-stack",
       "matchPackageNames": ["kube-prometheus-stack"],
       "matchUpdateTypes": ["patch"],

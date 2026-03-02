@@ -12,7 +12,7 @@
 
   "schedule": ["before 6am on Monday"],
 
-  "prTitle": "{{commitMessagePrefix}} [{{updateType}}] chore(deps): {{commitMessageAction}} {{commitMessageTopic}}{{commitMessageExtra}}",
+  "prTitle": "{{{commitMessagePrefix}}} [{{updateType}}] chore(deps): {{{commitMessageAction}}} {{{commitMessageTopic}}}{{{commitMessageExtra}}}",
 
   "packageRules": [
     {

@@ -35,10 +35,23 @@ prometheus:
       operator: Equal
       value: "true"
       effect: NoSchedule
+    # Scrape interval - 60s is voldoende voor homelab alerting/debugging
+    scrapeInterval: "60s"
+    evaluationInterval: "60s"
+
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false
     podMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
+
+    # Sluit kube-system (Cilium/Hubble - hoge cardinality) en kubelet-serving-cert-approver uit
+    serviceMonitorNamespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kubelet-serving-cert-approver
 
 # Alertmanager
 alertmanager:
@@ -188,6 +201,14 @@ grafana:
     datasources:
       enabled: true
 
+# Kubelet - disable probes endpoint (niet nuttig), drop hoge-cardinality id-label uit cadvisor
+kubelet:
+  serviceMonitor:
+    probes: false
+    cAdvisorMetricRelabelings:
+      - action: labeldrop
+        regex: id
+
 # Prometheus Node Exporter
 prometheus-node-exporter:
   tolerations:
@@ -221,16 +242,8 @@ kubeEtcd:
 # On Talos, these bind to 127.0.0.1 by default. We've configured them to bind to 0.0.0.0
 # in the Talos machine config. Endpoints are discovered via control-plane node IPs.
 kubeControllerManager:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    https: true
-    insecureSkipVerify: true
+  enabled: false # Niet nuttig voor homelab alerting
 kubeScheduler:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    https: true
-    insecureSkipVerify: true
+  enabled: false # Niet nuttig voor homelab alerting
 kubeProxy:
   enabled: false # Using Cilium kube-proxy replacement

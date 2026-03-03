@@ -11,6 +11,19 @@ configs:
       - apiGroups: ['cilium.io']
         kinds: ['CiliumIdentity']
         clusters: ['*']
+    # Ignore defaulted fields added by operators/API server (avoids false sync diffs with ServerSideApply)
+    resource.customizations.ignoreDifferences.external-secrets.io_ExternalSecret: |
+      jqPathExpressions:
+        - '.spec.data[].remoteRef.conversionStrategy'
+        - '.spec.data[].remoteRef.decodingStrategy'
+        - '.spec.data[].remoteRef.metadataPolicy'
+    resource.customizations.ignoreDifferences.gateway.networking.k8s.io_HTTPRoute: |
+      jqPathExpressions:
+        - '.spec.parentRefs[].group'
+        - '.spec.parentRefs[].kind'
+        - '.spec.rules[].backendRefs[].group'
+        - '.spec.rules[].backendRefs[].kind'
+        - '.spec.rules[].backendRefs[].weight'
     dex.config: |
       connectors:
         - type: github

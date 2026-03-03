@@ -39,8 +39,8 @@ prometheus:
     scrapeInterval: "60s"
     evaluationInterval: "60s"
 
-    # Ignore exporter timestamps to avoid out-of-order sample drops
-    honorTimestamps: false
+    # Override exporter timestamps to avoid out-of-order sample drops
+    overrideHonorTimestamps: true
 
     # Service monitors
     serviceMonitorSelectorNilUsesHelmValues: false

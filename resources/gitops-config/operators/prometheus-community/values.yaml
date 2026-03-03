@@ -204,13 +204,20 @@ grafana:
     datasources:
       enabled: true
 
-# Kubelet - disable probes endpoint (niet nuttig), drop hoge-cardinality id-label uit cadvisor
+# Kubelet - disable probes endpoint, allowlist alleen essentiële cadvisor metrics
+# Reduceert series van ~275k naar geschatte ~60-80k
 kubelet:
   serviceMonitor:
     probes: false
     cAdvisorMetricRelabelings:
+      # Drop hoge-cardinality id-label
       - action: labeldrop
         regex: id
+      # Allowlist: behoud alleen essentiële metrics voor alerting/debugging
+      - sourceLabels: [__name__]
+        regex: >-
+          container_(cpu_usage_seconds_total|cpu_cfs_periods_total|cpu_cfs_throttled_periods_total|cpu_cfs_throttled_seconds_total|memory_working_set_bytes|memory_usage_bytes|memory_rss|memory_cache|network_receive_bytes_total|network_transmit_bytes_total|network_receive_errors_total|network_transmit_errors_total|fs_usage_bytes|fs_limit_bytes|oom_events_total|start_time_seconds|scrape_error)
+        action: keep
 
 # Prometheus Node Exporter
 prometheus-node-exporter:

@@ -29,3 +29,6 @@ spec:
     remoteRef:
       key: github-argo-app
       property: argocd-private-acces.2025-04-22.private-key.pem
+      conversionStrategy: Default
+      decodingStrategy: None
+      metadataPolicy: None

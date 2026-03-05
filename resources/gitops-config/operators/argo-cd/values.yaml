@@ -48,10 +48,11 @@ global:
         release: prometheus
 
 controller:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -68,10 +69,11 @@ controller:
         release: prometheus
 
 applicationSet:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -88,10 +90,11 @@ applicationSet:
         release: prometheus
 
 repoServer:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -108,10 +111,11 @@ repoServer:
         release: prometheus
 
 server:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -129,10 +133,11 @@ server:
         release: prometheus
 
 redis:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -143,10 +148,11 @@ redis:
       memory: 32Mi
 
 dex:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:
@@ -157,10 +163,11 @@ dex:
       memory: 128Mi
 
 notificationsController:
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   tolerations:
   - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
+    operator: Exists
     effect: NoSchedule
   resources:
     limits:

@@ -12,7 +12,7 @@ replicaCount: 1
 extraArgs:
   - --enable-gateway-api
   - --dns01-recursive-nameservers-only
-  - --dns01-recursive-nameservers=1.1.1.1:53
+  - --dns01-recursive-nameservers=10.0.10.220:53
 
 resources:
   limits:

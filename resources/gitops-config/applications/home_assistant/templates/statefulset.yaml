@@ -71,10 +71,12 @@ spec:
           mountPath: /config
         {{- if .Values.externalSecrets.enabled }}
         {{- range .Values.externalSecrets.items }}
+        {{- if not .coderOnly }}
         - name: {{ .name }}
           mountPath: /config/{{ .secretKey }}
           subPath: {{ .secretKey }}
           readOnly: true
+        {{- end }}
         {{- end }}
         {{- end }}
         {{- if .Values.resources }}
@@ -121,10 +123,16 @@ spec:
         {{- if .Values.externalSecrets.enabled }}
         {{- range .Values.externalSecrets.items }}
         - name: {{ .name }}
-          mountPath: /config/{{ .secretKey }}
+          mountPath: {{ default (printf "/config/%s" .secretKey) .mountPath }}
           subPath: {{ .secretKey }}
           readOnly: true
         {{- end }}
+        {{- end }}
+        {{- if .Values.sshKnownHosts.enabled }}
+        - name: ssh-known-hosts
+          mountPath: /home/coder/.ssh/known_hosts
+          subPath: known_hosts
+          readOnly: true
         {{- end }}
         env:
         - name: TZ
@@ -141,8 +149,13 @@ spec:
       - name: {{ .name }}
         secret:
           secretName: {{ .name }}
-          defaultMode: 0440
+          defaultMode: {{ default 0440 .defaultMode }}
       {{- end }}
+      {{- end }}
+      {{- if .Values.sshKnownHosts.enabled }}
+      - name: ssh-known-hosts
+        configMap:
+          name: {{ include "home-assistant.fullname" . }}-ssh-known-hosts
       {{- end }}
 
   volumeClaimTemplates:

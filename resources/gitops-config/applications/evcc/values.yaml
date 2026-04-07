@@ -3,7 +3,7 @@
 
 image:
   repository: evcc/evcc
-  tag: "0.303.2"
+  tag: "0.304.1"
   pullPolicy: IfNotPresent
 
 replicas: 1

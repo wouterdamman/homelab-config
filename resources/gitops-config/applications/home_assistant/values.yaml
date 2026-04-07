@@ -58,7 +58,7 @@ externalSecrets:
   - name: home-assistant-ssh-key
     secretStoreRef: onepassword-connect
     remoteKey: private_github_auth
-    remoteProperty: private_key
+    remoteProperty: "private key"
     secretKey: id_ed25519
     coderOnly: true
     mountPath: /home/coder/.ssh/id_ed25519

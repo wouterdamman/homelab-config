@@ -1,0 +1,43 @@
+{{- if .Values.gitCron.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "home-assistant.fullname" . }}-git-push
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "home-assistant.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.gitCron.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "home-assistant.fullname" . }}-git-cron
+          restartPolicy: OnFailure
+          containers:
+          - name: git-push
+            image: bitnami/kubectl:latest
+            command:
+            - kubectl
+            - exec
+            - {{ include "home-assistant.fullname" . }}-0
+            - -c
+            - codeserver
+            - --
+            - /bin/sh
+            - -c
+            - |
+              cd /config
+              export GIT_SSH_COMMAND="ssh -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/home/coder/.ssh/known_hosts"
+              git add -A
+              if git diff --staged --quiet; then
+                echo "$(date '+%Y-%m-%d %H:%M:%S') No changes to commit"
+                exit 0
+              fi
+              git commit -m "Auto: nightly backup $(date '+%Y-%m-%d')"
+              git push
+              echo "$(date '+%Y-%m-%d %H:%M:%S') Push successful"
+{{- end }}

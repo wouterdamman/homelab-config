@@ -64,6 +64,10 @@ externalSecrets:
     mountPath: /home/coder/.ssh/id_ed25519
     defaultMode: 0600
 
+gitCron:
+  enabled: true
+  schedule: "0 3 * * *"  # Elke nacht om 03:00
+
 sshKnownHosts:
   enabled: true
   content: "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"

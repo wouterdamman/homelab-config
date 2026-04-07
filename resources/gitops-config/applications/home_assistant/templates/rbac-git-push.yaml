@@ -1,0 +1,40 @@
+{{- if .Values.gitCron.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "home-assistant.fullname" . }}-git-cron
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "home-assistant.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "home-assistant.fullname" . }}-git-cron
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "home-assistant.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "home-assistant.fullname" . }}-git-cron
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "home-assistant.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "home-assistant.fullname" . }}-git-cron
+subjects:
+- kind: ServiceAccount
+  name: {{ include "home-assistant.fullname" . }}-git-cron
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -49,8 +49,15 @@ spec:
                 cd /config
                 export GIT_SSH_COMMAND="ssh -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/home/coder/.ssh/known_hosts"
 
-                echo "$(date +%Y-%m-%d\ %H:%M:%S) Pulling latest changes..."
-                git pull --rebase
+                # Ensure we are on a branch before pulling
+                BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+                if [ -z "${BRANCH}" ]; then
+                  BRANCH=$(git remote show origin | awk "/HEAD branch/ {print \$NF}")
+                  git checkout "${BRANCH}"
+                fi
+
+                echo "$(date +%Y-%m-%d\ %H:%M:%S) Pulling latest changes on ${BRANCH}..."
+                git pull --rebase origin "${BRANCH}"
 
                 git add -A
                 if git diff --staged --quiet; then

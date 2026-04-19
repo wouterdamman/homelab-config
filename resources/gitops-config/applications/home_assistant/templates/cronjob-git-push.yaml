@@ -30,23 +30,35 @@ spec:
               capabilities:
                 drop: ["ALL"]
             command:
-            - kubectl
-            - exec
-            - {{ include "home-assistant.fullname" . }}-0
-            - -c
-            - codeserver
-            - --
             - /bin/sh
             - -c
             - |
-              cd /config
-              export GIT_SSH_COMMAND="ssh -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/home/coder/.ssh/known_hosts"
-              git add -A
-              if git diff --staged --quiet; then
-                echo "$(date '+%Y-%m-%d %H:%M:%S') No changes to commit"
-                exit 0
-              fi
-              git commit -m "Auto: nightly backup $(date '+%Y-%m-%d')"
-              git push
-              echo "$(date '+%Y-%m-%d %H:%M:%S') Push successful"
+              set -e
+              HA_POD="{{ include "home-assistant.fullname" . }}-0"
+
+              # Fix permissions via HA container (runs as root) so codeserver can
+              # write into directories that HA created at runtime (e.g. themes/,
+              # www/community/). Sets group-write + setgid so new subdirs inherit GID.
+              echo "$(date '+%Y-%m-%d %H:%M:%S') Fixing /config directory permissions..."
+              kubectl exec "${HA_POD}" -c home-assistant -- \
+                sh -c 'find /config -type d -exec chmod g+rwxs {} + 2>/dev/null; find /config -type f -exec chmod g+rw {} + 2>/dev/null' || true
+
+              # Git pull + push inside codeserver
+              kubectl exec "${HA_POD}" -c codeserver -- /bin/sh -c '
+                set -e
+                cd /config
+                export GIT_SSH_COMMAND="ssh -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/home/coder/.ssh/known_hosts"
+
+                echo "$(date +%Y-%m-%d\ %H:%M:%S) Pulling latest changes..."
+                git pull --rebase
+
+                git add -A
+                if git diff --staged --quiet; then
+                  echo "$(date +%Y-%m-%d\ %H:%M:%S) No changes to commit"
+                  exit 0
+                fi
+                git commit -m "Auto: nightly backup $(date +%Y-%m-%d)"
+                git push
+                echo "$(date +%Y-%m-%d\ %H:%M:%S) Push successful"
+              '
 {{- end }}

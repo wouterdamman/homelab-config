@@ -58,7 +58,9 @@ spec:
                 fi
 
                 echo "$(date +%Y-%m-%d\ %H:%M:%S) Pulling latest changes on ${BRANCH}..."
+                git stash
                 git pull --rebase origin "${BRANCH}"
+                git stash pop 2>/dev/null || true
 
                 git add -A
                 if git diff --staged --quiet; then

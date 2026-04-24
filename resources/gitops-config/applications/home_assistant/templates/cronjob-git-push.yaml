@@ -49,6 +49,8 @@ spec:
                 set -e
                 cd /config
                 git config --global --add safe.directory /config
+                git config --global user.email "home-assistant@cluster.local"
+                git config --global user.name "Home Assistant"
                 export GIT_SSH_COMMAND="ssh -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/home/coder/.ssh/known_hosts"
 
                 # Ensure we are on a branch before pulling

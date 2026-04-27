@@ -128,6 +128,12 @@ spec:
           readOnly: true
         {{- end }}
         {{- end }}
+        {{- if .Values.sshKnownHosts.enabled }}
+        - name: ssh-known-hosts
+          mountPath: /home/coder/.ssh/known_hosts
+          subPath: known_hosts
+          readOnly: true
+        {{- end }}
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -145,6 +151,11 @@ spec:
           secretName: {{ .name }}
           defaultMode: {{ default 0440 .defaultMode }}
       {{- end }}
+      {{- end }}
+      {{- if .Values.sshKnownHosts.enabled }}
+      - name: ssh-known-hosts
+        configMap:
+          name: {{ include "home-assistant.fullname" . }}-ssh-known-hosts
       {{- end }}
 
   volumeClaimTemplates:

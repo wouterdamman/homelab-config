@@ -1,9 +1,0 @@
-{{- if .Values.sshKnownHosts.enabled }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "home-assistant.fullname" . }}-ssh-known-hosts
-  namespace: {{ .Release.Namespace }}
-data:
-  known_hosts: {{ .Values.sshKnownHosts.content | quote }}
-{{- end }}

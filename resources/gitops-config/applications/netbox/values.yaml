@@ -1,6 +1,6 @@
 image:
   repository: netboxcommunity/netbox
-  tag: v4.5.7
+  tag: v4.5.8
   pullPolicy: IfNotPresent
 
 replicaCount: 1

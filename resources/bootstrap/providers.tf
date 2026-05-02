@@ -14,15 +14,15 @@ terraform {
   required_providers {
     talos = {
       source  = "siderolabs/talos"
-      version = "0.10.1"
+      version = "0.11.0"
     }
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.102.0"
+      version = "0.105.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.0.1"
+      version = "3.1.0"
     }
     random = {
       source  = "hashicorp/random"

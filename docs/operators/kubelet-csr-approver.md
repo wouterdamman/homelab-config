@@ -104,7 +104,7 @@ The approver automates this safely by validating IPs and hostnames against known
 kubectl get csr
 
 # View approver logs
-kubectl logs -n kube-system -l app.kubernetes.io/name=kubelet-csr-approver
+kubectl logs -n kubelet-serving-cert-approver -l app.kubernetes.io/name=kubelet-csr-approver
 
 # Manually approve CSR (emergency)
 kubectl certificate approve <csr-name>

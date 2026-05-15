@@ -55,8 +55,8 @@ Zigbee to MQTT bridge for smart home device integration.
 |---------|-------|
 | Type | StatefulSet |
 | Replicas | 1 |
-| Image | `koenkk/zigbee2mqtt:2.6.2` |
-| Storage | 5Gi (longhorn-standard) |
+| Image | `koenkk/zigbee2mqtt:2.9.2` |
+| Storage | 2Gi (longhorn-standard) |
 
 ### Zigbee Coordinator
 
@@ -80,14 +80,14 @@ serial:
 ```yaml
 initContainers:
 - name: copy-config
-  image: busybox:1.36
+  image: busybox:1.37.0
   command:
   - /bin/sh
   - -c
   - |
     cp /app/readonly/configuration.yaml /app/data/configuration.yaml
   volumeMounts:
-  - name: config-secret
+  - name: config-volume
     mountPath: /app/readonly
     readOnly: true
   - name: data-volume
@@ -208,7 +208,7 @@ kubectl logs -n zigbee2mqtt -l app=zigbee2mqtt | grep -i "mqtt"
 
 **Successful startup messages:**
 ```
-Zigbee2MQTT:info  Starting Zigbee2MQTT version 2.6.2
+Zigbee2MQTT:info  Starting Zigbee2MQTT version 2.9.2
 Zigbee2MQTT:info  MQTT connected
 Zigbee2MQTT:info  Coordinator firmware version: ...
 ```

@@ -128,7 +128,12 @@ Hubble certificates are regenerated on every sync. To prevent out-of-sync:
 
 ```yaml
 # In sync-app/templates/cilium.yaml
-ignoredifferences:
+ignoreDifferences:
+  - group: ""
+    kind: ConfigMap
+    name: hubble-ca-cert
+    jsonPointers:
+      - /data/ca.crt
   - group: ""
     kind: Secret
     name: hubble-relay-client-certs
@@ -136,6 +141,19 @@ ignoredifferences:
       - /data/ca.crt
       - /data/tls.crt
       - /data/tls.key
+  - group: ""
+    kind: Secret
+    name: hubble-server-certs
+    jsonPointers:
+      - /data/ca.crt
+      - /data/tls.crt
+      - /data/tls.key
+  - group: ""
+    kind: Secret
+    name: cilium-ca
+    jsonPointers:
+      - /data/ca.crt
+      - /data/ca.key
 ```
 
 This is already configured in `sync-app/templates/cilium.yaml`.

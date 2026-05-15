@@ -6,7 +6,7 @@ SSO and Authentication Platform for the homelab.
 
 Authentik provides centralized authentication and single sign-on (SSO) for homelab services via OAuth2/OIDC and forward authentication.
 
-- **URL:** https://sso.svc.damman.tech
+- **URL:** https://sso.svc.damman.tech / https://sso.app.damman.tech
 - **Admin Portal:** https://sso.svc.damman.tech/if/admin/
 - **User Portal:** https://sso.svc.damman.tech/if/user/
 - **Namespace:** `authentik`
@@ -19,11 +19,10 @@ Authentik provides centralized authentication and single sign-on (SSO) for homel
 
 ### Components
 
-| Component | Replicas | Memory (req/limit) | Purpose |
-|-----------|----------|-------------------|---------|
-| authentik-server | 2 | 256Mi/512Mi | Web UI + API |
-| authentik-worker | 2 | 256Mi/512Mi | Background tasks |
-| authentik-redis | 1 | 64Mi/128Mi | Session storage |
+| Component | Replicas | CPU (req/limit) | Memory (req/limit) | Purpose |
+|-----------|----------|-----------------|--------------------|---------|
+| authentik-server | 1 | 100m/750m | 640Mi/1280Mi | Web UI + API |
+| authentik-worker | 1 | 100m/none | 384Mi/1024Mi | Background tasks |
 
 ### Database
 

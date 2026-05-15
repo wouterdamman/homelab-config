@@ -81,6 +81,7 @@ This exports:
 - `TF_VAR_proxmox_username`
 - `TF_VAR_proxmox_password`
 - `TF_VAR_proxmox_api_token`
+- `TF_VAR_qdevice_root_password` (for QDevice LXC — ADR-027)
 - `AWS_ACCESS_KEY_ID` (for S3 backend)
 - `AWS_SECRET_ACCESS_KEY` (for S3 backend)
 

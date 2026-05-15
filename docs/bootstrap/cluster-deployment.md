@@ -15,7 +15,7 @@ The bootstrap process provisions a complete Kubernetes cluster:
 > - **Workers**: 3 nodes (3 CPU, 12GB RAM, 250GB disk each)
 > - **Operating System**: Talos Linux v1.13.2
 > - **CNI**: Cilium v1.19.3
-> - **API Gateway**: Gateway API v1.1.0
+> - **API Gateway**: Gateway API v1.2.0
 > - **Infrastructure**: Proxmox VE with automated VM provisioning
 
 ## Prerequisites
@@ -76,7 +76,7 @@ cluster_vip = "10.0.10.140"
 
 talos_version = "v1.13.2"
 cilium_version = "v1.19.3"
-gateway_api_version = "v1.1.0"
+gateway_api_version = "v1.2.0"
 ```
 
 ### Step 3: Initialize and Deploy

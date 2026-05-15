@@ -73,8 +73,8 @@ eval $(op signin)
 ```
 
 **Required secrets in 1Password "KubernetesSecrets" vault:**
-- `op-connect-credentials` — 1Password Connect credentials JSON
-- `op-connect-token` — 1Password Connect access token
+- `onepassword-connect-credentials.json` — 1Password Connect credentials JSON
+- `onepassword-connect-token` — 1Password Connect access token
 - `github-client-secrets` — GitHub OAuth client secret (for ArgoCD SSO)
 - `github-argo-app` — GitHub App credentials (for repo access)
 - `longhorn-s3-backup` — Hetzner Object Storage credentials (for Longhorn backups)
@@ -188,17 +188,17 @@ tofu state list | grep deploy_root_app
 
 Default versions (can be overridden in `terraform.tfvars`):
 - 1Password Connect: 2.1.1
-- External Secrets: 2.4.1
-- ArgoCD: 9.5.14 (app v3.4.2)
-- ArgoCD Apps: 2.0.3
+- External Secrets: 0.20.4
+- ArgoCD: 9.2.3
+- ArgoCD Apps: 2.0.2
 
 ### Customization
 
 ```hcl
 kube_config_path         = "../bootstrap/output/kube-config.yaml"
 onepassword_version      = "2.1.1"
-external_secrets_version = "2.4.1"
-argocd_version           = "9.5.14"
+external_secrets_version = "0.20.4"
+argocd_version           = "9.2.3"
 ```
 
 ## Changelog

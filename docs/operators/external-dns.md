@@ -29,6 +29,7 @@ sources:
   - service
   - ingress
   - gateway-httproute
+  - gateway-tlsroute
 ```
 
 ### UniFi Webhook Provider
@@ -39,7 +40,7 @@ provider:
   webhook:
     image:
       repository: 'ghcr.io/kashalls/external-dns-unifi-webhook'
-      tag: main
+      tag: v0.8.2
     env:
       - name: UNIFI_HOST
         value: https://10.0.10.193
@@ -56,7 +57,7 @@ provider:
 
 | Component | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |-----------|------------|-----------|----------------|--------------|
-| Controller | 5m | 100m | 32Mi | 64Mi |
+| Controller | 10m | 250m | 64Mi | 128Mi |
 | Webhook Sidecar | 10m | 100m | 64Mi | 128Mi |
 
 ---

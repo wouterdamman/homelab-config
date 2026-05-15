@@ -67,6 +67,8 @@ There is also `longhorn-monitoring` (1 replica, strict-local, no backups) used b
 
 ## Resource Limits
 
+Resource limits are **not explicitly configured** in `values.yaml` — Longhorn uses its chart defaults. The values below are informational chart defaults only, not enforced via this repo's configuration.
+
 | Component | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |-----------|------------|-----------|----------------|--------------|
 | Manager | 25m | 250m | 64Mi | 256Mi |

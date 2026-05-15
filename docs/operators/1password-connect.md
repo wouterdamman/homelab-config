@@ -72,7 +72,7 @@ http://onepassword-connect.onepassword:8080
 
 ## Sync Wave
 
-Deployed in **Wave 1** — before External Secrets (Wave 2) to ensure Connect is available before ESO starts syncing.
+Deployed in **Wave 1** — same wave as External Secrets (Wave 1); both deploy together, with Connect available on its service before ESO begins syncing.
 
 ```yaml
 argocd.argoproj.io/sync-wave: "1"

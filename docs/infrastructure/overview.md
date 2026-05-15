@@ -50,9 +50,12 @@ Complete overview of the homelab infrastructure stack.
 |------|------|--------|---------|
 | 1 | Default | 192.168.2.0/27 | Fallback/adoption |
 | 10 | Client | 10.0.10.0/26 | Everyday devices |
+| 11 | Kids | 10.0.10.64/29 | Kids' devices |
 | 13 | Server | 10.0.10.128/25 | Kubernetes/NAS |
 | 30 | IoT | 10.0.30.0/24 | IoT & cameras |
+| 40 | Guest | 10.0.40.128/28 | Guests |
 | 99 | MGMT | 10.0.99.0/24 | UniFi management |
+| 255 | Xbox | 10.255.1.0/29 | Game console |
 
 ## Software Stack
 
@@ -168,7 +171,7 @@ homelab-config/
 ├── resources/
 │   ├── bootstrap/          # OpenTofu for VMs + Talos
 │   ├── gitops-config/      # ArgoCD apps + operators
-│   └── state/              # Local state (gitignored)
+│   └── infrastructure/     # QDevice LXC OpenTofu workspace
 ├── docs/                   # Documentation
 └── renovate.json           # Dependency updates
 ```

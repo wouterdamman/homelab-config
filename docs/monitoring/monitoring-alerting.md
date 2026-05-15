@@ -51,10 +51,10 @@ Complete monitoring and alerting setup using Prometheus, Loki, Grafana, and Push
 
 ```yaml
 Retention: 14 days
-Retention Size: 20GB (stops earlier if limit reached)
+Retention Size: 30GB (stops earlier if limit reached)
 Storage: 40Gi PVC on longhorn-monitoring
-Scrape Interval: 30s
-Evaluation Interval: 30s
+Scrape Interval: 60s
+Evaluation Interval: 60s
 ```
 
 **Prometheus scrapes:**
@@ -125,9 +125,9 @@ Data Sources:
 
 | Component | Storage | Retention | StorageClass | Replicas |
 |-----------|---------|-----------|--------------|----------|
-| Prometheus | 40Gi | 14 days (20GB limit) | longhorn-monitoring | 1 (ephemeral) |
+| Prometheus | 40Gi | 14 days (30GB limit) | longhorn-monitoring | 1 (ephemeral) |
 | Loki | 30Gi | 14 days (336h) | longhorn-monitoring | 1 (ephemeral) |
-| Grafana | 5Gi | — | longhorn-standard | 2 |
+| Grafana | 5Gi | — | longhorn-standard | 1 |
 | Alertmanager | 2Gi | — | longhorn-standard | 2 |
 | **Total** | **77Gi** | | | |
 
@@ -155,7 +155,7 @@ pushover-credentials:
 ## Proxmox VE Monitoring
 
 **Status:** Operational (deployed 2026-01-12)  
-**Chart:** christianhuth/prometheus-pve-exporter v2.6.1 (app v3.8.0)  
+**Chart:** christianhuth/prometheus-pve-exporter v2.7.1 (app v3.8.0)  
 **Authentication:** Password-based (`monitoring@pve` user with PVEAuditor role)  
 
 **Prometheus Targets:**

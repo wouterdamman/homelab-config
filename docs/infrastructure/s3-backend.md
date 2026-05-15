@@ -15,17 +15,14 @@ terraform {
     region   = "nbg1"
     endpoint = "https://nbg1.your-objectstorage.com"
 
-    use_path_style = true
-
     skip_credentials_validation = true
     skip_region_validation      = true
     skip_metadata_api_check     = true
-    skip_requesting_account_id  = true
   }
 }
 ```
 
-The gitops-config stack uses `key = "tofu/gitops-config.tfstate"`.
+The gitops-config stack uses `key = "tofu/gitops-config.tfstate"` and additionally sets `use_path_style = true` and `skip_requesting_account_id = true`.
 
 ---
 

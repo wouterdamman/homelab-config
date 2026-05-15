@@ -7,7 +7,7 @@ Enterprise-grade MQTT broker for home automation communication.
 **Status:** ✅ Deployed & Production (2026-01-28)
 **Purpose:** MQTT message broker for Home Assistant, Zigbee2MQTT, EVCC, and other IoT devices.
 **Namespace:** `emqx`
-**Dashboard:** https://emqx.app.damman.tech
+**Dashboard:** https://emqx.svc.damman.tech
 
 **Migration completed 2026-01-28:** External LoadBalancer removed, all MQTT communication is now internal to the cluster.
 
@@ -41,9 +41,9 @@ Enterprise-grade MQTT broker for home automation communication.
 |---------|-------|
 | Type | StatefulSet |
 | Replicas | 3 |
-| Image | `emqx/emqx:latest` |
-| CPU | 500m request, 2 limit |
-| Memory | 512Mi request, 2Gi limit |
+| Image | `emqx/emqx:5.8.9` |
+| CPU | 100m request, 500m limit |
+| Memory | 256Mi request, 512Mi limit |
 | Storage | 10Gi per pod (longhorn-standard) |
 
 ---
@@ -67,7 +67,6 @@ All external clients connect via `emqx.emqx.svc.cluster.local`.
 ## Cluster Configuration
 
 ```yaml
-EMQX_NODE__COOKIE: emqxsecretcookie
 EMQX_CLUSTER__DISCOVERY_STRATEGY: dns
 EMQX_CLUSTER__DNS__NAME: emqx-headless.emqx.svc.cluster.local
 EMQX_CLUSTER__DNS__RECORD_TYPE: srv
@@ -77,7 +76,7 @@ EMQX_CLUSTER__DNS__RECORD_TYPE: srv
 
 ## Dashboard Access
 
-**URL:** https://emqx.app.damman.tech
+**URL:** https://emqx.svc.damman.tech
 **Username:** `admin`
 **Password:** 1Password → `emqx-dashboard-password`
 

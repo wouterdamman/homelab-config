@@ -12,7 +12,7 @@ Configuration file: `renovate.json` in the repository root.
 | Manager | File pattern | What it tracks |
 |---------|-------------|----------------|
 | ArgoCD | `resources/gitops-config/sync-app/templates/*.yaml` | Helm chart versions (`targetRevision`) |
-| Helm Values | `resources/gitops-config/applications/**/values.yaml` | Docker image tags in Helm values files |
+| Helm Values | All `values.yaml` files under `resources/gitops-config/` | Docker image tags in Helm values files |
 | Terraform | All `.tf` files | Provider versions in `required_providers` |
 
 ---
@@ -79,6 +79,12 @@ All ArgoCD applications have a tier label (`homelab.damman.tech/tier`) that refl
   "prTitle": "{{{commitMessagePrefix}}} [{{updateType}}] chore(deps): {{{commitMessageAction}}} {{{commitMessageTopic}}}{{{commitMessageExtra}}}",
 
   "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml"],
+      "matchStrings": ["imageName: (?<depName>[^\\s:]+):(?<currentValue>[^\\s]+)"],
+      "datasourceTemplate": "docker"
+    },
     {
       "description": "Track hardcoded utility images in Helm template files",
       "customType": "regex",

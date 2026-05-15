@@ -29,7 +29,7 @@ Homarr is a modern, customizable dashboard for managing and accessing homelab se
 
 | Item | Value |
 |------|-------|
-| Image | ghcr.io/homarr-labs/homarr:latest |
+| Image | ghcr.io/homarr-labs/homarr:v1.61.0 |
 | CPU | 200m request, 1000m limit |
 | Memory | 512Mi request, **1Gi limit** ⚠️ |
 | Storage | 5Gi (configs) + 1Gi (icons) |

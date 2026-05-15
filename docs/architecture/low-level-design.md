@@ -18,8 +18,11 @@ Technical implementation details for all components in the homelab infrastructur
 ### Kubernetes Network
 
 ```yaml
-clusterPoolIPv4PodCIDRList: ["10.244.0.0/16"]
-serviceCIDR: 10.96.0.0/12
+# Pod and service CIDRs are set at Talos/Kubernetes level, not in Cilium Helm values.
+# Cilium uses ipam.mode: kubernetes and inherits these ranges from the K8s API server.
+# Example values (configured in Talos machine config):
+#   podSubnets: 10.244.0.0/16
+#   serviceSubnets: 10.96.0.0/12
 # Features: eBPF datapath, Gateway API, network policies, Hubble observability
 ```
 
@@ -85,26 +88,29 @@ Kubernetes Service → Load balancing to pods
 
 ```hcl
 control_plane:
-  cpu_cores: 2
-  memory: 5120 MB   # Upgraded 2026-02-15
-  disk: 60 GB
+  cpu_cores: 4
+  memory: 8192 MB
+  disk: 250 GB
 
 worker:
-  cpu_cores: 3
-  memory: 12288 MB  # Upgraded 2026-02-15
+  cpu_cores: 2
+  memory: 4096 MB
   disk: 250 GB
+  secondary_disk: 268 GB  # Longhorn data disk
 ```
 
 ### Node Layout
 
-| Node | Role | IP | Resources |
+Node IPs are dynamically generated from the `cluster_cidr` and `ip_offset` Terraform variables (e.g. `cluster_cidr = "10.0.10"`, `ip_offset = 130`). The IPs below are examples for the production cluster, not hardcoded values.
+
+| Node | Role | IP (example) | Resources |
 |------|------|----|-----------|
-| prd-cp-01 | Control Plane | 10.0.10.130 | 2 CPU, 5GB RAM |
-| prd-cp-02 | Control Plane | 10.0.10.131 | 2 CPU, 5GB RAM |
-| prd-cp-03 | Control Plane | 10.0.10.132 | 2 CPU, 5GB RAM |
-| prd-w-01 | Worker | 10.0.10.133 | 3 CPU, 12GB RAM |
-| prd-w-02 | Worker | 10.0.10.134 | 3 CPU, 12GB RAM |
-| prd-w-03 | Worker | 10.0.10.135 | 3 CPU, 12GB RAM |
+| prd-cp-01 | Control Plane | 10.0.10.130 | 4 CPU, 8GB RAM |
+| prd-cp-02 | Control Plane | 10.0.10.131 | 4 CPU, 8GB RAM |
+| prd-cp-03 | Control Plane | 10.0.10.132 | 4 CPU, 8GB RAM |
+| prd-w-01 | Worker | 10.0.10.133 | 2 CPU, 4GB RAM |
+| prd-w-02 | Worker | 10.0.10.134 | 2 CPU, 4GB RAM |
+| prd-w-03 | Worker | 10.0.10.135 | 2 CPU, 4GB RAM |
 
 ---
 
@@ -115,15 +121,28 @@ worker:
 ```yaml
 longhorn-fast:
   replicas: 3
+  dataLocality: best-effort
+  reclaimPolicy: Retain
   useCase: Databases, critical data
 
 longhorn-standard:  # DEFAULT
   replicas: 2
+  dataLocality: best-effort
+  reclaimPolicy: Retain
   useCase: General applications
 
 longhorn-archive:
   replicas: 1
+  dataLocality: disabled
+  reclaimPolicy: Delete
   useCase: Logs, temporary data
+
+longhorn-monitoring:
+  replicas: 1
+  dataLocality: strict-local
+  reclaimPolicy: Delete
+  recurringJobs: disabled
+  useCase: Prometheus, Loki (monitoring data, no backups/snapshots)
 ```
 
 ### Backup Strategy
@@ -145,28 +164,36 @@ See [Longhorn Production-Grade Plan](../operators/longhorn-production-plan.md) a
 
 ```
 sync-app (Root Application)
-├── Wave 0 (tier-0): Core Infrastructure
+├── Wave 0: Core Infrastructure
 │   ├── argocd (self-managed)
 │   ├── argocd-apps (Projects)
 │   ├── cilium (CNI)
 │   └── longhorn (Storage)
-├── Wave 1 (tier-1): Essential Operators
+├── Wave 1: Essential Operators
 │   ├── onepassword-connect (Secrets backend)
 │   ├── external-secrets (Secrets operator)
 │   ├── cert-manager (TLS certificates)
 │   ├── external-dns (DNS automation)
 │   ├── kubelet-csr-approver (Certificate approval)
-│   └── cloudnative-pg (PostgreSQL operator)
-├── Wave 2 (tier-2): Monitoring & Auth
+│   ├── cloudnative-pg (PostgreSQL operator)
+│   └── sync-app (self-managed root app)
+├── Wave 2: Monitoring & Auth
 │   ├── kube-prometheus-stack (Metrics + Grafana)
 │   ├── prometheus-pve-exporter (Proxmox metrics)
 │   ├── loki (Log aggregation)
 │   ├── promtail (Log shipping)
 │   └── authentik (SSO/IdP)
-└── Wave 3+: Applications
-    ├── emqx, zigbee2mqtt, home-assistant
-    ├── netbox, homarr, firefly-iii
-    └── evcc
+├── Wave 3: Infrastructure Apps
+│   └── proxmox (Proxmox infrastructure)
+├── Wave 4: Home Automation
+│   ├── home-assistant
+│   ├── emqx
+│   └── zigbee2mqtt
+└── Wave 5: Additional Apps
+    └── evcc (solar charging)
+
+# Not currently deployed via GitOps (commented out):
+#   netbox, homarr, firefly-iii
 ```
 
 See [GitOps Bootstrap](../bootstrap/gitops-bootstrap.md).
@@ -218,10 +245,12 @@ Phase 2: GitOps (OpenTofu)
   6. Deploy sync-app (ArgoCD takes over)
 
 Phase 3: ArgoCD (GitOps)
-  Wave 0: Longhorn, Cilium
-  Wave 1: 1Password, ESO (self-managed)
-  Wave 2: cert-manager, external-dns
-  Wave 3: ArgoCD (self-managed)
+  Wave 0: Longhorn, Cilium, ArgoCD (self-managed), argocd-apps
+  Wave 1: 1Password Connect, ESO, cert-manager, external-dns, kubelet-csr-approver, cloudnative-pg, sync-app (self-managed)
+  Wave 2: kube-prometheus-stack, prometheus-pve-exporter, loki, promtail, authentik
+  Wave 3: proxmox (infrastructure)
+  Wave 4: home-assistant, emqx, zigbee2mqtt
+  Wave 5: evcc
 ```
 
 ---

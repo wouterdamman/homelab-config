@@ -39,7 +39,7 @@ Electric vehicle charging with solar surplus optimization.
 
 | Setting | Value |
 |---------|-------|
-| Image | `evcc/evcc:0.300.5` |
+| Image | `evcc/evcc:0.306.3` |
 | Strategy | Recreate (for PVC attachment) |
 | CPU | 100m request, 500m limit |
 | Memory | 256Mi request, 512Mi limit |
@@ -49,32 +49,19 @@ Electric vehicle charging with solar surplus optimization.
 
 ---
 
-## Configuration (ConfigMap)
+## Configuration (ExternalSecret)
 
-Basic configuration without devices:
+Configuration is sourced from a 1Password item via ExternalSecret — there is no ConfigMap.
+
+**ExternalSecret:** `evcc-config`
+**1Password Item:** `evcc-config` (KubernetesSecrets vault)
+
+The secret key `evcc.yaml` is mounted read-only into the container at `/etc/evcc.yaml`. Application data (SQLite database) is stored separately on the PVC at `/root/.evcc`.
 
 ```yaml
-network:
-  schema: http
-  host: 0.0.0.0
-  port: 7070
-
-log: info
-
-database:
-  type: sqlite
-  dsn: /data/evcc.db
-
-mqtt:
-  broker: emqx.emqx.svc.cluster.local:1883
-  topic: evcc
-
-sponsortoken: ""
-
-loadpoints: []
-chargers: []
-meters: []
-vehicles: []
+# ExternalSecret data mapping
+- remoteKey: evcc-config
+  secretKey: evcc.yaml
 ```
 
 ---
@@ -182,7 +169,7 @@ kubectl scale deployment evcc -n evcc --replicas=1
 
 ```bash
 kubectl logs -n evcc -l app.kubernetes.io/name=evcc --previous
-# Common: invalid YAML in ConfigMap, missing required keys
+# Common: invalid YAML in evcc-config secret, missing required keys
 ```
 
 ### MQTT Connection Failed
@@ -204,7 +191,7 @@ kubectl get gateway app-gateway -n kube-system
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| ImagePullBackOff | Tag `0.133.1` doesn't exist | Changed to `0.300.5` |
+| ImagePullBackOff | Tag `0.133.1` doesn't exist | Changed to `0.306.3` |
 | Config validation error | `buffersoc`/`prioritysoc` not camelCase | Removed site section |
 | HTTPRoute Progressing | Wrong gateway namespace `cilium-gateway` | Changed to `kube-system` |
 

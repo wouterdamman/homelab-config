@@ -57,8 +57,8 @@ All homelab secrets are stored in the **Homelab** vault:
 | Proxmox - Root Account | username | Proxmox root user (root@pam) |
 | Proxmox - Root Account | password | Proxmox root password |
 | Proxmox - Root Account | api_key | Proxmox API token |
-| Backblaze-homelab-prd | username | Backblaze B2 Key ID |
-| Backblaze-homelab-prd | credential | Backblaze B2 Application Key |
+| hetzner-homelab-prd | username | Hetzner Object Storage Access Key ID |
+| hetzner-homelab-prd | password | Hetzner Object Storage Secret Access Key |
 
 **Proxmox Credentials (ADR-025):**
 
@@ -87,6 +87,7 @@ source ./scripts/load-secrets.sh
 TF_VAR_proxmox_username      # For Proxmox provider
 TF_VAR_proxmox_password      # For Proxmox provider
 TF_VAR_proxmox_api_token     # For Proxmox provider
+TF_VAR_qdevice_root_password # For QDevice LXC (ADR-027)
 AWS_ACCESS_KEY_ID            # For S3 backend (Hetzner Object Storage)
 AWS_SECRET_ACCESS_KEY        # For S3 backend (Hetzner Object Storage)
 ```
@@ -193,8 +194,8 @@ Store both credentials in the **KubernetesSecrets** vault:
 
 | Item Name | Field | Content |
 |-----------|-------|---------|
-| `op-connect-credentials` | `password` | Full JSON content from downloaded file |
-| `op-connect-token` | `credential` | Access token string |
+| `onepassword-connect-credentials.json` | `password` | Full JSON content from downloaded file |
+| `onepassword-connect-token` | `password` | Access token string |
 
 #### Step 3: Bootstrap Deployment
 
@@ -277,9 +278,9 @@ op item get "github-argo-app" --vault KubernetesSecrets --format json | jq '.fie
 
 **1Password Connect pod crashes:**
 1. Regenerate credentials in 1Password Developer Console
-2. Update `op-connect-credentials` item in 1Password
+2. Update `onepassword-connect-credentials.json` item in 1Password
 3. Delete and recreate the bootstrap secret:
 ```bash
-kubectl delete secret op-credentials -n onepassword
+kubectl delete secret onepassword-connect-credentials -n onepassword
 cd resources/gitops-config && tofu apply
 ```

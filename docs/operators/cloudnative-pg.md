@@ -15,8 +15,8 @@ CloudNative-PG is the Kubernetes-native PostgreSQL operator for the homelab. It 
 
 | Cluster | Purpose | Instances | Storage | Backup Schedule | Retention |
 |---------|---------|-----------|---------|-----------------|-----------|
-| **cnpg-shared** | Authentik, NetBox, future apps | 2 (1 primary + 1 replica) | 5Gi | Daily @ 03:00 | 30 days |
-| **cnpg-homeassistant** | Home Assistant recorder | 2 (1 primary + 1 replica) | 10Gi | Every 6 hours | 30 days |
+| **cnpg-shared** | Authentik, NetBox, future apps | 2 (1 primary + 1 replica) | 5Gi | Daily @ 03:00 | 7d |
+| **cnpg-homeassistant** | Home Assistant recorder | 2 (1 primary + 1 replica) | 10Gi | Every 6 hours | 7d |
 
 ---
 
@@ -75,6 +75,7 @@ Database and user provisioning is managed via GitOps with ArgoCD PostSync hooks.
 Each database has a dedicated init Job:
 - `cnpg-init-authentik.yaml`
 - `cnpg-init-firefly.yaml`
+- `cnpg-init-homarr.yaml`
 - `cnpg-init-netbox.yaml`
 
 **ArgoCD Hook Configuration:**

@@ -43,23 +43,21 @@ NetBox is a web-based IPAM (IP Address Management) and DCIM (Data Center Infrast
 
 | Component | Image | Version |
 |-----------|-------|---------|
-| NetBox | netboxcommunity/netbox | latest (v4.x) |
-| Redis | redis | 7-alpine |
+| NetBox | netboxcommunity/netbox | v4.5.10 |
+| Redis | redis | 7.4.9-alpine |
 
 ### Resource Requirements
 
 | Component | CPU Request | CPU Limit | Memory Request | Memory Limit |
 |-----------|------------|-----------|----------------|--------------|
 | NetBox | 200m | 1000m | 512Mi | 2Gi |
-| Redis | 100m | 200m | 128Mi | 256Mi |
+| Redis | 50m | 200m | 128Mi | 256Mi |
 
 ### Storage
 
 | Purpose | Size | Storage Class | Mount Path |
 |---------|------|---------------|-----------|
-| Media files | 5Gi | longhorn-standard | /opt/netbox/netbox/media |
-| Reports | 2Gi | longhorn-standard | /opt/netbox/netbox/reports |
-| Scripts | 1Gi | longhorn-standard | /opt/netbox/netbox/scripts |
+| Media files | 10Gi | longhorn-standard | /opt/netbox/netbox/media |
 
 ## Database Configuration
 
@@ -112,12 +110,13 @@ def get_user_details(strategy, details, response, user=None, *args, **kwargs):
 
 ## Secrets Management
 
-| Secret | 1Password Reference | Purpose |
-|--------|---------------------|---------|
-| SECRET_KEY | op://Homelab/NetBox/secret_key | Django secret key |
-| DB_PASSWORD | op://Homelab/cnpg-shared/netbox-password | PostgreSQL password |
-| SUPERUSER_PASSWORD | op://Homelab/NetBox/admin_password | Admin user password |
-| SUPERUSER_API_TOKEN | op://Homelab/NetBox/api_token | API token for automation |
+| Secret | 1Password Item | Purpose |
+|--------|---------------|---------|
+| SECRET_KEY | netbox-secret-key | Django secret key |
+| DB_PASSWORD | cnpg-shared-netbox | PostgreSQL password |
+| SUPERUSER_PASSWORD | netbox-superuser | Admin user password |
+| SUPERUSER_API_TOKEN | netbox-superuser | API token for automation |
+| OIDC_CLIENT_SECRET | netbox-oidc | OIDC client secret |
 
 ## Network Configuration
 

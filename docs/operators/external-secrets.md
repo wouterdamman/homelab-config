@@ -55,9 +55,9 @@ spec:
       auth:
         secretRef:
           connectTokenSecretRef:
-            name: onepassword-connect-token
+            name: onepassword-connect-token-external-secret
             namespace: external-secrets
-            key: token
+            key: onepassword-connect-token
 ```
 
 ---

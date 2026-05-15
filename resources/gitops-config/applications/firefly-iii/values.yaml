@@ -27,7 +27,6 @@ service:
 ingress:
   enabled: true
   hostname: budget.app.damman.tech
-  className: cilium
 
 # Database configuration (cnpg-shared)
 database:

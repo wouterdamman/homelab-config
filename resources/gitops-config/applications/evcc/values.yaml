@@ -27,7 +27,6 @@ service:
 ingress:
   enabled: true
   hostname: evcc.app.damman.tech
-  className: cilium
 
 # Configuration via ExternalSecret from 1Password
 # Config is mounted at /etc/evcc.yaml, data stored in /root/.evcc

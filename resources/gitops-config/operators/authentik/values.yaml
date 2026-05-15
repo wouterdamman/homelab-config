@@ -136,7 +136,9 @@ redis:
         memory: 256Mi
 
     persistence:
-      enabled: false
+      enabled: true
+      storageClass: longhorn-standard
+      size: 1Gi
 
   replica:
     replicaCount: 0

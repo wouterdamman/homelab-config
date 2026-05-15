@@ -14,6 +14,15 @@
 
   "prTitle": "{{{commitMessagePrefix}}} [{{updateType}}] chore(deps): {{{commitMessageAction}}} {{{commitMessageTopic}}}{{{commitMessageExtra}}}",
 
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml"],
+      "matchStrings": ["imageName: (?<depName>[^\\s:]+):(?<currentValue>[^\\s]+)"],
+      "datasourceTemplate": "docker"
+    }
+  ],
+
   "packageRules": [
     {
       "description": "Add [Tier: 0] prefix to tier-0 PR titles",

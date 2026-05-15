@@ -44,7 +44,7 @@ provider:
   webhook:
     image:
       repository: 'ghcr.io/kashalls/external-dns-unifi-webhook'
-      tag: main
+      tag: v0.8.2
       pullPolicy: IfNotPresent
     env:
       - name: UNIFI_HOST

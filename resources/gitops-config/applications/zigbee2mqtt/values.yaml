@@ -5,10 +5,6 @@ image:
 service:
   type: ClusterIP
 
-secretesMigratorContainer:
-  repository: mikefarah/yq
-  tag: 4.40.5
-
 configmap:
   enabled: false
 

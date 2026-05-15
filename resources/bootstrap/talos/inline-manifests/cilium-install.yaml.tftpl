@@ -73,13 +73,18 @@ spec:
           mountPath: /root/app/values.yaml
           subPath: values.yaml
         command:
-        - cilium
-        - install
-        - --version=${cilium_version}
-        - --set
-        - kubeProxyReplacement=true
-        - --values
-        - /root/app/values.yaml
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          if cilium status --wait=false 2>/dev/null; then
+            echo "Cilium already installed and healthy, skipping install"
+            exit 0
+          fi
+          cilium install \
+            --version=${cilium_version} \
+            --set kubeProxyReplacement=true \
+            --values /root/app/values.yaml
       volumes:
       - name: values
         configMap:

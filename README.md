@@ -46,10 +46,11 @@ homelab-config/
 | Component | Technology | Version |
 |-----------|------------|---------|
 | **Virtualization** | Proxmox VE | Latest |
-| **Kubernetes** | Talos Linux | v1.12.2 |
-| **Networking** | Cilium + Gateway API | v1.18.5 |
-| **GitOps** | ArgoCD | Latest |
-| **Storage** | Longhorn | v1.10.1 |
+| **Kubernetes** | Talos Linux | v1.13.2 |
+| **Kubernetes** | Kubernetes | v1.36.0 |
+| **Networking** | Cilium + Gateway API | v1.19.3 |
+| **GitOps** | ArgoCD | v3.4.2 |
+| **Storage** | Longhorn | v1.11.2 |
 | **IaC** | OpenTofu | Latest |
 | **Secrets** | 1Password + External Secrets | Latest |
 | **Backup** | Hetzner Object Storage | - |

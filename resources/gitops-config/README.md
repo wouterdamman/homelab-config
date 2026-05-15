@@ -162,9 +162,9 @@ kubectl -n argocd get applications
 | `kube_config_path` | Path to kubeconfig file | `~/.kube/config` |
 | `secret_path` | Path to 1Password credentials secret | `./input-files/secret.yaml` |
 | `onepassword_version` | 1Password Connect Helm chart version | `2.1.1` |
-| `external_secrets_version` | External Secrets Operator version | `1.2.1` |
-| `argocd_version` | ArgoCD Helm chart version | `9.2.4` |
-| `argocd_apps_version` | ArgoCD Apps Helm chart version | `2.0.3` |
+| `external_secrets_version` | External Secrets Operator version | `2.4.1` |
+| `argocd_version` | ArgoCD Helm chart version | `9.5.14` |
+| `argocd_apps_version` | ArgoCD Apps Helm chart version | `2.0.2` |
 | `namespaces` | Namespaces to create | `["onepassword", "external-secrets", "argocd"]` |
 
 ### Input Files
@@ -306,9 +306,9 @@ Edit `variable.tf` defaults or override in `terraform.tfvars`:
 
 ```hcl
 # terraform.tfvars
-onepassword_version     = "1.18.0"
-external_secrets_version = "0.18.0"
-argocd_version          = "9.3.0"
+onepassword_version     = "2.1.1"
+external_secrets_version = "2.4.1"
+argocd_version          = "9.5.14"
 ```
 
 Then apply:

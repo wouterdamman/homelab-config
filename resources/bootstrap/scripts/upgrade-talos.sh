@@ -17,8 +17,17 @@ TALOSCONFIG="$(dirname "$(dirname "$0")")/output/talos-config.yaml"
 KUBECONFIG="$(dirname "$(dirname "$0")")/output/kube-config.yaml"
 SCHEMATIC_FILE="$(dirname "$(dirname "$0")")/talos/image/schematic.yaml"
 
-# Hardcoded schematic ID (stable across versions)
-SCHEMATIC_ID="e37cea50363b49e1887745d13c0a9fcb282499ee982535f2369db3fa1ce770c1"
+# Compute schematic ID dynamically from schematic.yaml via Talos image factory
+if [[ ! -f "$SCHEMATIC_FILE" ]]; then
+  echo "[ERROR] Schematic file not found: $SCHEMATIC_FILE" >&2
+  exit 1
+fi
+SCHEMATIC_ID=$(curl -sf -X POST https://factory.talos.dev/schematics \
+  --data-binary @"$SCHEMATIC_FILE" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+if [[ -z "$SCHEMATIC_ID" ]]; then
+  echo "[ERROR] Failed to compute schematic ID from factory.talos.dev" >&2
+  exit 1
+fi
 
 # Default wait times (in seconds)
 WORKER_WAIT_TIME=120    # 2 minutes between workers

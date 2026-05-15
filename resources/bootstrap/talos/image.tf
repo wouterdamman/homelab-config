@@ -40,7 +40,7 @@ data "http" "updated_schematic_id" {
 # 2. VMs will use existing images from /var/lib/vz/template/iso/
 #
 # Re-enable this resource when provider issue is fixed upstream
-# Current image: v1.12.2 (downloaded Jan 28, 2026)
+# Current image: v1.13.2 (downloaded May 2026)
 # See: https://github.com/bpg/terraform-provider-proxmox/issues/1724
 
 # resource "proxmox_virtual_environment_download_file" "this" {

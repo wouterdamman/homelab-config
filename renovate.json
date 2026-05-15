@@ -20,6 +20,13 @@
       "fileMatch": ["resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml"],
       "matchStrings": ["imageName: (?<depName>[^\\s:]+):(?<currentValue>[^\\s]+)"],
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Track hardcoded utility images in Helm template files",
+      "customType": "regex",
+      "fileMatch": ["resources/gitops-config/.*/templates/.*\\.yaml"],
+      "matchStrings": ["image: (?<depName>busybox|redis|alpine/k8s|ghcr\\.io/coder/code-server):(?<currentValue>[^\\s\"]+)"],
+      "datasourceTemplate": "docker"
     }
   ],
 

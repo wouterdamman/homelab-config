@@ -114,31 +114,4 @@ worker:
 postgresql:
   enabled: false
 
-# ─────────────────────────────────────────────────────────────
-# Redis (bundled Bitnami)
-# ─────────────────────────────────────────────────────────────
-redis:
-  enabled: true
-
-  master:
-    tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Equal
-      value: "true"
-      effect: NoSchedule
-
-    resources:
-      requests:
-        cpu: 25m
-        memory: 128Mi
-      limits:
-        cpu: 250m
-        memory: 256Mi
-
-    persistence:
-      enabled: true
-      storageClass: longhorn-standard
-      size: 1Gi
-
-  replica:
-    replicaCount: 0
+# Redis - subchart removed in chart 2026.x, Authentik now handles Redis internally

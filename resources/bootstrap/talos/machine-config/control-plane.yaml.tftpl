@@ -53,8 +53,8 @@ cluster:
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
-  - https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/main/deploy/ha-install.yaml
-  - https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+  - https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/v0.10.3/deploy/ha-install.yaml
+  - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml
   inlineManifests:
   - name: cilium-values
     contents: |

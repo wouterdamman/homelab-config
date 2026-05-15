@@ -52,7 +52,7 @@ Test upgrades on a single node first:
 --skip-workers            Only upgrade control planes
 --skip-control-planes     Only upgrade workers
 --auto-approve            Skip confirmation (use with caution!)
---worker-wait <seconds>   Custom wait time between workers (default: 300)
+--worker-wait <seconds>   Custom wait time between workers (default: 120)
 --cp-wait <seconds>       Custom wait time between CPs (default: 600)
 ```
 
@@ -105,7 +105,7 @@ If you add or remove extensions from `schematic.yaml`, the script automatically 
 ## Upgrade Strategy
 
 ### Recommended Order
-1. **Workers first** (one at a time, 5 min wait)
+1. **Workers first** (one at a time, 2 min wait)
 2. **Control planes** (one at a time, 10 min wait)
 
 This ensures:
@@ -114,9 +114,9 @@ This ensures:
 - API server remains available
 
 ### Expected Timeline
-- **Workers**: 3 nodes × (~5 min upgrade + 5 min wait) = ~30 minutes
+- **Workers**: 3 nodes × (~5 min upgrade + 2 min wait) = ~21 minutes
 - **Control Planes**: 3 nodes × (~5 min upgrade + 10 min wait) = ~45 minutes
-- **Total**: ~75-90 minutes for full cluster upgrade
+- **Total**: ~65-80 minutes for full cluster upgrade
 
 ## Manual Upgrade (Advanced)
 
@@ -300,7 +300,7 @@ talosctl upgrade --nodes 10.0.10.133 --image $INSTALLER_IMAGE --wait
 4. ✅ Review Talos release notes for breaking changes
 5. ✅ Ensure TALOSCONFIG and KUBECONFIG are set
 6. ✅ Verify network connectivity to factory.talos.dev
-7. ✅ Plan maintenance window (75-90 minutes)
+7. ✅ Plan maintenance window (65-80 minutes)
 
 ## Quick Reference
 

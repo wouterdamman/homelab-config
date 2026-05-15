@@ -97,10 +97,12 @@ kubectl get applications -n argocd
 
 ArgoCD deploys operators in wave order:
 
-1. **Wave 0**: Cilium (pre-installed), Longhorn
-2. **Wave 1**: 1Password Connect
-3. **Wave 2**: External Secrets
-4. **Wave 3**: cert-manager, external-dns, Prometheus stack
+1. **Wave 0**: Longhorn, Cilium, ArgoCD
+2. **Wave 1**: 1Password Connect, External Secrets, cert-manager, external-dns, kubelet-csr-approver, cloudnative-pg
+3. **Wave 2**: Prometheus stack, Loki, Promtail, Authentik
+4. **Wave 3**: Proxmox
+5. **Wave 4**: Home Assistant, EMQX, Zigbee2MQTT
+6. **Wave 5**: EVCC
 
 ```bash
 # Monitor progress
@@ -206,7 +208,7 @@ curl -k https://grafana.svc.damman.tech
 - `op-connect-token` — Connect access token
 - `github-argo-app` — GitHub App credentials
 - `github-client-secrets` — GitHub OAuth (ArgoCD SSO)
-- `longhorn-s3-backup` — Backblaze credentials for Longhorn
+- `longhorn-s3-backup` — Hetzner Object Storage credentials for Longhorn
 - `grafana-admin` — Grafana admin password
 - `pushover-credentials` — Alertmanager notifications
 

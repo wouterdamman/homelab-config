@@ -123,7 +123,7 @@ tofu apply
 kubectl drain prd-w-01 --ignore-daemonsets --delete-emptydir-data
 
 # Shutdown node (NOT reboot!)
-talosctl --talosconfig output/talos-config.yaml -n 10.0.70.11 shutdown
+talosctl --talosconfig output/talos-config.yaml -n 10.0.10.133 shutdown
 
 # Wait until VM is fully off, then start via Proxmox UI or:
 ssh root@10.0.10.200 "qm start <vm-id>"
@@ -142,7 +142,7 @@ kubectl get node prd-w-01 -o jsonpath='{.status.capacity.memory}'
 
 ```bash
 # Shutdown node (one at a time!)
-talosctl --talosconfig output/talos-config.yaml -n 10.0.70.4 shutdown
+talosctl --talosconfig output/talos-config.yaml -n 10.0.10.130 shutdown
 
 # Start via Proxmox
 ssh root@10.0.10.200 "qm start <vm-id>"
@@ -151,7 +151,7 @@ ssh root@10.0.10.200 "qm start <vm-id>"
 kubectl get nodes -w
 
 # Verify etcd quorum intact
-talosctl --talosconfig output/talos-config.yaml -n 10.0.70.4,10.0.70.5,10.0.70.6 etcd status
+talosctl --talosconfig output/talos-config.yaml -n 10.0.10.130,10.0.10.131,10.0.10.132 etcd status
 ```
 
 | Issue | Cause | Solution |

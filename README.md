@@ -4,16 +4,15 @@ Infrastructure-as-Code and GitOps configuration for a production-grade homelab r
 
 ## Documentation
 
-**All documentation is maintained in Notion for better collaboration and organization.**
+Full documentation lives in [`docs/`](docs/README.md).
 
 ### Quick Links
 
-- **[Homelab Database](https://www.notion.so/2d3b49ed6b91808e915de47613e29b3e)** - Main documentation hub
-- **[Infrastructure Overview](https://www.notion.so/2d3b49ed6b9181ac8474fa2a2be73c1c)** - Complete stack overview
-- **[Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4)** - How to deploy the cluster
-- **[GitOps Deployment - ArgoCD Bootstrap](https://www.notion.so/2d7b49ed6b91816dbb9cc3cdab067eeb)** - ArgoCD & operators setup
-- **[Secrets Management - 1Password](https://www.notion.so/2d6b49ed6b9181b0b331f641f915b5b5)** - How credentials are managed
-- **[Longhorn DR Runbook](https://www.notion.so/2d7b49ed6b918115a374db661adfce74)** - Disaster recovery procedures
+- **[docs/README.md](docs/README.md)** — Full documentation index
+- **[Architecture](docs/architecture/high-level-design.md)** — System overview and design decisions
+- **[Bootstrap](docs/bootstrap/cluster-deployment.md)** — How to deploy the cluster
+- **[Secrets Management](docs/bootstrap/secrets-management.md)** — 1Password → ESO → Kubernetes
+- **[Longhorn DR Runbook](docs/operators/longhorn-dr-runbook.md)** — Disaster recovery procedures
 
 ## Quick Start
 
@@ -22,7 +21,7 @@ Infrastructure-as-Code and GitOps configuration for a production-grade homelab r
 3. **Deploy**: `cd resources/bootstrap && tofu apply`
 4. **Verify**: `kubectl get nodes`
 
-See [Cluster Deployment - Bootstrap](https://www.notion.so/2d6b49ed6b9181b391cdca0718ee06c4) for detailed instructions.
+See [Cluster Deployment](docs/bootstrap/cluster-deployment.md) for detailed instructions.
 
 ## Repository Structure
 
@@ -38,7 +37,7 @@ homelab-config/
 │       ├── apps/               # ArgoCD application definitions
 │       ├── scripts/            # Helper scripts
 │       └── README.md           # Technical reference
-└── docs/                       # Documentation index (links to Notion)
+└── docs/                       # Full documentation (architecture, operators, apps)
 ```
 
 ## Tech Stack
@@ -66,11 +65,9 @@ homelab-config/
 
 ## Local Documentation
 
-Technical implementation details are kept in-repo:
-
-- [resources/bootstrap/README.md](resources/bootstrap/README.md) - Talos cluster bootstrap
-- [resources/gitops-config/README.md](resources/gitops-config/README.md) - ArgoCD and operators
-- [docs/README.md](docs/README.md) - Documentation index with all Notion links
+- [docs/README.md](docs/README.md) — Full documentation index
+- [resources/bootstrap/README.md](resources/bootstrap/README.md) — Talos bootstrap technical reference
+- [resources/gitops-config/README.md](resources/gitops-config/README.md) — ArgoCD and operators reference
 
 ## License
 

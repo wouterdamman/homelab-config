@@ -103,7 +103,7 @@ spec:
       {{- if .Values.addons.codeserver.enabled }}
       # Code-server sidecar container
       - name: codeserver
-        image: ghcr.io/coder/code-server:latest
+        image: ghcr.io/coder/code-server:4.118.0
         imagePullPolicy: IfNotPresent
         args:
         - --auth

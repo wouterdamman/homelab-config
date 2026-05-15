@@ -15,7 +15,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: init-authentik
-          image: bitnami/kubectl:latest
+          image: bitnami/kubectl:1.36
           command:
             - /bin/bash
             - -c

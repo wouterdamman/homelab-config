@@ -20,7 +20,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: validate-backups
-              image: bitnami/kubectl:latest
+              image: bitnami/kubectl:1.36
               env:
                 - name: PUSHOVER_USER
                   valueFrom:

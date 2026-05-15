@@ -106,7 +106,7 @@ worker:
       memory: 384Mi
     limits:
       # No CPU limit to prevent throttling on background tasks
-      memory: 768Mi
+      memory: 1024Mi
 
 # ─────────────────────────────────────────────────────────────
 # PostgreSQL (external CNPG)

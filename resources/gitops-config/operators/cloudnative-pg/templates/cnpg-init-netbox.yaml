@@ -26,23 +26,13 @@ spec:
               PRIMARY_POD=$(kubectl get pods -n cnpg-system -l cnpg.io/cluster=cnpg-shared,role=primary -o jsonpath='{.items[0].metadata.name}')
               echo "Using primary pod: $PRIMARY_POD"
 
-              NETBOX_PW=$(kubectl get secret cnpg-shared-netbox -n cnpg-system -o jsonpath='{.data.password}' | base64 -d)
-
               echo "Creating database if not exists..."
               kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
                 "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'netbox') THEN CREATE DATABASE netbox OWNER postgres; RAISE NOTICE 'Created database: netbox'; ELSE RAISE NOTICE 'Database netbox already exists'; END IF; END \$\$;"
 
-              echo "Creating user if not exists..."
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
-                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'netbox') THEN CREATE USER netbox WITH LOGIN; RAISE NOTICE 'Created user: netbox'; ELSE RAISE NOTICE 'User netbox already exists'; END IF; END \$\$;"
-
               echo "Granting privileges..."
               kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
                 "GRANT ALL PRIVILEGES ON DATABASE netbox TO netbox;"
-
-              echo "Setting user password..."
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
-                "ALTER USER netbox WITH PASSWORD '$NETBOX_PW';"
 
               echo "Setting schema permissions..."
               kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d netbox -c \

@@ -75,6 +75,30 @@ spec:
         sourceLabels: [cluster]
         targetLabel: cnpg_cluster
 
+  # Role management - CNPG sets passwords directly from secrets, no shell interpolation
+  managed:
+    roles:
+      - name: authentik
+        ensure: present
+        login: true
+        passwordSecret:
+          name: cnpg-shared-authentik
+      - name: firefly
+        ensure: present
+        login: true
+        passwordSecret:
+          name: cnpg-shared-firefly
+      - name: homarr
+        ensure: present
+        login: true
+        passwordSecret:
+          name: cnpg-shared-homarr
+      - name: netbox
+        ensure: present
+        login: true
+        passwordSecret:
+          name: cnpg-shared-netbox
+
   # Affinity - prefer different nodes for replicas
   affinity:
     enablePodAntiAffinity: true

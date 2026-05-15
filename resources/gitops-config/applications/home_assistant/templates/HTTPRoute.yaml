@@ -18,6 +18,10 @@ spec:
         - path:
             type: PathPrefix
             value: {{ .path }}
+      {{- if .timeout }}
+      timeouts:
+        request: {{ .timeout | quote }}
+      {{- end }}
       backendRefs:
         - name: {{ .backend.name }}
           port: {{ .backend.port }}

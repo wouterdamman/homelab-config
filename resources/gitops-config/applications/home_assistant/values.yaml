@@ -74,6 +74,7 @@ httproutes:
   namespace: home-assistant
   hostname: ha.app.damman.tech
   path: /
+  timeout: "0s"
   gateway:
     name: app-gateway
     namespace: kube-system
@@ -87,6 +88,7 @@ httproutes:
   namespace: home-assistant
   hostname: codeserver.svc.damman.tech
   path: /
+  timeout: "0s"
   gateway:
     name: svc-gateway
     namespace: kube-system

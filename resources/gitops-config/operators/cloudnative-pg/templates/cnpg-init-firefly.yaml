@@ -16,7 +16,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: init-firefly
-          image: bitnami/kubectl:1.36
+          image: alpine/k8s:1.36.0
           command:
             - /bin/bash
             - -c

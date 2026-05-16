@@ -1,0 +1,73 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  endpointSelector: {}
+
+  ingress:
+  # Intra-namespace: all ArgoCD components talk to each other
+  # (server→redis/repo-server/dex, controller→repo-server/redis, etc.)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: argocd
+
+  # argocd-server UI — from svc-gateway
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+
+  # Prometheus scraping — server (8083), repo-server (8084),
+  # application-controller (8082), applicationset-controller (8080)
+  - fromEndpoints:
+    - matchLabels:
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+      - port: "8082"
+        protocol: TCP
+      - port: "8083"
+        protocol: TCP
+      - port: "8084"
+        protocol: TCP
+
+  egress:
+  # Intra-namespace
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: argocd
+
+  # DNS
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+
+  # kube-apiserver — application-controller, applicationset-controller,
+  # notifications-controller, server, repo-server all need API access
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+  # GitHub (Dex OAuth + repo sync), Helm OCI registries
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

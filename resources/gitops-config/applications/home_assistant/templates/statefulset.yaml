@@ -23,41 +23,19 @@ spec:
       dnsPolicy: {{ .Values.dnsPolicy }}
       {{- end }}
 
-      # Pod-level security context
       securityContext:
-        fsGroup: 911
-        fsGroupChangePolicy: "OnRootMismatch"
-
-      # Init container to fix permissions for code-server
-      initContainers:
-      - name: fix-permissions
-        image: busybox:1.37.0
-        command:
-        - sh
-        - -c
-        - |
-          echo "Fixing /config permissions for UID 911 (abc user)..."
-          chown -R :911 /config
-          chmod -R g+rw /config
-          find /config -type d -exec chmod g+s {} \;
-          echo "Permissions fixed successfully"
-        volumeMounts:
-        - name: config
-          mountPath: /config
-        securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+        seccompProfile:
+          type: RuntimeDefault
 
       containers:
-      # Home Assistant main container
+      # Home Assistant — LSIO image, HA process runs as PUID 1000 (not root)
+      # s6-overlay starts as root to set up permissions then drops to PUID
       - name: home-assistant
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        # Container-level security context - override pod-level to run as root
-        # This is needed for Home Assistant to install Python packages
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+          capabilities:
+            drop: ["ALL"]
         ports:
         - name: http
           containerPort: 8123
@@ -101,21 +79,25 @@ spec:
           failureThreshold: 3
 
       {{- if .Values.addons.codeserver.enabled }}
-      # Code-server sidecar container
+      # Code-server — LSIO image, runs as PUID 1000, same user as HA → shared /config access
       - name: codeserver
-        image: ghcr.io/coder/code-server:4.118.0
+        image: "{{ .Values.addons.codeserver.image.repository }}:{{ .Values.addons.codeserver.image.tag }}"
         imagePullPolicy: IfNotPresent
-        args:
-        - --auth
-        - none
-        - --user-data-dir
-        - /config/.vscode
-        - --extensions-dir
-        - /config/.vscode-extensions
-        - /config
+        securityContext:
+          capabilities:
+            drop: ["ALL"]
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: DEFAULT_WORKSPACE
+          value: /config
         ports:
         - name: codeserver
-          containerPort: 8080
+          containerPort: 8443
           protocol: TCP
         volumeMounts:
         - name: config
@@ -130,13 +112,10 @@ spec:
         {{- end }}
         {{- if .Values.sshKnownHosts.enabled }}
         - name: ssh-known-hosts
-          mountPath: /home/coder/.ssh/known_hosts
+          mountPath: /config/.ssh/known_hosts
           subPath: known_hosts
           readOnly: true
         {{- end }}
-        env:
-        - name: TZ
-          value: Europe/Amsterdam
         {{- if .Values.addons.codeserver.resources }}
         resources:
           {{- toYaml .Values.addons.codeserver.resources | nindent 10 }}

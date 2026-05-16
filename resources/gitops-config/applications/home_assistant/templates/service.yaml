@@ -33,7 +33,7 @@ spec:
   ports:
   - name: codeserver
     port: {{ .Values.addons.codeserver.service.port }}
-    targetPort: 8080
+    targetPort: 8443
     protocol: TCP
   selector:
     {{- include "home-assistant.selectorLabels" . | nindent 4 }}

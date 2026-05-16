@@ -1,11 +1,16 @@
 image:
-  repository: ghcr.io/home-assistant/home-assistant
+  repository: lscr.io/linuxserver/homeassistant
   tag: 2026.5.1
   pullPolicy: IfNotPresent
 
+# LSIO requires PUID/PGID — HA process runs as UID 1000, not root
 env:
 - name: TZ
   value: Europe/Amsterdam
+- name: PUID
+  value: "1000"
+- name: PGID
+  value: "1000"
 
 service:
   type: LoadBalancer
@@ -17,8 +22,10 @@ service:
 ingress:
   enabled: false
 
+# hostNetwork required for mDNS device discovery (Hue, Chromecast, SSDP, etc.)
+# Accepted risk: documented in security/findings.md finding #2
+# Mitigated by: capabilities.drop ALL, PUID 1000 (HA process non-root)
 hostNetwork: true
-
 dnsPolicy: ClusterFirstWithHostNet
 
 persistence:
@@ -37,6 +44,10 @@ resources:
 addons:
   codeserver:
     enabled: true
+    image:
+      repository: lscr.io/linuxserver/code-server
+      # Pin to a specific tag after first deployment — check running pod for version
+      tag: latest
     service:
       type: ClusterIP
       port: 12321
@@ -61,7 +72,8 @@ externalSecrets:
     remoteProperty: private_key
     secretKey: id_ed25519
     coderOnly: true
-    mountPath: /home/coder/.ssh/id_ed25519
+    # LSIO code-server home dir is /config, not /home/coder
+    mountPath: /config/.ssh/id_ed25519
     defaultMode: 0600
 
 sshKnownHosts:

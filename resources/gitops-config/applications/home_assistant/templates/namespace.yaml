@@ -3,12 +3,12 @@ kind: Namespace
 metadata:
   name: {{ .Release.Namespace }}
   labels:
-    # PSS: baseline — hostNetwork requires privileged, but s6+cap-drop meets baseline
-    # Cannot enforce restricted: s6-overlay starts as root (LSIO image design)
-    # Cannot enforce privileged removal: hostNetwork needed for mDNS discovery
-    pod-security.kubernetes.io/enforce: baseline
+    # PSS: privileged required — hostNetwork:true (mDNS device discovery) falls
+    # under "host namespaces" which baseline disallows. Accepted risk, mitigated by:
+    # capabilities.drop ALL, LSIO PUID 1000 (HA process non-root), seccompProfile
+    pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/enforce-version: latest
-    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn: baseline
     pod-security.kubernetes.io/warn-version: latest
-    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit: baseline
     pod-security.kubernetes.io/audit-version: latest

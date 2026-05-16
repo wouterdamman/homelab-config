@@ -29,8 +29,9 @@ spec:
         - |
           echo "Copying configuration from secret to data volume..."
           cp /app/readonly/configuration.yaml /app/data/configuration.yaml
-          echo "Configuration copied successfully"
-          ls -la /app/data/
+          echo "Fixing ownership of data volume..."
+          chown -R 0:0 /app/data
+          echo "Done"
         volumeMounts:
         - name: config-volume
           mountPath: /app/readonly
@@ -41,6 +42,7 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop: ["ALL"]
+            add: ["CHOWN"]
       containers:
       - name: zigbee2mqtt
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

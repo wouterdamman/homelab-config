@@ -4,7 +4,7 @@
 configs:
   cm:
     url: https://argocd.svc.damman.tech
-    exec.enabled: true
+    exec.enabled: false
     admin.enabled: false # Disable local admin, use GitHub SSO only
     # Exclude high-churn Cilium resources from tracking
     resource.exclusions: |

@@ -78,6 +78,14 @@ provider:
       successThreshold: 1
     service:
       port: 8080
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      capabilities:
+        drop: ["ALL"]
+      seccompProfile:
+        type: RuntimeDefault
     resources:
       limits:
         cpu: 100m

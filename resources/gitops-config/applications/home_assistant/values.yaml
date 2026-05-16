@@ -75,8 +75,9 @@ externalSecrets:
     remoteProperty: private_key
     secretKey: id_ed25519
     coderOnly: true
-    # LSIO code-server home dir is /config, not /home/coder
-    mountPath: /config/.ssh/id_ed25519
+    # Mount outside /config so LSIO s6-overlay does not try to chown it (read-only = fails).
+    # An init container copies it to /config/.ssh/id_ed25519 with abc:abc 0600 ownership.
+    mountPath: /mnt/ssh-key/id_ed25519
     defaultMode: 0600
 
 sshKnownHosts:

@@ -27,6 +27,26 @@ spec:
         seccompProfile:
           type: RuntimeDefault
 
+      {{- if .Values.addons.codeserver.enabled }}
+      initContainers:
+      - name: fix-ssh-key-permissions
+        image: busybox:1.37
+        command:
+        - sh
+        - -c
+        - |
+          mkdir -p /config/.ssh
+          cp /mnt/ssh-key/id_ed25519 /config/.ssh/id_ed25519
+          chown 1000:1000 /config/.ssh/id_ed25519
+          chmod 600 /config/.ssh/id_ed25519
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: home-assistant-ssh-key
+          mountPath: /mnt/ssh-key/id_ed25519
+          subPath: id_ed25519
+      {{- end }}
+
       containers:
       # Home Assistant — LSIO image, HA process runs as PUID 1000 (not root)
       # s6-overlay starts as root then drops to PUID — needs root caps during init

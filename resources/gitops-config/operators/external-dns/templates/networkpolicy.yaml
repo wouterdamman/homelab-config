@@ -7,7 +7,7 @@ spec:
   endpointSelector: {}
 
   ingress:
-  # Prometheus scraping — external-dns metrics on port 7979
+  # Prometheus scraping — external-dns metrics (7979) + webhook metrics (8080)
   - fromEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: monitoring
@@ -15,6 +15,8 @@ spec:
     toPorts:
     - ports:
       - port: "7979"
+        protocol: TCP
+      - port: "8080"
         protocol: TCP
 
   egress:

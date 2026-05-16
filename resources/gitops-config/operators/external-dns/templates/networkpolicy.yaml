@@ -1,0 +1,47 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  endpointSelector: {}
+
+  ingress:
+  # Prometheus scraping — external-dns metrics on port 7979
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "7979"
+        protocol: TCP
+
+  egress:
+  # DNS
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+
+  # kube-apiserver — external-dns watches Services, HTTPRoutes, Ingresses
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+  # Unifi controller — webhook sidecar connects to UniFi API
+  - toCIDR:
+    - 10.0.10.193/32
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

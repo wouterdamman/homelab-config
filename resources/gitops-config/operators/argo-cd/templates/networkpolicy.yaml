@@ -25,6 +25,7 @@ spec:
   # application-controller (8082), applicationset-controller (8080)
   - fromEndpoints:
     - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
         app.kubernetes.io/name: prometheus
     toPorts:
     - ports:

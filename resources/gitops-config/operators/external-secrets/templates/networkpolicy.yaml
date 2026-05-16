@@ -18,6 +18,7 @@ spec:
   # Prometheus scraping — all three components expose metrics on 8080
   - fromEndpoints:
     - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
         app.kubernetes.io/name: prometheus
     toPorts:
     - ports:

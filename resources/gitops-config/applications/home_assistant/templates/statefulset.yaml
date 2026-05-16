@@ -29,13 +29,14 @@ spec:
 
       containers:
       # Home Assistant — LSIO image, HA process runs as PUID 1000 (not root)
-      # s6-overlay starts as root to set up permissions then drops to PUID
+      # s6-overlay starts as root then drops to PUID — needs root caps during init
+      # capabilities.drop ALL is incompatible with s6-overlay (needs CHOWN/SETGID/SETFCAP)
       - name: home-assistant
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         securityContext:
-          capabilities:
-            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         ports:
         - name: http
           containerPort: 8123
@@ -84,8 +85,8 @@ spec:
         image: "{{ .Values.addons.codeserver.image.repository }}:{{ .Values.addons.codeserver.image.tag }}"
         imagePullPolicy: IfNotPresent
         securityContext:
-          capabilities:
-            drop: ["ALL"]
+          seccompProfile:
+            type: RuntimeDefault
         env:
         - name: TZ
           value: Europe/Amsterdam

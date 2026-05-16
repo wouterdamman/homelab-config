@@ -13,12 +13,12 @@ spec:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: argocd
 
-  # argocd-server UI — from svc-gateway
+  # argocd-server UI — from svc-gateway (container port 8080, service maps 80/443→8080)
   - fromEntities:
     - cluster
     toPorts:
     - ports:
-      - port: "80"
+      - port: "8080"
         protocol: TCP
 
   # Prometheus scraping — server (8083), repo-server (8084),

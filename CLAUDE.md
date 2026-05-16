@@ -90,6 +90,55 @@ Cilium with Gateway API. Two gateways:
 
 Ingress uses `HTTPRoute` resources. No traditional Ingress objects.
 
+#### CiliumNetworkPolicy patterns (cluster-specific gotchas)
+
+**Port = container port, not service port.** Cilium enforces at the pod after DNAT. If a service maps `80 → 8080`, the policy must allow port `8080`.
+
+**Cross-namespace `fromEndpoints` requires the namespace label.** Without it, Cilium does not reliably match across namespaces:
+```yaml
+- fromEndpoints:
+  - matchLabels:
+      k8s:io.kubernetes.pod.namespace: monitoring   # required
+      app.kubernetes.io/name: prometheus
+```
+
+**kube-apiserver webhook ingress: use `cluster`, not `kube-apiserver`.** In Talos, the API-server is a static pod in the host network. Cilium does not recognise it as the `kube-apiserver` entity for *ingress* traffic (admission webhooks). Use `fromEntities: cluster` for webhook ports. `toEntities: kube-apiserver` for *egress* works fine.
+
+**Admission webhook deadlock.** If a NetworkPolicy blocks the webhook that validates the CRD being synced by ArgoCD, the sync will loop forever and never apply the fix. Break it with a direct `kubectl patch` on the CiliumNetworkPolicy, then re-trigger the ArgoCD sync.
+
+**Standard allow rules (template for every namespace):**
+```yaml
+# DNS egress — every namespace needs this
+- toEndpoints:
+  - matchLabels:
+      k8s:io.kubernetes.pod.namespace: kube-system
+      k8s-app: kube-dns
+  toPorts:
+  - ports:
+    - port: "53"
+      protocol: UDP
+    - port: "53"
+      protocol: TCP
+
+# Prometheus scraping ingress
+- fromEndpoints:
+  - matchLabels:
+      k8s:io.kubernetes.pod.namespace: monitoring
+      app.kubernetes.io/name: prometheus
+  toPorts:
+  - ports:
+    - port: "<metrics-port>"
+      protocol: TCP
+
+# kube-apiserver egress (controllers/operators only)
+- toEntities:
+  - kube-apiserver
+  toPorts:
+  - ports:
+    - port: "6443"
+      protocol: TCP
+```
+
 ### Storage
 Longhorn with four storage classes:
 - `longhorn-fast`: 3 replicas (databases, critical data)
@@ -107,6 +156,15 @@ CloudNative-PG operator provides shared PostgreSQL. Apps connect to `cnpg-shared
 
 ### Dependency Updates
 Renovate runs Monday before 6am and opens PRs. Tier 0/1 (infra/core operators) get individual PRs; Tier 2+ app patch updates are auto-merged.
+
+## Security Audit
+
+`security/` (gitignored) contains the live security audit for this cluster:
+- `findings.md` — alle bevindingen met status (opgelost / gedeeltelijk / open)
+- `rules.md` — werkregels voor het oplossen van findings (functionality first, one commit per fix, etc.)
+- `namespace-status.md` — overzicht van PSS labels en CiliumNetworkPolicy per namespace
+
+Before adding a new NetworkPolicy or PSS labels, check `namespace-status.md` for current state.
 
 ## Terraform State
 

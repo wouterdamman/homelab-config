@@ -68,10 +68,9 @@ spec:
         - name: data-volume
           mountPath: /app/data
         securityContext:
-          privileged: true
+          allowPrivilegeEscalation: false
           capabilities:
-            add:
-            - SYS_ADMIN
+            drop: ["ALL"]
       volumes:
       - name: config-volume
         secret:

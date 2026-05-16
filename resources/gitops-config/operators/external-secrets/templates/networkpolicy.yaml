@@ -8,8 +8,9 @@ spec:
 
   ingress:
   # Admission webhook — kube-apiserver calls ESO webhook for ExternalSecret validation
+  # kube-apiserver runs as static pod in host network on Talos; use cluster entity
   - fromEntities:
-    - kube-apiserver
+    - cluster
     toPorts:
     - ports:
       - port: "10250"

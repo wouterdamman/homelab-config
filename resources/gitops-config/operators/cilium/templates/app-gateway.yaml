@@ -16,7 +16,10 @@ spec:
       hostname: "*.app.damman.tech"
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/app-gateway: "true"
     - name: app-https-listener
       protocol: HTTPS
       port: 443
@@ -28,4 +31,7 @@ spec:
             kind: Secret
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/app-gateway: "true"

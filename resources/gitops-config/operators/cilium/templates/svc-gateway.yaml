@@ -16,7 +16,10 @@ spec:
       hostname: "*.svc.damman.tech"
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/svc-gateway: "true"
     - name: svc-https-listener
       protocol: HTTPS
       port: 443
@@ -28,7 +31,10 @@ spec:
             kind: Secret
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/svc-gateway: "true"
     - name: svc-tls-passthrough-listener
       protocol: TLS
       port: 8006
@@ -37,4 +43,7 @@ spec:
         mode: Passthrough
       allowedRoutes:
         namespaces:
-          from: All
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/svc-gateway: "true"

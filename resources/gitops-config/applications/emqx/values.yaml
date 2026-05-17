@@ -73,7 +73,7 @@ httproutes:
     sectionName: svc-https-listener
   path: /
   backend:
-    name: emqx
+    name: emqx-emqx-enterprise
     port: 18083
 
 metrics:

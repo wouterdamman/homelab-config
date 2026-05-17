@@ -13,9 +13,19 @@ spec:
     spec:
       serviceAccountName: cnpg-init
       restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: init-homarr
           image: alpine/k8s:1.36.0
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
           command:
             - /bin/bash
             - -c

@@ -5,7 +5,7 @@ metadata:
   namespace: cnpg-system
 spec:
   description: "Shared PostgreSQL cluster for small applications"
-  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4@sha256:99be063781d171d3971089b49c992706bdab9ccbd2b57cdf126c7542773aedfe
   instances: 2
 
   # PostgreSQL configuration

@@ -232,6 +232,13 @@ prometheus-node-exporter:
   tolerations:
   - effect: NoSchedule
     operator: Exists
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
 
 # Kube State Metrics
 kube-state-metrics:
@@ -240,6 +247,13 @@ kube-state-metrics:
     operator: Equal
     value: "true"
     effect: NoSchedule
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
 
 # etcd metrics - Talos exposes etcd metrics on port 2381
 kubeEtcd:

@@ -52,6 +52,7 @@ spec:
   # Backup via barman-cloud plugin (ObjectStore: cnpg-homeassistant-backup)
   plugins:
   - name: barman-cloud.cloudnative-pg.io
+    enabled: true
     isWALArchiver: true
     parameters:
       barmanObjectName: cnpg-homeassistant-backup

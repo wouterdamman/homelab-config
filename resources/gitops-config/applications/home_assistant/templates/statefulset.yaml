@@ -116,6 +116,9 @@ spec:
           value: "1000"
         - name: DEFAULT_WORKSPACE
           value: /config
+        # Disable built-in password auth — Authentik outpost handles authentication
+        - name: PASSWORD
+          value: ""
         ports:
         - name: codeserver
           containerPort: 8443

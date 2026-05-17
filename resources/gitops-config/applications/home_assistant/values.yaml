@@ -109,5 +109,5 @@ httproutes:
     namespace: kube-system
     sectionName: svc-https-listener
   backend:
-    name: home-assistant-codeserver
-    port: 12321
+    name: authentik-outpost-codeserver
+    port: 9000

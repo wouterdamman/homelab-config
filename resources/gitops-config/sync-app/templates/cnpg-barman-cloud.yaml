@@ -1,0 +1,37 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: cnpg-barman-cloud
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-1
+    homelab.damman.tech/managed-by: argocd
+  name: cnpg-barman-cloud
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  source:
+    repoURL: https://github.com/TheIronRock95/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/cnpg-barman-cloud
+  destination:
+    namespace: cnpg-system
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec
+        - /status

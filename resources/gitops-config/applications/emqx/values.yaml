@@ -24,17 +24,30 @@ externalSecrets:
     secretStoreRef: onepassword-connect
     templateData:
       EMQX_DASHBOARD__DEFAULT_USERNAME:
-        value: admin
-        isSecret: false
+        value: EMQX_DASHBOARD__DEFAULT_USERNAME
+        isSecret: true
       EMQX_DASHBOARD__DEFAULT_PASSWORD:
         value: EMQX_DASHBOARD__DEFAULT_PASSWORD
         isSecret: true
     data:
     - remoteKey: emqx-dashboard-password
+      property: username
+      secretKey: EMQX_DASHBOARD__DEFAULT_USERNAME
+    - remoteKey: emqx-dashboard-password
       property: password
       secretKey: EMQX_DASHBOARD__DEFAULT_PASSWORD
 
 envFromSecret: "emqx-dashboard-secret"
+
+containerSecurityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  seccompProfile:
+    type: RuntimeDefault
 
 resources:
   requests:

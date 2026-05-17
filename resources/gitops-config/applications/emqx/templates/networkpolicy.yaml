@@ -1,0 +1,77 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: emqx
+  namespace: emqx
+spec:
+  endpointSelector: {}
+  ingress:
+  # Dashboard via svc-gateway
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "18083"
+        protocol: TCP
+  # MQTT from cluster clients (home-assistant, zigbee2mqtt)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: zigbee2mqtt
+    toPorts:
+    - ports:
+      - port: "1883"
+        protocol: TCP
+  # EMQX cluster internal communication
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: emqx
+    toPorts:
+    - ports:
+      - port: "4370"
+        protocol: TCP
+      - port: "5369"
+        protocol: TCP
+      - port: "18083"
+        protocol: TCP
+  # Prometheus scraping
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "18083"
+        protocol: TCP
+  egress:
+  # DNS
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # EMQX cluster internal communication
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: emqx
+    toPorts:
+    - ports:
+      - port: "4370"
+        protocol: TCP
+      - port: "5369"
+        protocol: TCP
+      - port: "18083"
+        protocol: TCP
+  # kube-apiserver (for service discovery)
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP

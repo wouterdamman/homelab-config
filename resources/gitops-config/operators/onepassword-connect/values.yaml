@@ -2,8 +2,18 @@ connect:
   credentialsName: onepassword-connect-credentials
   credentialsKey: onepassword-connect-credentials.json
 
+  replicaCount: 2
+
   # API container resources
   api:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
     resources:
       limits:
         cpu: 200m
@@ -14,6 +24,14 @@ connect:
 
   # Sync container resources
   sync:
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+      readOnlyRootFilesystem: true
+      seccompProfile:
+        type: RuntimeDefault
     resources:
       limits:
         cpu: 200m

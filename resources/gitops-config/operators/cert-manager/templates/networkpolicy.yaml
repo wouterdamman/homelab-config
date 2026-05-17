@@ -1,0 +1,127 @@
+---
+# CiliumNetworkPolicy for cert-manager controller
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cert-manager-controller
+  namespace: cert-manager
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: cert-manager
+  ingress:
+    # Prometheus metrics scraping
+    - fromEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: monitoring
+          app.kubernetes.io/name: prometheus
+      toPorts:
+      - ports:
+        - port: "9402"
+          protocol: TCP
+  egress:
+    # DNS resolution
+    - toEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: kube-system
+          k8s-app: kube-dns
+      toPorts:
+      - ports:
+        - port: "53"
+          protocol: UDP
+        - port: "53"
+          protocol: TCP
+    # kube-apiserver
+    - toEntities:
+      - kube-apiserver
+      toPorts:
+      - ports:
+        - port: "6443"
+          protocol: TCP
+---
+# CiliumNetworkPolicy for cert-manager webhook
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cert-manager-webhook
+  namespace: cert-manager
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: webhook
+  ingress:
+    # Admission webhook from API-server (Talos: use cluster entity, not kube-apiserver)
+    - fromEntities:
+      - cluster
+      toPorts:
+      - ports:
+        - port: "10250"
+          protocol: TCP
+    # Prometheus metrics scraping
+    - fromEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: monitoring
+          app.kubernetes.io/name: prometheus
+      toPorts:
+      - ports:
+        - port: "9402"
+          protocol: TCP
+  egress:
+    # DNS resolution
+    - toEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: kube-system
+          k8s-app: kube-dns
+      toPorts:
+      - ports:
+        - port: "53"
+          protocol: UDP
+        - port: "53"
+          protocol: TCP
+    # kube-apiserver
+    - toEntities:
+      - kube-apiserver
+      toPorts:
+      - ports:
+        - port: "6443"
+          protocol: TCP
+---
+# CiliumNetworkPolicy for cert-manager cainjector
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cert-manager-cainjector
+  namespace: cert-manager
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: cainjector
+  ingress:
+    # Prometheus metrics scraping
+    - fromEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: monitoring
+          app.kubernetes.io/name: prometheus
+      toPorts:
+      - ports:
+        - port: "9402"
+          protocol: TCP
+  egress:
+    # DNS resolution
+    - toEndpoints:
+      - matchLabels:
+          k8s:io.kubernetes.pod.namespace: kube-system
+          k8s-app: kube-dns
+      toPorts:
+      - ports:
+        - port: "53"
+          protocol: UDP
+        - port: "53"
+          protocol: TCP
+    # kube-apiserver
+    - toEntities:
+      - kube-apiserver
+      toPorts:
+      - ports:
+        - port: "6443"
+          protocol: TCP

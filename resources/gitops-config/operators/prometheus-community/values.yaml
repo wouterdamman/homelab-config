@@ -81,9 +81,10 @@ alertmanager:
       operator: Equal
       value: "true"
       effect: NoSchedule
-    # Mount Pushover secret
+    # Mount secrets for Alertmanager receivers
     secrets:
     - alertmanager-pushover-secret
+    - alertmanager-healthchecks-secret
 
   # Alertmanager config - Pushover integration
   config:
@@ -97,8 +98,9 @@ alertmanager:
       repeat_interval: 4h
       receiver: 'pushover-warning'
       routes:
-      # Watchdog goes to null (dead man's switch, not for push notifications)
-      - receiver: 'null'
+      # Watchdog pings healthchecks.io every 30m as dead man's switch
+      - receiver: 'healthchecks-watchdog'
+        repeat_interval: 30m
         matchers:
         - alertname = "Watchdog"
       # InfoInhibitor goes to null
@@ -115,6 +117,12 @@ alertmanager:
         - severity = "warning"
 
     receivers:
+    # Dead man's switch — pings healthchecks.io every 30m; silence = monitoring down
+    - name: 'healthchecks-watchdog'
+      webhook_configs:
+      - url_file: /etc/alertmanager/secrets/alertmanager-healthchecks-secret/ping-url
+        send_resolved: false
+
     # Null receiver for alerts we don't want to send
     - name: 'null'
 

@@ -20,6 +20,7 @@ containerSecurityContext:
 
 # Webhook
 webhook:
+  replicaCount: 2
   resources:
     limits:
       cpu: 200m

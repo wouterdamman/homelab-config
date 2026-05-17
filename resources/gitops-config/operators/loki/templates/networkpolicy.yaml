@@ -24,6 +24,14 @@ spec:
     - ports:
       - port: "3100"
         protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "3100"
+        protocol: TCP
   # Loki memberlist gossip (single-binary mode)
   - fromEndpoints:
     - matchLabels:

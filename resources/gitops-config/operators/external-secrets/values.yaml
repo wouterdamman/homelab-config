@@ -8,6 +8,15 @@ resources:
   requests:
     cpu: 50m
     memory: 64Mi
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  readOnlyRootFilesystem: true
 
 # Webhook
 webhook:
@@ -18,6 +27,15 @@ webhook:
     requests:
       cpu: 20m
       memory: 32Mi
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
 
 # Cert Controller
 certController:
@@ -28,6 +46,15 @@ certController:
     requests:
       cpu: 20m
       memory: 32Mi
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
 
 # Prometheus metrics
 serviceMonitor:

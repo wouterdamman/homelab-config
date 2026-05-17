@@ -1,0 +1,185 @@
+# CNPG operator — manages PostgreSQL clusters, serves admission webhook
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: cloudnative-pg
+  namespace: cnpg-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloudnative-pg
+  ingress:
+  # Admission webhooks from kube-apiserver (Talos: static pod in host network → cluster entity)
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9443"
+        protocol: TCP
+  # Prometheus scraping
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+  # barman-cloud plugin communication
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        app: barman-cloud
+    toPorts:
+    - ports:
+      - port: "9090"
+        protocol: TCP
+---
+# barman-cloud plugin — handles WAL archiving to Hetzner S3
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: barman-cloud
+  namespace: cnpg-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: barman-cloud
+  ingress:
+  # CNPG operator plugin calls + Prometheus scraping (same port 9090)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+    toPorts:
+    - ports:
+      - port: "9090"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "9090"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # Hetzner Object Storage for WAL archiving
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+---
+# PostgreSQL instances — cnpg-shared + cnpg-homeassistant clusters
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: postgresql
+  namespace: cnpg-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/managed-by: cloudnative-pg
+  ingress:
+  # Authentik → cnpg-shared
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  # Home Assistant → cnpg-homeassistant
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: home-assistant
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  # Disabled apps (homarr, netbox, firefly-iii) → cnpg-shared, pre-allowed for when re-enabled
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: homarr
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: netbox
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: firefly-iii
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  # Intra-namespace: replication between instances + backup-validation job
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+      - port: "8000"
+        protocol: TCP
+  # Prometheus scraping (postgres-exporter metrics)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "9187"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+  # Intra-namespace: replication to other PostgreSQL instances
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        app.kubernetes.io/name: postgresql
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP

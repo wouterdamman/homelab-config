@@ -27,10 +27,10 @@ spec:
         protocol: UDP
       - port: "53"
         protocol: TCP
-  # Proxmox API (local LAN — world entity in Cilium)
+  # Proxmox API (local LAN — world entity in Cilium, port 8006)
   - toEntities:
     - world
     toPorts:
     - ports:
-      - port: "443"
+      - port: "8006"
         protocol: TCP

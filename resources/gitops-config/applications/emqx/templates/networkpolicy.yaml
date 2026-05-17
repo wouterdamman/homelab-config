@@ -76,8 +76,9 @@ spec:
       - port: "6443"
         protocol: TCP
   # Authentik OIDC (discovery doc + token exchange via app-gateway at sso.app.damman.tech)
+  # Cilium classifies LB-IPAM IPs as world (not cluster)
   - toEntities:
-    - cluster
+    - world
     toPorts:
     - ports:
       - port: "443"

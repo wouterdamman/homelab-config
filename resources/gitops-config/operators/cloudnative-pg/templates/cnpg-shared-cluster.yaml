@@ -50,7 +50,7 @@ spec:
 
   # Backup configuration to Hetzner Object Storage
   backup:
-    retentionPolicy: "7d"
+    retentionPolicy: "14d"
     barmanObjectStore:
       destinationPath: s3://homelab-prd/cnpg-backup/shared/
       endpointURL: https://nbg1.your-objectstorage.com

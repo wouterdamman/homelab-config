@@ -17,10 +17,20 @@ spec:
       labels:
         app.kubernetes.io/name: evcc
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: evcc
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: EVCC_DIR
+          value: /data
         ports:
         - name: http
           containerPort: 7070
@@ -31,7 +41,14 @@ spec:
           subPath: evcc.yaml
           readOnly: true
         - name: data
-          mountPath: /root/.evcc
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          readOnlyRootFilesystem: true
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         livenessProbe:
@@ -53,3 +70,5 @@ spec:
       - name: data
         persistentVolumeClaim:
           claimName: evcc-data
+      - name: tmp
+        emptyDir: {}

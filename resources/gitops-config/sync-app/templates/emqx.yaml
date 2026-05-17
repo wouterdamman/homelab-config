@@ -18,8 +18,8 @@ spec:
   project: apps
   sources:
   - repoURL: https://repos.emqx.io/charts
-    chart: emqx
-    targetRevision: 5.8.9
+    chart: emqx-enterprise
+    targetRevision: 5.9.2
     helm:
       valueFiles:
       - $values/resources/gitops-config/applications/emqx/values.yaml

@@ -1,8 +1,4 @@
-replicaCount: 3
-image:
-  repository: emqx/emqx
-  pullPolicy: IfNotPresent
-  tag: "5.8.9"
+replicaCount: 1
 
 podManagementPolicy: Parallel
 
@@ -13,9 +9,8 @@ persistence:
   accessMode: ReadWriteOnce
 
 emqxConfig:
-  EMQX_CLUSTER__DISCOVERY_STRATEGY: dns
-  EMQX_CLUSTER__DNS__NAME: emqx-headless.emqx.svc.cluster.local
-  EMQX_CLUSTER__DNS__RECORD_TYPE: srv
+  EMQX_DASHBOARD__DEFAULT_USERNAME: ""
+  EMQX_DASHBOARD__DEFAULT_PASSWORD: ""
 
 externalSecrets:
   enabled: true

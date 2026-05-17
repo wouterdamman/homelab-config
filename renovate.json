@@ -76,9 +76,9 @@
       "pinDigests": true
     },
     {
-      "description": "Ignore emqx/emqx docker image updates",
-      "matchPackageNames": ["emqx/emqx"],
-      "enabled": false
+      "description": "Block emqx-enterprise upgrades to 6.x (BSL license change, clustering costs)",
+      "matchPackageNames": ["emqx-enterprise"],
+      "allowedVersions": ">=5.9.0 <6.0.0"
     },
     {
       "description": "Disable patch updates for kube-prometheus-stack",

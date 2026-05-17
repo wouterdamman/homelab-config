@@ -2,7 +2,7 @@ connect:
   credentialsName: onepassword-connect-credentials
   credentialsKey: onepassword-connect-credentials.json
 
-  replicaCount: 2
+  replicas: 2
 
   # API container resources
   api:

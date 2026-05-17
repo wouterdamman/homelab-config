@@ -236,43 +236,6 @@ spec:
       - port: "443"
         protocol: TCP
 ---
-# Promtail — ships logs to Loki, queries kube-apiserver for pod metadata
-apiVersion: cilium.io/v2
-kind: CiliumNetworkPolicy
-metadata:
-  name: promtail
-  namespace: monitoring
-spec:
-  endpointSelector:
-    matchLabels:
-      app.kubernetes.io/name: promtail
-  ingress: []
-  egress:
-  - toEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: kube-system
-        k8s-app: kube-dns
-    toPorts:
-    - ports:
-      - port: "53"
-        protocol: UDP
-      - port: "53"
-        protocol: TCP
-  - toEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: loki
-    toPorts:
-    - ports:
-      - port: "3100"
-        protocol: TCP
-  - toEntities:
-    - kube-apiserver
-    toPorts:
-    - ports:
-      - port: "6443"
-        protocol: TCP
----
 # Prometheus operator — manages Prometheus/Alertmanager CRDs
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy

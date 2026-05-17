@@ -17,6 +17,9 @@ spec:
   backupOwnerReference: self
   immediate: false
   suspend: false
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
 
   # Target for backup (prefer standby to reduce primary load)
   target: prefer-standby

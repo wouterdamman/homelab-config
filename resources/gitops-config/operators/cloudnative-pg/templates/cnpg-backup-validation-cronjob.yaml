@@ -196,20 +196,21 @@ spec:
                     kubectl delete namespace $test_namespace --wait=false
 
                     # Send result notification
+                    NL=$'\n'
                     if [ "$validation_result" = "success" ]; then
                       send_pushover \
-                        "✅ Backup Validation Success" \
-                        "Cluster: cnpg-${cluster_name}\nBackup Source: Hetzner S3\nBackup Time: $BACKUP_TIME\nDatabases: $DB_COUNT\n\nRestore test from S3 completed successfully!" \
+                        "✅ cnpg-${cluster_name} — Backup OK" \
+                        "Backup: $BACKUP_TIME${NL}Databases ($DB_COUNT): $DATABASES${NL}Source: Hetzner S3" \
                         "-1"
                     elif [ "$validation_result" = "warning" ]; then
                       send_pushover \
-                        "⚠️ Backup Validation Warning" \
-                        "Cluster: cnpg-${cluster_name}\nBackup Time: $BACKUP_TIME\nWarning: $error_details" \
+                        "⚠️ cnpg-${cluster_name} — Backup Warning" \
+                        "Backup: $BACKUP_TIME${NL}Warning: $error_details" \
                         "0"
                     else
                       send_pushover \
-                        "❌ Backup Validation FAILED" \
-                        "Cluster: cnpg-${cluster_name}\nBackup Time: $BACKUP_TIME\nError: $error_details\n\nImmediate attention required!" \
+                        "❌ cnpg-${cluster_name} — Backup FAILED" \
+                        "Backup: $BACKUP_TIME${NL}Error: $error_details${NL}${NL}Immediate attention required!" \
                         "1"
                       return 1
                     fi

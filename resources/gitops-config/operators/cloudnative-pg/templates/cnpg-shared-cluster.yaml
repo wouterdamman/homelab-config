@@ -48,24 +48,12 @@ spec:
       cpu: 500m
       memory: 512Mi
 
-  # Backup configuration to Hetzner Object Storage
-  backup:
-    retentionPolicy: "14d"
-    barmanObjectStore:
-      destinationPath: s3://homelab-prd/cnpg-backup/shared/
-      endpointURL: https://nbg1.your-objectstorage.com
-      s3Credentials:
-        accessKeyId:
-          name: cnpg-s3-secret
-          key: ACCESS_KEY_ID
-        secretAccessKey:
-          name: cnpg-s3-secret
-          key: ACCESS_SECRET_KEY
-      wal:
-        compression: gzip
-        maxParallel: 1
-      data:
-        compression: gzip
+  # Backup via barman-cloud plugin (ObjectStore: cnpg-shared-backup)
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: cnpg-shared-backup
 
   # Monitoring
   monitoring:

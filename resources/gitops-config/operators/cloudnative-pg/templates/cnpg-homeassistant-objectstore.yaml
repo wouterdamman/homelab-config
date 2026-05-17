@@ -1,0 +1,22 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: cnpg-homeassistant-backup
+  namespace: cnpg-system
+spec:
+  configuration:
+    destinationPath: s3://homelab-prd/cnpg-backup/homeassistant/
+    endpointURL: https://nbg1.your-objectstorage.com
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-s3-secret
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-s3-secret
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+      maxParallel: 2
+    data:
+      compression: gzip
+    retentionPolicy: "14d"

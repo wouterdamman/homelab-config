@@ -13,12 +13,10 @@ spec:
     - ports:
       - port: "18083"
         protocol: TCP
-  # MQTT from cluster clients (home-assistant, zigbee2mqtt)
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: home-assistant
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: zigbee2mqtt
+  # MQTT from cluster clients — use cluster+host because HA uses hostNetwork=true
+  - fromEntities:
+    - cluster
+    - host
     toPorts:
     - ports:
       - port: "1883"

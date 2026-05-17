@@ -60,6 +60,14 @@ controller:
     requests:
       cpu: 100m
       memory: 512Mi
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
   metrics:
     enabled: true
     serviceMonitor:
@@ -81,6 +89,14 @@ applicationSet:
     requests:
       cpu: 10m
       memory: 64Mi
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
   metrics:
     enabled: true
     serviceMonitor:
@@ -95,6 +111,7 @@ repoServer:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
     effect: NoSchedule
+  replicas: 2
   resources:
     limits:
       cpu: 1000m
@@ -102,6 +119,14 @@ repoServer:
     requests:
       cpu: 100m
       memory: 256Mi
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
   metrics:
     enabled: true
     serviceMonitor:
@@ -116,6 +141,7 @@ server:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
     effect: NoSchedule
+  replicas: 2
   resources:
     limits:
       cpu: 250m
@@ -124,6 +150,14 @@ server:
       cpu: 2m
       memory: 64Mi
   insecure: true
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
   metrics:
     enabled: true
     serviceMonitor:
@@ -175,6 +209,14 @@ notificationsController:
     requests:
       cpu: 1m
       memory: 32Mi
+  containerSecurityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: [ALL]
+    seccompProfile:
+      type: RuntimeDefault
   metrics:
     enabled: true
     serviceMonitor:

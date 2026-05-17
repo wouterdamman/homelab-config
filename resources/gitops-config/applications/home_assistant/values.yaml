@@ -46,8 +46,7 @@ addons:
     enabled: true
     image:
       repository: lscr.io/linuxserver/code-server
-      # Pin to a specific tag after first deployment — check running pod for version
-      tag: latest
+      tag: 4.118.0
     service:
       type: ClusterIP
       port: 12321

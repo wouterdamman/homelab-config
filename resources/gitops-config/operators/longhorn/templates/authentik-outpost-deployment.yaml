@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-outpost-longhorn
+  namespace: longhorn-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: authentik-outpost-longhorn
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: authentik-outpost-longhorn
+    spec:
+      containers:
+      - name: proxy
+        image: ghcr.io/goauthentik/proxy:2026.2.2
+        env:
+        - name: AUTHENTIK_HOST
+          value: "https://sso.svc.damman.tech"
+        - name: AUTHENTIK_INSECURE
+          value: "false"
+        - name: AUTHENTIK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: authentik-outpost-longhorn-token
+              key: token
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 9443
+          name: https
+        livenessProbe:
+          httpGet:
+            path: /outpost.goauthentik.io/ping
+            port: 9300
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /outpost.goauthentik.io/ping
+            port: 9300
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          seccompProfile:
+            type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-outpost-longhorn
+  namespace: longhorn-system
+spec:
+  selector:
+    app.kubernetes.io/name: authentik-outpost-longhorn
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000

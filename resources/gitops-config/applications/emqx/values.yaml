@@ -24,6 +24,9 @@ externalSecrets:
       EMQX_DASHBOARD__DEFAULT_PASSWORD:
         value: EMQX_DASHBOARD__DEFAULT_PASSWORD
         isSecret: true
+      EMQX_DASHBOARD__SSO__OIDC__BACKEND:
+        value: "oidc"
+        isSecret: false
       EMQX_DASHBOARD__SSO__OIDC__ENABLE:
         value: "true"
         isSecret: false
@@ -33,8 +36,8 @@ externalSecrets:
       EMQX_DASHBOARD__SSO__OIDC__CLIENTID:
         value: EMQX_DASHBOARD__SSO__OIDC__CLIENTID
         isSecret: true
-      EMQX_DASHBOARD__SSO__OIDC__CLIENTSECRET:
-        value: EMQX_DASHBOARD__SSO__OIDC__CLIENTSECRET
+      EMQX_DASHBOARD__SSO__OIDC__SECRET:
+        value: EMQX_DASHBOARD__SSO__OIDC__SECRET
         isSecret: true
       EMQX_DASHBOARD__SSO__OIDC__DASHBOARD_ADDR:
         value: "https://emqx.svc.damman.tech"
@@ -51,7 +54,7 @@ externalSecrets:
       secretKey: EMQX_DASHBOARD__SSO__OIDC__CLIENTID
     - remoteKey: emqx-oidc
       property: password
-      secretKey: EMQX_DASHBOARD__SSO__OIDC__CLIENTSECRET
+      secretKey: EMQX_DASHBOARD__SSO__OIDC__SECRET
 
 envFromSecret: "emqx-dashboard-secret"
 

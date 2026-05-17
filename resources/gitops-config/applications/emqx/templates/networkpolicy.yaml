@@ -75,3 +75,10 @@ spec:
     - ports:
       - port: "6443"
         protocol: TCP
+  # Authentik OIDC (discovery doc + token exchange via app-gateway at sso.app.damman.tech)
+  - toEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

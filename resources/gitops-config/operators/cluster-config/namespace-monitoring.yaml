@@ -11,3 +11,4 @@ metadata:
     pod-security.kubernetes.io/warn-version: latest
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: latest
+    gateway.damman.tech/svc-gateway: "true"

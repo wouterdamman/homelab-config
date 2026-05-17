@@ -72,13 +72,6 @@ gatewayAPI:
   enableAlpn: true
   enableAppProtocol: true
 
-# WebSocket fix: Envoy closes upstream connection after proxy-idle-timeout-seconds of no HTTP
-# requests. After a WS upgrade there are no more HTTP requests → connection dies after 60s.
-# Set both upstream idle timeout and stream idle timeout to 0 (disabled).
-extraConfig:
-  proxy-idle-timeout-seconds: "0"
-  http-stream-idle-timeout: "0"
-
 envoy:
   securityContext:
     capabilities:

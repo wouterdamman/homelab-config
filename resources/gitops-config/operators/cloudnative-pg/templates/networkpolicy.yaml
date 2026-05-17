@@ -92,6 +92,12 @@ spec:
         protocol: UDP
       - port: "53"
         protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
   # Hetzner Object Storage — WAL archiving
   - toEntities:
     - world

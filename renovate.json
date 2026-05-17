@@ -19,8 +19,7 @@
       "customType": "regex",
       "fileMatch": ["resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml"],
       "matchStrings": ["imageName: (?<depName>[^\\s:]+):(?<currentValue>[^@\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?"],
-      "datasourceTemplate": "docker",
-      "pinDigests": true
+      "datasourceTemplate": "docker"
     },
     {
       "description": "Track hardcoded utility images in Helm template files",
@@ -71,6 +70,12 @@
         "external-secrets", "kubelet-csr-approver", "connect"
       ],
       "commitMessagePrefix": "[Tier: 2+]"
+    },
+    {
+      "description": "Pin digests for CNPG PostgreSQL images tracked via customManager",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["resources/gitops-config/operators/cloudnative-pg/templates/**"],
+      "pinDigests": true
     },
     {
       "description": "Ignore emqx/emqx docker image updates",

@@ -1,0 +1,57 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: authentik
+  namespace: authentik
+spec:
+  endpointSelector: {}
+
+  ingress:
+  # Server UI/API — from app-gateway and svc-gateway (container port 9000; service maps 80→9000)
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP
+
+  # Prometheus scraping — server metrics endpoint
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "9300"
+        protocol: TCP
+
+  egress:
+  # DNS
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+
+  # CNPG PostgreSQL (shared cluster — Authentik database)
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        cnpg.io/cluster: cnpg-shared
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+
+  # External: OIDC providers, outbound webhooks, branding resources
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

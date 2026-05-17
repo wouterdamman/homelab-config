@@ -90,6 +90,31 @@ spec:
                       jq 'del(.metadata.namespace,.metadata.uid,.metadata.resourceVersion,.metadata.creationTimestamp,.metadata.ownerReferences)' | \
                       kubectl create -n $test_namespace -f -
 
+                    # Create ObjectStore for the source cluster in the test namespace
+                    echo "Creating ObjectStore in test namespace..."
+                    cat <<EOF | kubectl apply -f -
+                  apiVersion: barmancloud.cnpg.io/v1
+                  kind: ObjectStore
+                  metadata:
+                    name: cnpg-${cluster_name}-source
+                    namespace: $test_namespace
+                  spec:
+                    configuration:
+                      destinationPath: s3://homelab-prd/cnpg-backup/${cluster_name}/
+                      endpointURL: https://nbg1.your-objectstorage.com
+                      s3Credentials:
+                        accessKeyId:
+                          name: cnpg-s3-secret
+                          key: ACCESS_KEY_ID
+                        secretAccessKey:
+                          name: cnpg-s3-secret
+                          key: ACCESS_SECRET_KEY
+                      wal:
+                        compression: gzip
+                      data:
+                        compression: gzip
+                  EOF
+
                     # Create test cluster with restore from S3 backup
                     echo "Creating test cluster with restore from S3 (Hetzner Object Storage)..."
                     cat <<EOF | kubectl apply -f -
@@ -111,20 +136,11 @@ spec:
 
                     externalClusters:
                       - name: cnpg-${cluster_name}
-                        barmanObjectStore:
-                          destinationPath: s3://homelab-prd/cnpg-backup/${cluster_name}/
-                          endpointURL: https://nbg1.your-objectstorage.com
-                          s3Credentials:
-                            accessKeyId:
-                              name: cnpg-s3-secret
-                              key: ACCESS_KEY_ID
-                            secretAccessKey:
-                              name: cnpg-s3-secret
-                              key: ACCESS_SECRET_KEY
-                          wal:
-                            compression: gzip
-                          data:
-                            compression: gzip
+                        plugin:
+                          name: barman-cloud.cloudnative-pg.io
+                          parameters:
+                            barmanObjectName: cnpg-${cluster_name}-source
+                            serverName: cnpg-${cluster_name}
                   EOF
 
                     # Wait for cluster to be ready (max 10 minutes)

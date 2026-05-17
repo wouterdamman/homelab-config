@@ -9,6 +9,17 @@ crds:
 # Controller
 replicaCount: 1
 
+securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+  readOnlyRootFilesystem: true
+
 extraArgs:
   - --enable-gateway-api
   - --dns01-recursive-nameservers-only
@@ -38,6 +49,15 @@ prometheus:
 # Webhook
 webhook:
   replicaCount: 1
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
   resources:
     limits:
       cpu: 100m
@@ -50,6 +70,15 @@ webhook:
 cainjector:
   enabled: true
   replicaCount: 1
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
   resources:
     limits:
       cpu: 100m
@@ -61,6 +90,15 @@ cainjector:
 # Startup API Check
 startupapicheck:
   enabled: true
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+    readOnlyRootFilesystem: true
   resources:
     limits:
       cpu: 100m

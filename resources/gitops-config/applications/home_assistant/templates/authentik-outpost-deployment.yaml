@@ -19,9 +19,9 @@ spec:
         image: ghcr.io/goauthentik/proxy:2026.2.2
         env:
         - name: AUTHENTIK_HOST
-          value: "https://sso.app.damman.tech"
+          value: "http://authentik-server.authentik.svc"
         - name: AUTHENTIK_INSECURE
-          value: "true"
+          value: "false"
         - name: AUTHENTIK_HOST_BROWSER
           value: "https://sso.app.damman.tech"
         - name: AUTHENTIK_TOKEN

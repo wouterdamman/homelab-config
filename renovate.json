@@ -12,8 +12,6 @@
 
   "schedule": ["before 6am on Monday"],
 
-  "prTitle": "{{{commitMessagePrefix}}} [{{updateType}}] chore(deps): {{{commitMessageAction}}} {{{commitMessageTopic}}}{{{commitMessageExtra}}}",
-
   "customManagers": [
     {
       "customType": "regex",

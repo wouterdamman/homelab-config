@@ -92,7 +92,7 @@ spec:
 
                     # Create ObjectStore for the source cluster in the test namespace
                     echo "Creating ObjectStore in test namespace..."
-                    cat <<EOF | kubectl apply -f -
+                    cat <<EOF | kubectl create -f -
                   apiVersion: barmancloud.cnpg.io/v1
                   kind: ObjectStore
                   metadata:

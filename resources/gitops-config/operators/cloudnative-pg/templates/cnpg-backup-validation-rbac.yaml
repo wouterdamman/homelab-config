@@ -15,6 +15,11 @@ rules:
     resources: ["clusters", "backups", "scheduledbackups"]
     verbs: ["list", "get", "create", "delete", "watch"]
 
+  # barman-cloud ObjectStore permissions (for creating restore source in test namespace)
+  - apiGroups: ["barmancloud.cnpg.io"]
+    resources: ["objectstores"]
+    verbs: ["create", "delete", "get"]
+
   # Namespace permissions (for creating/deleting dynamic test namespaces)
   - apiGroups: [""]
     resources: ["namespaces"]

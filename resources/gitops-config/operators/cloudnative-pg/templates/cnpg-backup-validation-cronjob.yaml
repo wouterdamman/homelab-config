@@ -20,7 +20,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: validate-backups
-              image: alpine/k8s:1.36.0
+              image: alpine/k8s:1.36.1
               env:
                 - name: PUSHOVER_USER
                   valueFrom:

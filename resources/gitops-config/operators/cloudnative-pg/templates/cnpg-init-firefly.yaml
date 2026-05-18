@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: init-firefly
-          image: alpine/k8s:1.36.0
+          image: alpine/k8s:1.36.1
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

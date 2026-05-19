@@ -184,6 +184,13 @@ grafana:
     operator: Equal
     value: "true"
     effect: NoSchedule
+
+  # OIDC credentials injected as env vars; optional so Grafana starts before Authentik is configured
+  envFrom:
+  - secretRef:
+      name: grafana-oidc-secret
+      optional: true
+
   # Grafana.ini settings
   grafana.ini:
     server:
@@ -192,6 +199,19 @@ grafana:
       disable_login_form: false
     auth.anonymous:
       enabled: false
+    auth.generic_oauth:
+      enabled: true
+      name: Authentik
+      allow_sign_up: true
+      use_pkce: true
+      scopes: openid email profile
+      auth_url: https://sso.svc.damman.tech/application/o/authorize/
+      token_url: https://sso.svc.damman.tech/application/o/token/
+      api_url: https://sso.svc.damman.tech/application/o/userinfo/
+      signout_redirect_url: https://sso.svc.damman.tech/application/o/grafana/end-session/
+      client_id: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
+      client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+      role_attribute_path: "'Admin'"
 
   # Default dashboards
   defaultDashboardsEnabled: true

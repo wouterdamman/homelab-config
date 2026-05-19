@@ -38,6 +38,15 @@ spec:
       - ports:
         - port: "6443"
           protocol: TCP
+    # Let's Encrypt ACME + external CA endpoints
+    - toEntities:
+      - world
+      toPorts:
+      - ports:
+        - port: "443"
+          protocol: TCP
+        - port: "80"
+          protocol: TCP
 ---
 # CiliumNetworkPolicy for cert-manager webhook
 apiVersion: cilium.io/v2

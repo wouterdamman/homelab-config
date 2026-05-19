@@ -138,9 +138,17 @@ spec:
       - port: "5432"
         protocol: TCP
   # Home Assistant → cnpg-homeassistant
+  # HA uses hostNetwork:true, so Cilium assigns reserved:host/remote-node identity cross-node.
+  # fromEndpoints namespace match only works same-node; remote-node covers cross-node hostNetwork traffic.
   - fromEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: home-assistant
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  - fromEntities:
+    - remote-node
     toPorts:
     - ports:
       - port: "5432"

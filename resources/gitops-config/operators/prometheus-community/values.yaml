@@ -186,10 +186,9 @@ grafana:
     effect: NoSchedule
 
   # OIDC credentials injected as env vars; optional so Grafana starts before Authentik is configured
-  envFrom:
-  - secretRef:
-      name: grafana-oidc-secret
-      optional: true
+  envFromSecrets:
+  - name: grafana-oidc-secret
+    optional: true
 
   # Grafana.ini settings
   grafana.ini:

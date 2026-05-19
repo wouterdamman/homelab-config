@@ -269,7 +269,7 @@ kubeEtcd:
   serviceMonitor:
     enabled: true
     scheme: http
-    insecureSkipVerify: true
+    # insecureSkipVerify removed: scheme is http, TLS is not in use, field had no effect
 # kube-controller-manager and kube-scheduler metrics
 # On Talos, these bind to 127.0.0.1 by default. We've configured them to bind to 0.0.0.0
 # in the Talos machine config. Endpoints are discovered via control-plane node IPs.

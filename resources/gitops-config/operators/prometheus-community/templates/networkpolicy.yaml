@@ -126,7 +126,16 @@ spec:
     - ports:
       - port: "3100"
         protocol: TCP
-  # Grafana plugin downloads + OAuth
+  # Authentik OIDC token + userinfo — server-side calls via internal service (LB IP is cluster-entity)
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+        app.kubernetes.io/name: authentik
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP
+  # Grafana plugin downloads
   - toEntities:
     - world
     toPorts:

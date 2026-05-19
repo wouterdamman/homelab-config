@@ -205,8 +205,9 @@ grafana:
       use_pkce: true
       scopes: openid email profile
       auth_url: https://sso.svc.damman.tech/application/o/authorize/
-      token_url: https://sso.svc.damman.tech/application/o/token/
-      api_url: https://sso.svc.damman.tech/application/o/userinfo/
+      # token_url + api_url use internal service: svc-gateway LB IP is cluster-entity, blocked by CNP
+      token_url: http://authentik-server.authentik.svc.cluster.local/application/o/token/
+      api_url: http://authentik-server.authentik.svc.cluster.local/application/o/userinfo/
       signout_redirect_url: https://sso.svc.damman.tech/application/o/grafana/end-session/
       client_id: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
       client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}

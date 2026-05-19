@@ -31,7 +31,7 @@ dnsPolicy: ClusterFirstWithHostNet
 persistence:
   enabled: true
   size: 10Gi
-  storageClassName: longhorn-standard
+  storageClassName: longhorn-fast
 
 resources:
   requests:

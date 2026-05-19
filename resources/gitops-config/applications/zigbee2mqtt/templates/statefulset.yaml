@@ -64,6 +64,14 @@ spec:
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: web
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
         resources:
           {{- toYaml .Values.statefulset.resources | nindent 10 }}
         volumeMounts:

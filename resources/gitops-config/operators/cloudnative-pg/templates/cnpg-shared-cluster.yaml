@@ -36,7 +36,7 @@ spec:
 
   # Storage configuration
   storage:
-    storageClass: longhorn-standard
+    storageClass: longhorn-fast
     size: 5Gi
 
   # Resource configuration

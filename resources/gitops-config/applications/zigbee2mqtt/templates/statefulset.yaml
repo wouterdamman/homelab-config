@@ -40,6 +40,7 @@ spec:
           mountPath: /app/data
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop: ["ALL"]
             add: ["CHOWN"]
@@ -77,6 +78,8 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /app/data
+        - name: tmp
+          mountPath: /tmp
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -85,6 +88,8 @@ spec:
       - name: config-volume
         secret:
           secretName: zigbee2mqtt-config
+      - name: tmp
+        emptyDir: {}
   {{- if .Values.statefulset.storage.enabled }}
   volumeClaimTemplates:
   - metadata:

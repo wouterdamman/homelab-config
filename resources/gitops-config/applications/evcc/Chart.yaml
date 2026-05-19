@@ -3,4 +3,4 @@ name: evcc
 description: EVCC - Solar Charging for Electric Vehicles
 type: application
 version: 1.0.0
-appVersion: "0.133.1"
+appVersion: "0.306.3"

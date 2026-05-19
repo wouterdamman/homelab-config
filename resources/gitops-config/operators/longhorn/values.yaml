@@ -18,7 +18,7 @@ defaultSettings:
   restoreConcurrentLimit: 2
   snapshotDataIntegrity: fast
   snapshotDataIntegrityImmediateCheckAfterSnapshotCreation: true
-  snapshotMaxCount: 250
+  snapshotMaxCount: 50
   replicaReplenishmentWaitInterval: 600
   replicaAutoBalance: best-effort
   storageMinimalAvailablePercentage: 15

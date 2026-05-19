@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: evcc
-  namespace: evcc
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: evcc
 spec:

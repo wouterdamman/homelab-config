@@ -1,0 +1,75 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: netbox
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpointSelector: {}
+
+  ingress:
+  # Web UI — from svc-gateway
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+
+  # Prometheus scraping
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+
+  # Redis — netbox/worker → redis (intra-namespace)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: netbox
+    toPorts:
+    - ports:
+      - port: "6379"
+        protocol: TCP
+
+  egress:
+  # DNS
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+
+  # PostgreSQL (cnpg-shared)
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        cnpg.io/cluster: cnpg-shared
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+
+  # Redis — netbox/worker → redis (intra-namespace)
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: netbox
+    toPorts:
+    - ports:
+      - port: "6379"
+        protocol: TCP
+
+  # Authentik OIDC (sso.svc.damman.tech via svc-gateway LB IP — Cilium sees as world)
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

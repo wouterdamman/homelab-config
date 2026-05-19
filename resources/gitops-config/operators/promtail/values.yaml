@@ -24,6 +24,15 @@ tolerations:
   - effect: NoSchedule
     operator: Exists
 
+# Pod runs as root — required to read host log files at /var/log/pods (owned by root:root).
+# Running non-root would silently break log collection on nodes with restricted log permissions.
+podSecurityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  runAsGroup: 0
+  seccompProfile:
+    type: RuntimeDefault
+
 # Security context
 containerSecurityContext:
   readOnlyRootFilesystem: true

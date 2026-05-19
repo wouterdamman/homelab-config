@@ -1,3 +1,6 @@
+image:
+  tag: "5.9.2@sha256:bde926ab1ab4cd48bf7159d512754840c0b784cee3b9cfd5b99127f828ea3e88"
+
 replicaCount: 1
 
 podManagementPolicy: Parallel

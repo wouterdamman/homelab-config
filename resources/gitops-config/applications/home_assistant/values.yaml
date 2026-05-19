@@ -1,6 +1,6 @@
 image:
   repository: lscr.io/linuxserver/homeassistant
-  tag: 2026.5.2
+  tag: 2026.5.2@sha256:2fa51a403e34b116594462f4e5f25b98dd68d5d9b7d2973d435651d3cb304b1f
   pullPolicy: IfNotPresent
 
 # LSIO requires PUID/PGID — HA process runs as UID 1000, not root
@@ -46,7 +46,7 @@ addons:
     enabled: true
     image:
       repository: lscr.io/linuxserver/code-server
-      tag: 4.118.0
+      tag: 4.118.0@sha256:d66e3216a3a7fc876692646897e4f06790b1a267b7f70777cda5334d44a95a8d
     service:
       type: ClusterIP
       port: 12321

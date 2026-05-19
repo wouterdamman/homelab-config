@@ -49,6 +49,8 @@ prometheus:
 # Webhook
 webhook:
   replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
   securityContext:
     runAsNonRoot: true
     seccompProfile:

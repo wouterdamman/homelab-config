@@ -1,0 +1,102 @@
+# PgBouncer connection pooler for cnpg-shared cluster
+# Apps connect to cnpg-shared-pooler-rw.cnpg-system.svc:5432
+# Currently additive — apps still use cnpg-shared-rw directly
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: cnpg-shared-pooler
+  namespace: cnpg-system
+spec:
+  cluster:
+    name: cnpg-shared
+  instances: 2
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "10"
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: pgbouncer
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cnpg-shared-pooler
+  namespace: cnpg-system
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      cnpg.io/poolerName: cnpg-shared-pooler
+---
+# Pooler pods need: ingress from app namespaces on 5432, egress to PostgreSQL + DNS
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: pooler
+  namespace: cnpg-system
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/poolerName: cnpg-shared-pooler
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: firefly-iii
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: homarr
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: netbox
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        app.kubernetes.io/name: postgresql
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP

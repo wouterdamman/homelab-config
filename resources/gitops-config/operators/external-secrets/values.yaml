@@ -21,6 +21,8 @@ containerSecurityContext:
 # Webhook
 webhook:
   replicaCount: 2
+  podDisruptionBudget:
+    enabled: true
   resources:
     limits:
       cpu: 200m

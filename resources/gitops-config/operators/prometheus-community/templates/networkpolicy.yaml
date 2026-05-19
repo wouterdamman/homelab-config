@@ -135,6 +135,13 @@ spec:
     - ports:
       - port: "9000"
         protocol: TCP
+  # kube-apiserver — grafana-sc-dashboard + grafana-sc-datasources sidecars watch ConfigMaps/Secrets
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
   # Grafana plugin downloads
   - toEntities:
     - world

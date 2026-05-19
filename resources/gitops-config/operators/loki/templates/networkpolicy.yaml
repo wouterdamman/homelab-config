@@ -64,6 +64,13 @@ spec:
         protocol: TCP
       - port: "7946"
         protocol: UDP
+  # loki-sc-rules sidecar watches kube-apiserver for ConfigMaps/Secrets
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
   # Hetzner S3 for log storage
   - toEntities:
     - world

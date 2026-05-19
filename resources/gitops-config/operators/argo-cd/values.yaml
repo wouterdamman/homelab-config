@@ -112,6 +112,8 @@ repoServer:
     operator: Exists
     effect: NoSchedule
   replicas: 2
+  pdb:
+    enabled: true
   resources:
     limits:
       cpu: 1000m
@@ -142,6 +144,8 @@ server:
     operator: Exists
     effect: NoSchedule
   replicas: 2
+  pdb:
+    enabled: true
   resources:
     limits:
       cpu: 250m

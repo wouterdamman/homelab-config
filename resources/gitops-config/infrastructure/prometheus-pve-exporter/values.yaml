@@ -6,6 +6,9 @@ prometheus-pve-exporter:
     pveUser: "monitoring@pve"
     pvePassword: ""
     pveExistingSecretName: "pve-exporter-secret"
+    # Proxmox uses a self-signed certificate by default; adding the CA cert to the
+    # container trust store is disproportionate for an internal scrape endpoint.
+    # Accepted risk: connection is cluster-internal (10.0.10.x), no external exposure.
     pveVerifySsl: false
 
   resources:

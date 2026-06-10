@@ -1,6 +1,6 @@
 image:
   repository: lscr.io/linuxserver/homeassistant
-  tag: 2026.5.4@sha256:8853a8333bb6faaae6c1ec12e5e6a550bf3ca3c811bb235a5ce56c219e78868c
+  tag: 2026.5.4@sha256:22291ec925a885ac4940a4dceaf265a030a6f7aa3b0dd72c25062641796af623
   pullPolicy: IfNotPresent
 
 # LSIO requires PUID/PGID — HA process runs as UID 1000, not root

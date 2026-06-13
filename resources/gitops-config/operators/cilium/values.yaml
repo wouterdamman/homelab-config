@@ -73,6 +73,8 @@ gatewayAPI:
   enableAppProtocol: true
 
 envoy:
+  # 0 disables stream idle timeout (default 300s kills WebSocket connections after 5min background)
+  streamIdleTimeoutDurationSeconds: 0
   securityContext:
     capabilities:
       keepCapNetBindService: true

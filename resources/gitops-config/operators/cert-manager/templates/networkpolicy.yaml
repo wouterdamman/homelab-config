@@ -47,6 +47,15 @@ spec:
           protocol: TCP
         - port: "80"
           protocol: TCP
+    # DNS-01 challenge verification (cert-manager queries public DNS to verify propagation)
+    - toEntities:
+      - world
+      toPorts:
+      - ports:
+        - port: "53"
+          protocol: UDP
+        - port: "53"
+          protocol: TCP
 ---
 # CiliumNetworkPolicy for cert-manager webhook
 apiVersion: cilium.io/v2

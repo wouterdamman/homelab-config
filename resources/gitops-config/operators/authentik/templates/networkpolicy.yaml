@@ -8,8 +8,13 @@ spec:
 
   ingress:
   # Server UI/API — from app-gateway and svc-gateway (container port 9000; service maps 80→9000)
+  # host/remote-node: the Cilium Gateway's Envoy is the per-node agent itself
+  # (hostNetwork), so hairpin traffic from in-cluster OIDC clients (e.g. EMQX)
+  # routed through the gateway's ClusterIP arrives with that identity, not cluster
   - fromEntities:
     - cluster
+    - host
+    - remote-node
     toPorts:
     - ports:
       - port: "9000"

@@ -42,6 +42,17 @@ spec:
     - ports:
       - port: "18083"
         protocol: TCP
+  # Cilium Gateway's own L7 proxy redirect for outbound HTTPS to the Authentik
+  # OIDC discovery/token/userinfo calls (see egress world:443 below). Confirmed
+  # via Hubble: this leg of the connection is tagged with the reserved "ingress"
+  # identity, not the original egress destination identity, and gets DROPPED
+  # without this rule even though the egress side is fully allowed.
+  - fromEntities:
+    - ingress
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
   egress:
   # DNS
   - toEndpoints:
@@ -76,15 +87,11 @@ spec:
   # Authentik OIDC (discovery doc + token exchange via app-gateway at sso.app.damman.tech)
   # CoreDNS rewrites this hostname to the gateway's ClusterIP in-cluster (see
   # cluster-config), which avoids the Cilium Gateway's anti-hairpin block on its
-  # own announced VIP. The gateway's Envoy is the per-node Cilium agent itself
-  # (hostNetwork), so the ClusterIP destination is "host"/"remote-node" identity,
-  # not "world" -- both are needed alongside world (external OIDC providers,
-  # webhooks, etc., for apps that don't route through this gateway pattern).
+  # own announced VIP. Egress to the ClusterIP is classified "world" same as the
+  # original VIP (confirmed via Hubble) -- the actual remaining block was on the
+  # ingress side (see fromEntities: ingress rule above), not here.
   - toEntities:
     - world
-    - host
-    - remote-node
-    - cluster
     toPorts:
     - ports:
       - port: "443"

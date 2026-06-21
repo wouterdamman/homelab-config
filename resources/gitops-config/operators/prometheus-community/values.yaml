@@ -8,7 +8,8 @@ fullnameOverride: prometheus
 prometheus:
   prometheusSpec:
     retention: 14d
-    retentionSize: "30GB"
+    # Doubled from 30GB alongside scrapeInterval 60s->30s to keep 14d retention intact
+    retentionSize: "60GB"
 
     # Storage
     storageSpec:
@@ -18,7 +19,7 @@ prometheus:
           accessModes: [ "ReadWriteOnce" ]
           resources:
             requests:
-              storage: 40Gi
+              storage: 80Gi
 
     # Resources
     resources:
@@ -35,9 +36,9 @@ prometheus:
       operator: Equal
       value: "true"
       effect: NoSchedule
-    # Scrape interval - 60s is voldoende voor homelab alerting/debugging
-    scrapeInterval: "60s"
-    evaluationInterval: "60s"
+    # Scrape interval - 30s catches sub-minute spikes; retentionSize/storage doubled to compensate
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
 
     # Override exporter timestamps to avoid out-of-order sample drops
     overrideHonorTimestamps: true

@@ -51,13 +51,13 @@ Complete monitoring and alerting setup using Prometheus, Loki, Grafana, and Push
 
 ```yaml
 Retention: 14 days
-Retention Size: 30GB (stops earlier if limit reached)
-Storage: 40Gi PVC on longhorn-monitoring
-Scrape Interval: 60s
-Evaluation Interval: 60s
+Retention Size: 60GB (stops earlier if limit reached)
+Storage: 80Gi PVC on longhorn-monitoring
+Scrape Interval: 30s
+Evaluation Interval: 30s
 ```
 
-> **Trade-off:** 60s is a deliberate choice to keep cardinality/storage cost down on a single 40Gi PVC. It means spikes shorter than ~60s (brief CPU/latency/memory blips) are invisible in graphs and won't trigger alerts based on `rate()` over short windows. Accepted as-is — lower the interval only if a real incident gets missed because of it.
+> **Trade-off:** Was 60s/30GB/40Gi until 2026-06-21; lowered to 30s to catch sub-minute spikes, with retentionSize/storage doubled in lockstep to keep the full 14d retention window.
 
 **Prometheus scrapes:**
 - `kube-state-metrics` — Kubernetes object states

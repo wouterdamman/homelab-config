@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+            lameduck 5s
+        }
+        ready
+        log . {
+            class error
+        }
+        prometheus :9153
+
+        # In-cluster pods hairpinning back through app-gateway's L2-announced VIP
+        # (10.0.10.241) to reach an Authentik OIDC provider get a hard 403 from
+        # Cilium's Gateway dataplane (anti-hairpin protection on the announced VIP).
+        # The gateway's own ClusterIP has no such restriction and reaches the same
+        # Envoy/HTTPRoute, so native-OIDC apps (EMQX) that can't override individual
+        # auth/token/userinfo endpoints (unlike Grafana's generic_oauth) work by
+        # rewriting this one hostname to the ClusterIP for in-cluster DNS only.
+        # External/browser DNS resolution is untouched (different DNS server).
+        rewrite name sso.app.damman.tech cilium-gateway-app-gateway.kube-system.svc.cluster.local
+
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        forward . /etc/resolv.conf {
+           max_concurrent 1000
+        }
+        cache 30 {
+           disable success cluster.local
+           disable denial cluster.local
+        }
+        loop
+        reload
+        loadbalance
+    }

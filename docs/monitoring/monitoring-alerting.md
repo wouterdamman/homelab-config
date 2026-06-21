@@ -57,6 +57,8 @@ Scrape Interval: 60s
 Evaluation Interval: 60s
 ```
 
+> **Trade-off:** 60s is a deliberate choice to keep cardinality/storage cost down on a single 40Gi PVC. It means spikes shorter than ~60s (brief CPU/latency/memory blips) are invisible in graphs and won't trigger alerts based on `rate()` over short windows. Accepted as-is — lower the interval only if a real incident gets missed because of it.
+
 **Prometheus scrapes:**
 - `kube-state-metrics` — Kubernetes object states
 - `node-exporter` — Hardware/OS metrics

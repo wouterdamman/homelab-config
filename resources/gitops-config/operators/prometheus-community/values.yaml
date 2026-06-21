@@ -47,13 +47,13 @@ prometheus:
     podMonitorSelectorNilUsesHelmValues: false
     ruleSelectorNilUsesHelmValues: false
 
-    # Sluit kube-system (Cilium/Hubble - hoge cardinality) en kubelet-serving-cert-approver uit
+    # Sluit kubelet-serving-cert-approver uit; kube-system terug toegelaten zodat
+    # Cilium/Hubble ServiceMonitors (leven in kube-system) wel gescraped worden
     serviceMonitorNamespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
-            - kube-system
             - kubelet-serving-cert-approver
 
 # Alertmanager

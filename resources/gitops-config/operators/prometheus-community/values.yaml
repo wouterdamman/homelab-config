@@ -95,7 +95,8 @@ alertmanager:
       group_by: [ 'alertname', 'namespace' ]
       group_wait: 30s
       group_interval: 5m
-      repeat_interval: 4h
+      # 24h fallback for anything that matches no sub-route below
+      repeat_interval: 24h
       receiver: 'pushover-warning'
       routes:
       # Watchdog pings healthchecks.io every 30m as dead man's switch
@@ -107,12 +108,14 @@ alertmanager:
       - receiver: 'null'
         matchers:
         - alertname = "InfoInhibitor"
-      # Critical alerts
+      # Critical alerts — keep re-paging every 4h, unlike warnings
       - receiver: 'pushover-critical'
+        repeat_interval: 4h
         matchers:
         - severity = "critical"
-      # Warning alerts (default)
+      # Warning alerts (default) — 24h reduces alert fatigue for sustained slow-burn issues
       - receiver: 'pushover-warning'
+        repeat_interval: 24h
         matchers:
         - severity = "warning"
 

@@ -81,3 +81,17 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Authentik OIDC backend calls (discovery/token/userinfo) — internal service.
+  # In-cluster pods hairpinning back through app-gateway to sso.app.damman.tech get
+  # blocked (Cilium Gateway dataplane denies hairpin traffic with a generic 403).
+  # EMQX's native OIDC client has no separate auth/token/userinfo endpoint override
+  # (unlike Grafana's generic_oauth), so it must reach Authentik internally for all of it.
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+        app.kubernetes.io/name: authentik
+        app.kubernetes.io/component: server
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP

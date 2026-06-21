@@ -84,6 +84,7 @@ spec:
     - world
     - host
     - remote-node
+    - cluster
     toPorts:
     - ports:
       - port: "443"

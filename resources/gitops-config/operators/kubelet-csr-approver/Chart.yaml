@@ -2,4 +2,4 @@ apiVersion: v2
 name: kubelet-csr-approver
 description: Kubernetes controller that automatically approves kubelet serving certificate signing requests
 type: application
-version: 1.0.0
+version: 1.0.1

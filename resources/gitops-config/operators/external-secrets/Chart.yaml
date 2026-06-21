@@ -2,4 +2,4 @@ apiVersion: v2
 name: external-secrets
 description: External Secrets Operator - Synchronize secrets from external APIs into Kubernetes
 type: application
-version: 1.0.0
+version: 1.0.1

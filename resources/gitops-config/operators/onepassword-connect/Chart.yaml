@@ -2,4 +2,4 @@ apiVersion: v2
 name: onepassword-connect
 description: 1Password Connect for Kubernetes - Secrets management integration
 type: application
-version: 1.0.0
+version: 1.0.1

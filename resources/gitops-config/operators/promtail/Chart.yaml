@@ -2,4 +2,4 @@ apiVersion: v2
 name: promtail
 description: Promtail - Log shipping agent for Loki
 type: application
-version: 1.0.0
+version: 1.0.1

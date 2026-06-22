@@ -17,14 +17,21 @@ data:
         prometheus :9153
 
         # In-cluster pods hairpinning back through app-gateway's L2-announced VIP
-        # (10.0.10.241) to reach an Authentik OIDC provider get a hard 403 from
-        # Cilium's Gateway dataplane (anti-hairpin protection on the announced VIP).
-        # The gateway's own ClusterIP has no such restriction and reaches the same
-        # Envoy/HTTPRoute, so native-OIDC apps (EMQX) that can't override individual
-        # auth/token/userinfo endpoints (unlike Grafana's generic_oauth) work by
-        # rewriting this one hostname to the ClusterIP for in-cluster DNS only.
-        # External/browser DNS resolution is untouched (different DNS server).
-        rewrite name sso.app.damman.tech cilium-gateway-app-gateway.kube-system.svc.cluster.local
+        # (10.0.10.241) or its ClusterIP to reach an app behind the same Gateway
+        # get a hard 403 from Cilium's Gateway dataplane (anti-hairpin protection),
+        # regardless of NetworkPolicy -- confirmed via Hubble across several
+        # attempts (see git history on the emqx app). Native OIDC was abandoned
+        # for EMQX because of this (its client can't route around the hairpin).
+        # This rewrite sends in-cluster traffic for the SSO hostname straight to
+        # Authentik's own Service, skipping the Gateway/Envoy entirely. EMQX's
+        # one remaining server-side call (SAML IdP metadata fetch, at SSO config
+        # save time) uses this to fetch metadata over plain HTTP; the resulting
+        # metadata still advertises sso.app.damman.tech (Authentik builds its
+        # response URLs from the request's Host header, which this rewrite
+        # preserves), so the actual login redirect still goes out over the real
+        # public Gateway path. External/browser DNS resolution is untouched
+        # (different DNS server).
+        rewrite name sso.app.damman.tech authentik-server.authentik.svc.cluster.local
 
         kubernetes cluster.local in-addr.arpa ip6.arpa {
             pods insecure

@@ -90,6 +90,16 @@ Client → UniFi DNS → Cilium LB IP → Envoy → HTTPRoute → Service → Po
 
 **TLSRoute** (TLS passthrough): SNI-based routing, backend handles its own TLS. Example: Proxmox VE (`pve.svc.damman.tech:8006`)
 
+### Gateway Hairpin / Anti-Hairpin Protection (gotcha)
+
+In-cluster pods that loop back through a Gateway's own announced VIP or ClusterIP to reach another app behind the same Gateway (e.g. app A calling app B's public hostname for a server-to-server API call, where both are routed via the same `app-gateway`/`svc-gateway`) get a hard 403 "Access denied" from Cilium's Gateway dataplane — **independent of CiliumNetworkPolicy**. Confirmed via Hubble: the request's source identity on that hop is `reserved:ingress` (id 8), and Cilium's Gateway/Envoy implementation refuses this hairpin pattern by design (loop prevention), regardless of any policy that allows the traffic at L3/L4.
+
+This is NOT fixable by NetworkPolicy alone. Things that were tried and did **not** work:
+- A `CiliumClusterwideNetworkPolicy` selecting `reserved:ingress` for egress, scoped with `toPorts: 443/80` — broke unrelated gateway-routed traffic (e.g. Home Assistant's own UI hairpin on port 8123) because selecting `reserved:ingress` in any policy switches it to default-deny, and the port restriction silently blocked every other port sharing that same per-node identity. If you need this pattern, leave `toEntities: cluster` **unrestricted on port** (matches the upstream Cilium docs example) and let each backend's own CNP enforce its actual port.
+- Rewriting DNS for the public hostname to the Gateway's own ClusterIP (instead of its external/L2-announced VIP) — does not bypass the anti-hairpin check; both addresses hit the same per-node Envoy and get the same `reserved:ingress` identity treatment.
+
+What does work: route the in-cluster caller **around the Gateway entirely** for that specific server-to-server call — straight to the target app's own Service (bypassing `cilium-gateway-*`/Envoy). See `docs/applications/emqx.md` (SAML SSO section) for a concrete example using a CoreDNS hostname rewrite to preserve the public hostname (and therefore the correct `Host` header) while resolving directly to the target Service.
+
 ---
 
 ## Hubble Observability

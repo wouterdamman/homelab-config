@@ -1,0 +1,31 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: gateway-ingress-identity-egress
+spec:
+  description: >-
+    Per-node Gateway API Envoy (reserved:ingress) egress. Cluster destinations
+    are unrestricted on port since each backend pod's own CiliumNetworkPolicy
+    already enforces the allowed ports (defense in depth) — this mirrors the
+    upstream Cilium docs pattern and avoids the earlier mistake of restricting
+    toPorts here, which silently default-denied every other gateway-routed
+    port (e.g. Home Assistant's 8123) once this identity got its own policy.
+    World is scoped to 80/443 only, needed for the EMQX->Authentik OIDC
+    hairpin: Cilium classifies the gateway's LB-IPAM VIP as "world", and the
+    forward leg of that hairpin (Envoy re-originating the request) carries
+    the reserved:ingress identity rather than the original pod identity.
+  endpointSelector:
+    matchExpressions:
+    - key: reserved:ingress
+      operator: Exists
+  egress:
+  - toEntities:
+    - cluster
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+      - port: "80"
+        protocol: TCP

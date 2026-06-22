@@ -42,6 +42,14 @@ spec:
     - ports:
       - port: "18083"
         protocol: TCP
+  # emqx-saml-metadata static server -- only EMQX itself needs this
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: emqx
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
   egress:
   # DNS
   - toEndpoints:
@@ -73,19 +81,16 @@ spec:
     - ports:
       - port: "6443"
         protocol: TCP
-  # Authentik SAML metadata fetch (one-time, at SSO config save). Goes direct
-  # to Authentik's own Service over plain HTTP, bypassing the Gateway/Envoy
-  # entirely. Native OIDC (the toEntities: world rule this replaced) never
-  # worked reliably: Cilium's Gateway API hairpin protection blocks in-cluster
-  # pods from looping back through their own announced VIP/ClusterIP to reach
-  # an app behind the same Gateway, regardless of NetworkPolicy (confirmed via
-  # Hubble -- see git history). SAML's metadata-only fetch sidesteps this
-  # since the actual login flow afterwards is pure browser redirect.
+  # Authentik SAML metadata fetch (one-time, at SSO config save). EMQX's SAML
+  # Metadata URL points at the in-namespace emqx-saml-metadata static server
+  # (hand-patched copy of Authentik's metadata, see saml-metadata-server.yaml
+  # for why), not at Authentik directly -- so no cross-namespace rule is
+  # needed here, only the intra-namespace rule below covers it.
   - toEndpoints:
     - matchLabels:
-        k8s:io.kubernetes.pod.namespace: authentik
-        app.kubernetes.io/name: authentik
+        k8s:io.kubernetes.pod.namespace: emqx
+        app: emqx-saml-metadata
     toPorts:
     - ports:
-      - port: "9000"
+      - port: "8080"
         protocol: TCP

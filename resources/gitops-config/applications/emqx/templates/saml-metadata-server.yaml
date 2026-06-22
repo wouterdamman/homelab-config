@@ -1,0 +1,98 @@
+# Static file server serving a hand-patched copy of Authentik's SAML IdP
+# metadata for the EMQX provider. Needed because EMQX's SAML client (esaml)
+# has a binding mismatch bug: it only ever reads the metadata's HTTP-POST
+# SingleSignOnService Location, but always sends the AuthnRequest using
+# HTTP-Redirect encoding (GET + deflated query param) regardless of which
+# binding the URL was meant for. Authentik's real POST endpoint expects a
+# POST body and rejects the GET with "SAML payload missing". This file
+# patches the HTTP-POST entry's Location to point at the redirect-binding
+# endpoint instead, so esaml's GET-based request lands somewhere that
+# actually accepts it. The original XML-DSig signature on the document is
+# dropped since it's no longer valid after this edit; metadata signing is
+# optional in SAML and esaml does not verify it, only the IdP signing cert
+# inside KeyDescriptor (kept verbatim) for validating actual SAML Responses.
+#
+# Served same-namespace, no Gateway involved, to avoid Cilium's Gateway API
+# anti-hairpin protection (see emqx CiliumNetworkPolicy and configmap-coredns
+# in cluster-config for the wider context).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emqx-saml-metadata
+  namespace: emqx
+data:
+  metadata.xml: |
+    <md:EntityDescriptor xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" entityID="https://emqx.svc.damman.tech/api/v5/sso/saml/metadata"><md:IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"><md:KeyDescriptor use="signing"><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIFUzCCAzugAwIBAgIQBUnK3P/QTXWMiUQJsSxufDANBgkqhkiG9w0BAQsFADAeMRwwGgYDVQQDDBNhdXRoZW50aWsgMjAyNS4xMC4zMB4XDTI2MDEwOTE5MTQ1MVoXDTI3MDExMDE5MTQ1MVowVjEqMCgGA1UEAwwhYXV0aGVudGlrIFNlbGYtc2lnbmVkIENlcnRpZmljYXRlMRIwEAYDVQQKDAlhdXRoZW50aWsxFDASBgNVBAsMC1NlbGYtc2lnbmVkMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr71THi1Zx+ruCmSDCP8UzmdtIUbtgjyo5ENnMbAvwy/wQzDxBppoEHUSBwibF2jxzXx1qPi3ZaaDDj1UOVuf66NQNbQ0Ooxm2sHAURi8gqOA7B3A52UZybC9OWxv2Cd61Huom4LDFiA9pgTgQr91PYO98jBXxKiAR0AOwN+6GUoofl797DEhMj3exS4fOC74zsIy/8fMUikmTbG5LPBWquo18a+pqgGRBF0AU333Cr2hztvJG7QqZCuhgAmOzb/DnLvICN6sDbJf1GdpD4fdqp+WYeLes4MLbwJNv9Hgtqd+4FCGdNZhxSB8T3coMr3gDN0iRmYsUa8lFOqyUKJMyhQcBjECYuvLhUbTrJsRMtEqXv7I8EAzl9pZFdp4bcSDy266ReIZ91x6q0rEzYGjTRSTHGRUJJbgs/LEMeBI8/paKncK+C+dnaOfV/6Fyr7w2t7dX3RbXdMj8dzIJTAbX3SuGCOl8YtzeKSfcTNzK6018xcX7AcNL0r0wiV/LrcqZvzQrp+3Y/Q7zLZzJQcGaMACamBhrvpusDKyUsnJgnZ5lsHq7xF/LcbpQDWirWyRvjs06B1EbDH2QiwW2pt4YgHm9A5zQ8j90rD03GN4KgWziz+5nxdgYj2WHSre3vRQ5QjG4V+nTHBA5YlzYGrd3rmeIlsaugLt2Ne+tICUSD0CAwEAAaNVMFMwUQYDVR0RAQH/BEcwRYJDNG5uaHRxanloYkVRSmRLT2M3a0M2c05nZFNwNWZmZ25ZWG92cGk0Ry5zZWxmLXNpZ25lZC5nb2F1dGhlbnRpay5pbzANBgkqhkiG9w0BAQsFAAOCAgEAHf9mrGROUGoYhahboAIFOPYF8IScIDTgiJ5TYUn6b314gWU/eUa8y/O1Yy6B1W6qqpiNx0T1BZgsfyZuIyT+rjOWUPRyR5EUtYfDtqucOkJEOtYFvNTEJXwPKssseHNm6QAmcCqGCGGEmZtE83dLE9b/OiZVGV27HO2YnraNdInpRvtrdpH4Agcp7BOTprckg/VX5Fu/sXVeSy2xD/XOQr5si1TRLsFHYniME8xtG+NSKxOgvuydELkbCjqdZLPrJeqHbQFpmOQCkfJSFKEdbdWEYXhg2vRXVHqmU9ZbBSbU5f2G0goNbC1n0mEVRiBU6rSBD79y1mYfm2PG06QsvgAM4WGDj669HpO7KPQ9w0AdXD31Fpz1cMENTBgAlI4AlcNon56QbFApZzW6465BHokLw5dAEctH2pGSe5wfHTd95rlaO/uTFD930udbagRCQIZnyzlXCgcVRAy2Zo/sArI8KPcN0DowIb3HJHcdq0Lta2FDOwfPJoHoEw0vcJj2wlAn7sFClS+TwnrqxAG6QsWSKQsfgt9p2etdrbTXStCrGmaMi4PW5kF0kqzOdDBmADmk6uncvZx+5R2TE62J+kPEIUKab7An/TUZ4ZXW3Mmd0U0NySgac7r3QjKBSs11T0o7QLgZZVyMdC3CfTDUIHC2fJz/9VSwnpXfB21DhNM=</ds:X509Certificate></ds:X509Data></ds:KeyInfo></md:KeyDescriptor><md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://sso.app.damman.tech/application/saml/emqx-dashboard/slo/binding/redirect/"/><md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://sso.app.damman.tech/application/saml/emqx-dashboard/slo/binding/post/"/><md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat><md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:persistent</md:NameIDFormat><md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName</md:NameIDFormat><md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat><md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://sso.app.damman.tech/application/saml/emqx-dashboard/sso/binding/redirect/"/><md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://sso.app.damman.tech/application/saml/emqx-dashboard/sso/binding/redirect/"/></md:IDPSSODescriptor></md:EntityDescriptor>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emqx-saml-metadata
+  namespace: emqx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emqx-saml-metadata
+  template:
+    metadata:
+      labels:
+        app: emqx-saml-metadata
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: nginx
+        image: nginxinc/nginx-unprivileged:1.27-alpine
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - name: metadata
+          mountPath: /usr/share/nginx/html/metadata.xml
+          subPath: metadata.xml
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        - name: var-cache
+          mountPath: /var/cache/nginx
+        - name: var-run
+          mountPath: /var/run
+        resources:
+          requests:
+            cpu: 5m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 32Mi
+      volumes:
+      - name: metadata
+        configMap:
+          name: emqx-saml-metadata
+      - name: tmp
+        emptyDir: {}
+      - name: var-cache
+        emptyDir: {}
+      - name: var-run
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emqx-saml-metadata
+  namespace: emqx
+spec:
+  selector:
+    app: emqx-saml-metadata
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP

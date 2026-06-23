@@ -16,16 +16,28 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
 spec:
   project: apps
-  source:
-    repoURL: https://github.com/TheIronRock95/homelab-config
+  sources:
+  - repoURL: https://sironite.github.io/helm-zigbee2mqtt
+    chart: zigbee2mqtt
+    targetRevision: "1.2.0"
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/applications/zigbee2mqtt/values.yaml
+  - repoURL: https://github.com/TheIronRock95/homelab-config
     targetRevision: HEAD
-    path: resources/gitops-config/applications/zigbee2mqtt
+    ref: values
   destination:
     namespace: zigbee2mqtt
     server: https://kubernetes.default.svc
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true
     automated:
       prune: true
       selfHeal: true
+  ignoreDifferences:
+  - group: apps
+    kind: StatefulSet
+    jsonPointers:
+    - /spec/volumeClaimTemplates

@@ -1,36 +1,46 @@
 image:
   repository: koenkk/zigbee2mqtt
-  tag: 2.9.2@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0
+  tag: "2.9.2@sha256:2a21bbf7a664a149024bbe1f776e3151f28ed9db15948270dcbffb89544a41f0"
 
 service:
   type: ClusterIP
 
-configmap:
-  enabled: false
+namespaceLabels:
+  gateway.damman.tech/svc-gateway: "true"
 
-statefulset:
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-  storage:
+networkPolicy:
+  cilium:
     enabled: true
-    size: 2Gi
-    storageClassName: longhorn-standard
-  secrets:
-    name: ""
+  prometheusNamespace: monitoring
+  mqttNamespace: emqx
+  extraEgress:
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "6638"
+        protocol: TCP
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClassName: longhorn-standard
 
 externalSecrets:
   enabled: true
   items:
   - name: zigbee2mqtt-config
     secretStoreRef: onepassword-connect
-    data:
-    - remoteKey: zigbee2mqtt-config
-      secretKey: configuration.yaml
+    remoteKey: zigbee2mqtt-config
+    secretKey: configuration.yaml
 
 httproutes:
 - enabled: true

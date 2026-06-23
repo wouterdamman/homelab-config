@@ -76,6 +76,17 @@ addons:
       limits:
         cpu: 500m
         memory: 512Mi
+    authentikOutpost:
+      enabled: true
+      image:
+        repository: ghcr.io/goauthentik/proxy
+        tag: "2026.5.3"
+      authentikHost: "http://authentik-server.authentik.svc"
+      authentikHostBrowser: "https://sso.app.damman.tech"
+      externalSecret:
+        enabled: true
+        secretStoreRef: onepassword-connect
+        remoteKey: authentik-outpost-codeserver
 
 externalSecrets:
   enabled: true

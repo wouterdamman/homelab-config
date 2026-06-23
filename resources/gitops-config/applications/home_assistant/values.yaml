@@ -19,6 +19,10 @@ service:
     io.cilium/lb-ipam-ips: "10.0.10.242"
   loadBalancerIP: 10.0.10.242
 
+namespaceLabels:
+  gateway.damman.tech/app-gateway: "true"
+  gateway.damman.tech/svc-gateway: "true"
+
 ingress:
   enabled: false
 

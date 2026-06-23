@@ -35,7 +35,7 @@ persistence:
   storageClassName: longhorn-standard
 
 externalSecrets:
-  enabled: true
+  enabled: false
   items:
   - name: zigbee2mqtt-config
     secretStoreRef: onepassword-connect

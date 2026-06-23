@@ -22,6 +22,21 @@ service:
 ingress:
   enabled: false
 
+networkPolicy:
+  cilium:
+    enabled: true
+  prometheusNamespace: monitoring
+  mqttNamespace: emqx
+  extraEgress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: cnpg-system
+        cnpg.io/cluster: cnpg-homeassistant
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
+
 # hostNetwork required for mDNS device discovery (Hue, Chromecast, SSDP, etc.)
 # Accepted risk: documented in security/findings.md finding #2
 # Mitigated by: capabilities.drop ALL, PUID 1000 (HA process non-root)

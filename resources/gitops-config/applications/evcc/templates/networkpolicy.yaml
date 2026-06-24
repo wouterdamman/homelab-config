@@ -63,3 +63,5 @@ spec:
         protocol: TCP
       - port: "502"
         protocol: TCP
+      - port: "1502"
+        protocol: TCP

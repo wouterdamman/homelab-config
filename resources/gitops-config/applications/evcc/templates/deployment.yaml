@@ -28,11 +28,7 @@ spec:
       - name: evcc
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        env:
-        - name: EVCC_DIR
-          value: /data
-        - name: HOME
-          value: /data
+        env: []
         ports:
         - name: http
           containerPort: 7070
@@ -43,7 +39,7 @@ spec:
           subPath: evcc.yaml
           readOnly: true
         - name: data
-          mountPath: /data
+          mountPath: /root
         - name: tmp
           mountPath: /tmp
         securityContext:

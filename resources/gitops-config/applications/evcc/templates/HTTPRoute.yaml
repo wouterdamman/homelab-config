@@ -39,6 +39,8 @@ spec:
     - path:
         type: PathPrefix
         value: /
+    timeouts:
+      backendRequest: 0s
     backendRefs:
     - name: evcc
       port: 8887

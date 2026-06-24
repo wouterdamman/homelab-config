@@ -6,7 +6,7 @@ image:
   tag: "0.309.1"
   pullPolicy: IfNotPresent
 
-replicas: 0
+replicas: 1
 
 resources:
   requests:

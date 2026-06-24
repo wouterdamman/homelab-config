@@ -33,6 +33,9 @@ spec:
         - name: http
           containerPort: 7070
           protocol: TCP
+        - name: ocpp
+          containerPort: 8887
+          protocol: TCP
         volumeMounts:
         - name: config-volume
           mountPath: /etc/evcc.yaml

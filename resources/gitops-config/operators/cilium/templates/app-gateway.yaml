@@ -35,3 +35,12 @@ spec:
           selector:
             matchLabels:
               gateway.damman.tech/app-gateway: "true"
+    - name: app-ocpp-listener
+      protocol: HTTP
+      port: 8887
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              gateway.damman.tech/app-gateway: "true"

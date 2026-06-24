@@ -40,6 +40,16 @@ spec:
       - port: "53"
         protocol: TCP
 
+  # MQTT broker (emqx)
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: emqx
+        app.kubernetes.io/name: emqx-enterprise
+    toPorts:
+    - ports:
+      - port: "1883"
+        protocol: TCP
+
   # Cloud APIs (Tibber etc.) + local devices (solar inverter, EV charger via LAN)
   - toEntities:
     - world

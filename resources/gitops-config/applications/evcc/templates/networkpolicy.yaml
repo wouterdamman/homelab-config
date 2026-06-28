@@ -16,8 +16,6 @@ spec:
     - ports:
       - port: "7070"
         protocol: TCP
-      - port: "8887"
-        protocol: TCP
 
   # Prometheus scraping
   - fromEndpoints:

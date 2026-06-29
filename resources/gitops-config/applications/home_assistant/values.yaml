@@ -13,11 +13,8 @@ env:
   value: "1000"
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 8123
-  annotations:
-    io.cilium/lb-ipam-ips: "10.0.10.242"
-  loadBalancerIP: 10.0.10.242
 
 namespaceLabels:
   gateway.damman.tech/app-gateway: "true"

@@ -52,8 +52,8 @@ resources:
 
 # Increase rate limit when doing L2 announcements
 k8sClientRateLimit:
-  qps: 20
-  burst: 100
+  qps: 50
+  burst: 200
 
 l2announcements:
   enabled: true
@@ -61,7 +61,11 @@ l2announcements:
 externalIPs:
   enabled: true
 
-enableCiliumEndpointSlice: false
+enableCiliumEndpointSlice: true
+
+bpf:
+  masquerade: true
+  tproxy: true
 
 loadBalancer:
   # https://docs.cilium.io/en/stable/network/kubernetes/kubeproxy-free/#maglev-consistent-hashing
@@ -81,11 +85,11 @@ envoy:
       envoy: [ NET_ADMIN, PERFMON, BPF ]
   resources:
     limits:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 500m
+      memory: 256Mi
     requests:
-      cpu: 5m
-      memory: 32Mi
+      cpu: 50m
+      memory: 64Mi
 
 ingressController:
   enabled: false
@@ -127,6 +131,7 @@ hubble:
           cpu: 2m
           memory: 16Mi
   metrics:
+    enableOpenMetrics: true
     enabled:
       - dns
       - drop

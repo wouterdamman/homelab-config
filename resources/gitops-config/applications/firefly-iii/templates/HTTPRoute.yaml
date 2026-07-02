@@ -19,6 +19,8 @@ spec:
         - path:
             type: PathPrefix
             value: /
+      timeouts:
+        request: 0s
       backendRefs:
         - name: firefly
           port: {{ .Values.service.port }}

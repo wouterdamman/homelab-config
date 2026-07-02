@@ -80,7 +80,7 @@ httproutes:
     port: 18083
 
 metrics:
-  enabled: false
+  enabled: true
   type: prometheus
 
 serviceExternal:

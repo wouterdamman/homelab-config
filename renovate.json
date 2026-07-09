@@ -10,8 +10,6 @@
     ]
   },
 
-  "schedule": ["before 6am on Monday"],
-
   "customManagers": [
     {
       "customType": "regex",
@@ -33,7 +31,8 @@
       "description": "Add [Tier: 0] prefix to tier-0 PR titles",
       "matchManagers": ["argocd"],
       "matchPackageNames": ["argo-cd", "argocd-apps", "cilium", "longhorn"],
-      "commitMessagePrefix": "[Tier: 0]"
+      "commitMessagePrefix": "[Tier: 0]",
+      "schedule": ["before 6am on Monday"]
     },
     {
       "description": "Add [Tier: 1] prefix to tier-1 PR titles",
@@ -42,7 +41,8 @@
         "cert-manager", "cloudnative-pg", "external-dns",
         "external-secrets", "kubelet-csr-approver", "connect"
       ],
-      "commitMessagePrefix": "[Tier: 1]"
+      "commitMessagePrefix": "[Tier: 1]",
+      "schedule": ["before 6am on Monday"]
     },
     {
       "description": "Group tier-2+ patch updates into a single automerged PR",
@@ -56,8 +56,7 @@
       ],
       "groupName": "Helm charts (tier-2+) - patches",
       "commitMessagePrefix": "[Tier: 2+]",
-      "automerge": true,
-      "schedule": ["at any time"]
+      "automerge": true
     },
     {
       "description": "Individual PRs for tier-2+ minor and major updates",

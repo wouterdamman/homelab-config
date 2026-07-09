@@ -1,0 +1,67 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cnpg-backup-pruner
+  namespace: cnpg-system
+spec:
+  # Sunday at 01:00 UTC (before backup-validation at 04:00)
+  schedule: "0 1 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          serviceAccountName: cnpg-backup-validation
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: pruner
+              image: alpine/k8s:1.36.2
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  echo "Starting CNPG Backup CR pruner -- $(date)"
+
+                  NOW=$(date +%s)
+                  HA_THRESHOLD=$((7 * 86400))      # homeassistant: 7 days (4 backups/day)
+                  SHARED_THRESHOLD=$((30 * 86400)) # shared: 30 days (daily backups)
+
+                  TO_DELETE=$(kubectl get backup.postgresql.cnpg.io -n cnpg-system -o json | \
+                    jq -r --argjson now "$NOW" \
+                          --argjson ha "$HA_THRESHOLD" \
+                          --argjson sh "$SHARED_THRESHOLD" '
+                      .items[] |
+                      (.metadata.creationTimestamp | fromdateiso8601) as $created |
+                      ($now - $created) as $age |
+                      (.metadata.labels["cnpg.io/cluster"]) as $cluster |
+                      (if $cluster == "cnpg-homeassistant" then $ha
+                       elif $cluster == "cnpg-shared" then $sh
+                       else $sh end) as $threshold |
+                      select($age > $threshold) |
+                      .metadata.name
+                    ')
+
+                  COUNT=$(echo "$TO_DELETE" | grep -c . || true)
+                  if [ "$COUNT" -eq 0 ]; then
+                    echo "Nothing to prune."
+                    exit 0
+                  fi
+
+                  echo "Pruning $COUNT Backup CRs..."
+                  echo "$TO_DELETE" | xargs -r kubectl delete backup.postgresql.cnpg.io -n cnpg-system
+                  echo "Done."

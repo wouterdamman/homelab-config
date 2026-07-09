@@ -75,6 +75,7 @@
       "description": "Pin digests for CNPG PostgreSQL images tracked via customManager",
       "matchManagers": ["custom.regex"],
       "matchFileNames": ["resources/gitops-config/operators/cloudnative-pg/templates/**"],
+      "matchDepNames": ["ghcr.io/cloudnative-pg/postgresql"],
       "pinDigests": true
     },
     {

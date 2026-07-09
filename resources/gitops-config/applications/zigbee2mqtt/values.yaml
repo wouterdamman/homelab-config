@@ -38,7 +38,7 @@ authentikOutpost:
   enabled: true
   image:
     repository: ghcr.io/goauthentik/proxy
-    tag: "2026.5.3"
+    tag: "2026.5.4"
   authentikHost: "http://authentik-server.authentik.svc"
   authentikHostBrowser: "https://sso.app.damman.tech"
   externalSecret:

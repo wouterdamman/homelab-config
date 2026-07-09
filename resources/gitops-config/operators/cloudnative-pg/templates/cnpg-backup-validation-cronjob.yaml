@@ -73,8 +73,9 @@ spec:
 
                     echo "=== Starting validation for cluster: $cluster_name ==="
 
-                    # Get last successful backup timestamp from cluster status
-                    LAST_BACKUP_TIME=$(kubectl get cluster cnpg-${cluster_name} -n $cluster_namespace -o jsonpath='{.status.lastSuccessfulBackup}')
+                    # Get last successful backup timestamp from condition (plugin backups don't update .status.lastSuccessfulBackup)
+                    LAST_BACKUP_TIME=$(kubectl get cluster cnpg-${cluster_name} -n $cluster_namespace \
+                      -o jsonpath='{.status.conditions[?(@.type=="LastBackupSucceeded")].lastTransitionTime}')
 
                     if [ -z "$LAST_BACKUP_TIME" ]; then
                       echo "ERROR: No successful backup found for cluster"
@@ -85,7 +86,7 @@ spec:
                       return 1
                     fi
 
-                    echo "Last successful backup from S3: $LAST_BACKUP_TIME"
+                    echo "Last successful backup: $LAST_BACKUP_TIME"
                     BACKUP_TIME=$LAST_BACKUP_TIME
 
                     # Create test namespace

@@ -23,6 +23,3 @@ spec:
 
   # Target for backup (prefer standby to reduce primary load)
   target: prefer-standby
-
-  # Keep Backup CRs for 30 days (daily backups = 30 objects max)
-  retentionPolicy: "30d"

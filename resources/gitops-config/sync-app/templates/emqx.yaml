@@ -19,7 +19,7 @@ spec:
   sources:
   - repoURL: https://repos.emqx.io/charts
     chart: emqx-enterprise
-    targetRevision: 5.9.2
+    targetRevision: 5.10.4
     helm:
       valueFiles:
       - $values/resources/gitops-config/applications/emqx/values.yaml

@@ -56,7 +56,8 @@
       ],
       "groupName": "Helm charts (tier-2+) - patches",
       "commitMessagePrefix": "[Tier: 2+]",
-      "automerge": true
+      "automerge": true,
+      "schedule": ["at any time"]
     },
     {
       "description": "Individual PRs for tier-2+ minor and major updates",

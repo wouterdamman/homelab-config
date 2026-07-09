@@ -43,9 +43,9 @@ spec:
       - port: "6443"
         protocol: TCP
   # PostgreSQL instance status polling (https://:8000/pg/status)
+  # No namespace filter — operator manages clusters cluster-wide (watchNamespace: "")
   - toEndpoints:
     - matchLabels:
-        k8s:io.kubernetes.pod.namespace: cnpg-system
         app.kubernetes.io/name: postgresql
     toPorts:
     - ports:

@@ -27,7 +27,7 @@ mcp:
       memory: 128Mi
   env:
     VAULT_PATH: /vault
-    MCP_ALLOWED_HOST: ""
+    MCP_ALLOWED_HOST: "localhost"
 
 persistence:
   size: 20Gi

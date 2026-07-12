@@ -20,6 +20,12 @@ spec:
     - path:
         type: PathPrefix
         value: {{ .path }}
+    filters:
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        set:
+        - name: Host
+          value: localhost
     backendRefs:
     - name: {{ .backend.name }}
       port: {{ .backend.port }}

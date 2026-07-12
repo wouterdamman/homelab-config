@@ -41,7 +41,7 @@ Enterprise-grade MQTT broker for home automation communication.
 |---------|-------|
 | Type | StatefulSet |
 | Replicas | 3 |
-| Image | `emqx/emqx:5.8.9` |
+| Image | `emqx/emqx:5.9.2` |
 | CPU | 100m request, 500m limit |
 | Memory | 256Mi request, 512Mi limit |
 | Storage | 10Gi per pod (longhorn-standard) |

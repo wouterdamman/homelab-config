@@ -39,7 +39,7 @@ Electric vehicle charging with solar surplus optimization.
 
 | Setting | Value |
 |---------|-------|
-| Image | `evcc/evcc:0.306.3` |
+| Image | `evcc/evcc:0.311.1` |
 | Strategy | Recreate (for PVC attachment) |
 | CPU | 100m request, 500m limit |
 | Memory | 256Mi request, 512Mi limit |
@@ -191,7 +191,7 @@ kubectl get gateway app-gateway -n kube-system
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
-| ImagePullBackOff | Tag `0.133.1` doesn't exist | Changed to `0.306.3` |
+| ImagePullBackOff | Tag `0.133.1` doesn't exist | Changed to `0.311.1` |
 | Config validation error | `buffersoc`/`prioritysoc` not camelCase | Removed site section |
 | HTTPRoute Progressing | Wrong gateway namespace `cilium-gateway` | Changed to `kube-system` |
 

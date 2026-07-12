@@ -43,8 +43,8 @@ NetBox is a web-based IPAM (IP Address Management) and DCIM (Data Center Infrast
 
 | Component | Image | Version |
 |-----------|-------|---------|
-| NetBox | netboxcommunity/netbox | v4.5.10 |
-| Redis | redis | 7.4.9-alpine |
+| NetBox | netboxcommunity/netbox | v4.6.4 |
+| Redis | redis | 8.8.0-alpine |
 
 ### Resource Requirements
 

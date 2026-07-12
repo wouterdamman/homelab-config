@@ -150,7 +150,7 @@ Code-server runs as a sidecar on the same pod, sharing the `/config` volume. Thi
 addons:
   codeserver:
     enabled: true
-    image: ghcr.io/coder/code-server:4.118.0
+    image: ghcr.io/coder/code-server:4.128.0
     service:
       type: ClusterIP
       port: 12321

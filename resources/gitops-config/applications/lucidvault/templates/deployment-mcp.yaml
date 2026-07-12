@@ -40,7 +40,7 @@ spec:
       - name: mcp
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["lucidvault", "mcp", "--http", ":8080"]
+        command: ["/lucidvault", "mcp", "--http", ":8080"]
         env:
         - name: VAULT_PATH
           value: {{ .Values.mcp.env.VAULT_PATH | quote }}

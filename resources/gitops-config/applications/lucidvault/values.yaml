@@ -1,0 +1,67 @@
+image:
+  repository: ghcr.io/bamaas/lucidvault
+  tag: latest
+  # Always because 'latest' tag doesn't change — must re-pull to pick up new builds
+  pullPolicy: Always
+
+pipeline:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  env:
+    VAULT_PATH: /vault
+    POLL_INTERVAL: 5m
+    OLLAMA_MODEL: qwen3.5
+
+mcp:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  env:
+    VAULT_PATH: /vault
+    MCP_ALLOWED_HOST: "lucidvault.svc.damman.tech"
+
+persistence:
+  size: 20Gi
+  # Bare 'longhorn' class doesn't exist; longhorn-standard = 2 replicas (default for app data)
+  storageClassName: longhorn-standard
+
+service:
+  type: ClusterIP
+  port: 8080
+
+httproutes:
+- enabled: true
+  name: lucidvault-mcp-httproute
+  namespace: lucidvault
+  hostname: lucidvault.svc.damman.tech
+  path: /
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  backend:
+    name: lucidvault-mcp
+    port: 8080
+
+externalSecrets:
+  items:
+  - name: lucidvault-secrets
+    data:
+    - secretKey: OLLAMA_API_KEY
+      remoteKey: lucidvault-ollama
+      property: api_key
+    - secretKey: RAINDROP_ACCESS_TOKEN
+      remoteKey: lucidvault-raindrop
+      property: access_token
+    - secretKey: SUPADATA_API_KEY
+      remoteKey: lucidvault-supadata
+      property: api_key

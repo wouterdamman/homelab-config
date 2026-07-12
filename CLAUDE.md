@@ -163,6 +163,80 @@ Renovate runs Monday before 6am UTC and opens PRs against `resources/gitops-conf
 - Tier 2+ (`authentik`, `loki`, `kube-prometheus-stack`, `promtail`, `evcc`, `home-assistant`, `zigbee2mqtt`): patch updates grouped into one auto-merged PR; minor/major get their own PR, manual merge.
 - `kube-prometheus-stack` patch updates are disabled (releases too frequently); `emqx/emqx` image is ignored entirely (managed manually).
 
+## Adding a New Application
+
+Two patterns based on whether the app has an upstream Helm chart:
+
+**Pattern A — Local chart** (app has no upstream Helm chart or needs full manifest control):
+1. Create `resources/gitops-config/applications/<app>/` with `Chart.yaml`, `values.yaml`, `templates/`
+2. Add `sync-app/templates/<app>.yaml` with a single `source.path` pointing to that directory
+
+**Pattern B — Dual-source** (upstream Helm chart + local values override):
+1. Create `resources/gitops-config/applications/<app>/values.yaml` (no full chart needed)
+2. Add `sync-app/templates/<app>.yaml` with two `sources:`:
+   - Upstream chart with `helm.valueFiles: [$values/resources/gitops-config/applications/<app>/values.yaml]`
+   - This repo with `ref: values` and `targetRevision: HEAD`
+
+See `sync-app/templates/home-assistant.yaml` for a dual-source example, `sync-app/templates/zigbee2mqtt.yaml` for local chart.
+
+**For each new app also:**
+- Set `argocd.argoproj.io/sync-wave` annotation (check wave ordering above)
+- Add `homelab.damman.tech/tier` label (drives Renovate PR behavior)
+- Add `CiliumNetworkPolicy` — all namespaces need DNS egress + Prometheus ingress at minimum
+- If app needs PostgreSQL: create a CNPG `Database` CR and `ExternalSecret` pulling credentials from the created secret
+
+**ExternalSecret pattern** (pull secret from 1Password into a K8s Secret):
+```yaml
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: <app>-secrets
+  namespace: <app>
+spec:
+  secretStoreRef:
+    name: onepassword-connect
+    kind: ClusterSecretStore
+  target:
+    name: <app>-secrets
+  data:
+    - secretKey: <env-var-name>
+      remoteRef:
+        key: <1password-item-name>
+        property: <field-name>
+```
+
+## Common Day-to-Day Operations
+
+```bash
+# Check all ArgoCD app health/sync status
+kubectl get applications -n argocd
+
+# Force sync a specific app
+kubectl patch application <app> -n argocd --type merge -p '{"operation":{"sync":{"revision":"HEAD"}}}'
+
+# Get ArgoCD admin password (initial)
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d
+
+# Check which pods are not Running
+kubectl get pods -A | grep -v Running | grep -v Completed
+
+# Check Longhorn volume health
+kubectl get volumes -n longhorn-system
+
+# Check CNPG cluster + backup status
+kubectl get cluster,scheduledbackup,backup -n cnpg-system
+
+# Tail logs for an app
+kubectl logs -n <namespace> -l app.kubernetes.io/name=<app> --tail=100 -f
+```
+
+## Operators vs Applications
+
+- `resources/gitops-config/operators/` — cluster infrastructure: CRD-installing operators (Cilium, Longhorn, cert-manager, CNPG, ESO, ArgoCD, etc.). These are managed in waves 0–2 and must be healthy before apps deploy.
+- `resources/gitops-config/applications/` — user-facing workloads (home-assistant, zigbee2mqtt, evcc, etc.). Waves 4–5. Depend on operators being ready.
+
+Both follow the same Helm chart structure and ArgoCD Application pattern — the distinction is conceptual, not mechanical.
+
 ## Security Audit
 
 `security/` (gitignored) contains the live security audit for this cluster:

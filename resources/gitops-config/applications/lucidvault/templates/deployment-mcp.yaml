@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lucidvault-mcp
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lucidvault
+    app.kubernetes.io/component: mcp
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lucidvault
+      app.kubernetes.io/component: mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lucidvault
+        app.kubernetes.io/component: mcp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # RWO PVC: must schedule on same node as pipeline pod
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: lucidvault
+                app.kubernetes.io/component: pipeline
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: mcp
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["lucidvault", "mcp", "--http", ":8080"]
+        env:
+        - name: VAULT_PATH
+          value: {{ .Values.mcp.env.VAULT_PATH | quote }}
+        - name: MCP_ALLOWED_HOST
+          value: {{ .Values.mcp.env.MCP_ALLOWED_HOST | quote }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        volumeMounts:
+        - name: vault
+          mountPath: /vault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        resources:
+          {{- toYaml .Values.mcp.resources | nindent 10 }}
+        livenessProbe:
+          tcpSocket:
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: vault
+        persistentVolumeClaim:
+          claimName: lucidvault-vault

@@ -27,6 +27,21 @@ spec:
         fsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      - name: seed-soul
+        image: busybox:1
+        command: ["/bin/sh", "-c", "cp /soul-src/soul.md /vault/soul.md"]
+        volumeMounts:
+        - name: vault
+          mountPath: /vault
+        - name: soul
+          mountPath: /soul-src
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          runAsNonRoot: true
+          runAsUser: 1000
       containers:
       - name: pipeline
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

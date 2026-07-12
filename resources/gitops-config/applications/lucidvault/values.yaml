@@ -27,7 +27,7 @@ mcp:
       memory: 128Mi
   env:
     VAULT_PATH: /vault
-    MCP_ALLOWED_HOST: "lucidvault.svc.damman.tech"
+    MCP_ALLOWED_HOST: "*"
 
 persistence:
   size: 20Gi

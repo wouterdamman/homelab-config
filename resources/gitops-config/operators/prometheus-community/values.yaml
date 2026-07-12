@@ -261,7 +261,7 @@ prometheus-node-exporter:
       cpu: 10m
       memory: 32Mi
     limits:
-      cpu: 100m
+      cpu: 250m
       memory: 64Mi
 
 # Kube State Metrics

@@ -19,6 +19,8 @@ data:
           "password": "__COUCHDB_PASSWORD__",
           "url": "http://lucidvault-couchdb:5984",
           "passphrase": "__LIVESYNC_PASSPHRASE__",
+          "obfuscatePassphrase": "",
+          "baseDir": "",
           "useRemoteTweaks": true
         },
         {

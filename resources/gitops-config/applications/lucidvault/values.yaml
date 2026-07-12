@@ -17,6 +17,9 @@ pipeline:
     POLL_INTERVAL: 5m
     OLLAMA_MODEL: gemma3:12b
 
+livesync:
+  enabled: false
+
 mcp:
   resources:
     requests:

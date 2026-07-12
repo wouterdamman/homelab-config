@@ -21,11 +21,9 @@ spec:
         type: PathPrefix
         value: {{ .path }}
     filters:
-    - type: RequestHeaderModifier
-      requestHeaderModifier:
-        set:
-        - name: Host
-          value: localhost
+    - type: URLRewrite
+      urlRewrite:
+        hostname: localhost
     backendRefs:
     - name: {{ .backend.name }}
       port: {{ .backend.port }}

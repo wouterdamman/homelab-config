@@ -18,7 +18,7 @@ pipeline:
     OLLAMA_MODEL: gemma3:12b
 
 livesync:
-  enabled: false
+  enabled: true
 
 mcp:
   resources:
@@ -92,3 +92,6 @@ externalSecrets:
     - secretKey: COUCHDB_SECRET
       remoteKey: lucidvault-couchdb
       property: secret
+    - secretKey: LIVESYNC_PASSPHRASE
+      remoteKey: lucidvault-livesync-passphrase
+      property: password

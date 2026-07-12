@@ -9,19 +9,23 @@ metadata:
 data:
   config.json.tmpl: |
     {
-      "local": {
-        "type": "filesystem",
-        "path": "/vault"
-      },
-      "remote": {
-        "type": "couchdb",
-        "url": "http://lucidvault-couchdb:5984",
-        "dbName": "lucidvault",
-        "username": "__COUCHDB_USER__",
-        "password": "__COUCHDB_PASSWORD__"
-      },
-      "bridge": {
-        "interval": 60,
-        "batchSize": 100
-      }
+      "peers": [
+        {
+          "type": "couchdb",
+          "name": "lucidvault-remote",
+          "group": "main",
+          "database": "lucidvault",
+          "username": "__COUCHDB_USER__",
+          "password": "__COUCHDB_PASSWORD__",
+          "url": "http://lucidvault-couchdb:5984",
+          "passphrase": "__LIVESYNC_PASSPHRASE__",
+          "useRemoteTweaks": true
+        },
+        {
+          "type": "storage",
+          "name": "lucidvault-storage",
+          "group": "main",
+          "baseDir": "./data/"
+        }
+      ]
     }

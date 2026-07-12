@@ -41,8 +41,9 @@ spec:
         args:
         - |
           sed \
-            -e "s/__COUCHDB_USER__/${COUCHDB_USER}/g" \
-            -e "s/__COUCHDB_PASSWORD__/${COUCHDB_PASSWORD}/g" \
+            -e "s|__COUCHDB_USER__|${COUCHDB_USER}|g" \
+            -e "s|__COUCHDB_PASSWORD__|${COUCHDB_PASSWORD}|g" \
+            -e "s|__LIVESYNC_PASSPHRASE__|${LIVESYNC_PASSPHRASE}|g" \
             /template/config.json.tmpl > /config/config.json
         env:
         - name: COUCHDB_USER
@@ -55,6 +56,11 @@ spec:
             secretKeyRef:
               name: lucidvault-couchdb-secrets
               key: COUCHDB_PASSWORD
+        - name: LIVESYNC_PASSPHRASE
+          valueFrom:
+            secretKeyRef:
+              name: lucidvault-couchdb-secrets
+              key: LIVESYNC_PASSPHRASE
         volumeMounts:
         - name: config-template
           mountPath: /template
@@ -68,13 +74,13 @@ spec:
           runAsUser: 1000
       containers:
       - name: livesync-bridge
-        image: ghcr.io/vrtmrz/livesync-bridge:latest
+        image: pitazzo/livesync-bridge:latest
         imagePullPolicy: Always
         volumeMounts:
         - name: vault
-          mountPath: /vault
+          mountPath: /app/data
         - name: config-rendered
-          mountPath: /config.json
+          mountPath: /app/dat/config.json
           subPath: config.json
         securityContext:
           allowPrivilegeEscalation: false

@@ -26,7 +26,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: init
-        image: curlimages/curl:8
+        image: curlimages/curl:latest
         command: ["/bin/sh", "/scripts/init.sh"]
         env:
         - name: COUCHDB_USER

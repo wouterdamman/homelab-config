@@ -15,7 +15,7 @@ pipeline:
   env:
     VAULT_PATH: /vault
     POLL_INTERVAL: 5m
-    OLLAMA_MODEL: llama3.2
+    OLLAMA_MODEL: gemma3:12b
 
 mcp:
   resources:

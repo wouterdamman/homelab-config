@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lucidvault-couchdb-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lucidvault
+    app.kubernetes.io/component: couchdb
+data:
+  local.ini: |
+    [chttpd]
+    bind_address = any
+    port = 5984
+
+    [httpd]
+    enable_cors = true
+
+    [cors]
+    origins = app://obsidian.md,capacitor://localhost,http://localhost
+    credentials = true
+    headers = accept, authorization, content-type, origin, referer
+    methods = GET, PUT, POST, HEAD, DELETE
+    max_age = 3600
+
+    [chttpd_auth]
+    require_valid_user = true
+    authentication_redirect = /_utils/session.html
+
+    [couchdb]
+    single_node = true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lucidvault-couchdb-init
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lucidvault
+    app.kubernetes.io/component: couchdb
+data:
+  init.sh: |
+    #!/bin/sh
+    set -e
+    COUCHDB_URL="http://lucidvault-couchdb:5984"
+    CREDS="${COUCHDB_USER}:${COUCHDB_PASSWORD}"
+
+    echo "Waiting for CouchDB..."
+    until curl -sf -u "${CREDS}" "${COUCHDB_URL}/_up"; do
+      echo "Not ready, retrying in 3s..."
+      sleep 3
+    done
+
+    echo "Finishing cluster setup..."
+    curl -sf -X POST "${COUCHDB_URL}/_cluster_setup" \
+      -H "Content-Type: application/json" \
+      -u "${CREDS}" \
+      -d '{"action":"finish_cluster"}' || true
+
+    echo "Creating database 'lucidvault'..."
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+      -X PUT -u "${CREDS}" "${COUCHDB_URL}/lucidvault")
+    if [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "412" ]; then
+      echo "Database ready (HTTP ${HTTP_CODE})"
+    else
+      echo "Unexpected HTTP ${HTTP_CODE}" >&2
+      exit 1
+    fi
+    echo "Init complete."

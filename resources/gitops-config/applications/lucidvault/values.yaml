@@ -44,6 +44,7 @@ httproutes:
   namespace: lucidvault
   hostname: lucidvault.svc.damman.tech
   path: /
+  rewriteHostname: localhost
   gateway:
     name: svc-gateway
     namespace: kube-system
@@ -51,6 +52,18 @@ httproutes:
   backend:
     name: lucidvault-mcp
     port: 8080
+- enabled: true
+  name: lucidvault-couchdb-httproute
+  namespace: lucidvault
+  hostname: couchdb.svc.damman.tech
+  path: /
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  backend:
+    name: lucidvault-couchdb
+    port: 5984
 
 externalSecrets:
   items:
@@ -65,3 +78,14 @@ externalSecrets:
     - secretKey: SUPADATA_API_KEY
       remoteKey: lucidvault-supadata
       property: api_key
+  - name: lucidvault-couchdb-secrets
+    data:
+    - secretKey: COUCHDB_USER
+      remoteKey: lucidvault-couchdb
+      property: username
+    - secretKey: COUCHDB_PASSWORD
+      remoteKey: lucidvault-couchdb
+      property: password
+    - secretKey: COUCHDB_SECRET
+      remoteKey: lucidvault-couchdb
+      property: secret

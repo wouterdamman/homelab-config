@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lucidvault-livesync-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lucidvault
+    app.kubernetes.io/component: livesync-bridge
+data:
+  config.json.tmpl: |
+    {
+      "local": {
+        "type": "filesystem",
+        "path": "/vault"
+      },
+      "remote": {
+        "type": "couchdb",
+        "url": "http://lucidvault-couchdb:5984",
+        "dbName": "lucidvault",
+        "username": "__COUCHDB_USER__",
+        "password": "__COUCHDB_PASSWORD__"
+      },
+      "bridge": {
+        "interval": 60,
+        "batchSize": 100
+      }
+    }

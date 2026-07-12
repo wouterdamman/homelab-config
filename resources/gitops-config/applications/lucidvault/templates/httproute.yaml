@@ -20,10 +20,12 @@ spec:
     - path:
         type: PathPrefix
         value: {{ .path }}
+    {{- if .rewriteHostname }}
     filters:
     - type: URLRewrite
       urlRewrite:
-        hostname: localhost
+        hostname: {{ .rewriteHostname }}
+    {{- end }}
     backendRefs:
     - name: {{ .backend.name }}
       port: {{ .backend.port }}

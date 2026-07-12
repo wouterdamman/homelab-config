@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lucidvault-livesync-bridge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: lucidvault
+    app.kubernetes.io/component: livesync-bridge
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lucidvault
+      app.kubernetes.io/component: livesync-bridge
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lucidvault
+        app.kubernetes.io/component: livesync-bridge
+    spec:
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # RWO PVC: must schedule on same node as pipeline pod
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: lucidvault
+                app.kubernetes.io/component: pipeline
+            topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: render-config
+        image: busybox:1
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          sed \
+            -e "s/__COUCHDB_USER__/${COUCHDB_USER}/g" \
+            -e "s/__COUCHDB_PASSWORD__/${COUCHDB_PASSWORD}/g" \
+            /template/config.json.tmpl > /config/config.json
+        env:
+        - name: COUCHDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: lucidvault-couchdb-secrets
+              key: COUCHDB_USER
+        - name: COUCHDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lucidvault-couchdb-secrets
+              key: COUCHDB_PASSWORD
+        volumeMounts:
+        - name: config-template
+          mountPath: /template
+        - name: config-rendered
+          mountPath: /config
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          runAsNonRoot: true
+          runAsUser: 1000
+      containers:
+      - name: livesync-bridge
+        image: ghcr.io/vrtmrz/livesync-bridge:latest
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: vault
+          mountPath: /vault
+        - name: config-rendered
+          mountPath: /config.json
+          subPath: config.json
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+      volumes:
+      - name: vault
+        persistentVolumeClaim:
+          claimName: lucidvault-vault
+      - name: config-template
+        configMap:
+          name: lucidvault-livesync-config
+      - name: config-rendered
+        emptyDir: {}

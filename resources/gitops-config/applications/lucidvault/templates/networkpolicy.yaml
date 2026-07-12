@@ -15,6 +15,14 @@ spec:
       - port: "8080"
         protocol: TCP
 
+  # CouchDB — from svc-gateway and same-namespace clients (livesync-bridge, init-job)
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "5984"
+        protocol: TCP
+
   # Prometheus scraping
   - fromEndpoints:
     - matchLabels:
@@ -36,6 +44,17 @@ spec:
       - port: "53"
         protocol: UDP
       - port: "53"
+        protocol: TCP
+
+  # CouchDB — livesync-bridge and init-job → couchdb within namespace
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: lucidvault
+        app.kubernetes.io/name: lucidvault
+        app.kubernetes.io/component: couchdb
+    toPorts:
+    - ports:
+      - port: "5984"
         protocol: TCP
 
   # Ollama Cloud + Raindrop + Supadata — all external HTTPS APIs

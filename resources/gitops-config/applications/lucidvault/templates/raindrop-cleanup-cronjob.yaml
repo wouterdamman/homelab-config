@@ -30,7 +30,7 @@ spec:
           containers:
           - name: cleanup
             image: python:3.12-slim
-            command: ["sh", "-c", "pip install requests -q && python /scripts/cleanup.py"]
+            command: ["sh", "-c", "pip install --target /tmp/pkg requests -q && PYTHONPATH=/tmp/pkg python /scripts/cleanup.py"]
             envFrom:
             - secretRef:
                 name: lucidvault-secrets

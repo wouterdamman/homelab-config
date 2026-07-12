@@ -92,8 +92,9 @@ externalSecrets:
     secretStoreRef: onepassword-connect
     remoteKey: homeassistant-secrets
     secretKey: secrets.yaml
-    # 0444: LSIO chowns /config on init but Secret mounts are read-only — chown fails
-    # and file stays root:root. HA runs as UID 1000 → "others" on 0440 = no access.
+    # Mount outside /config so LSIO s6-overlay does not chown the read-only Secret mount.
+    # Chart v2.1.0 initContainer copies it to /config/secrets.yaml with correct ownership.
+    mountPath: /mnt/ha-secrets/secrets.yaml
     defaultMode: 0444
   - name: home-assistant-ssh-key
     secretStoreRef: onepassword-connect

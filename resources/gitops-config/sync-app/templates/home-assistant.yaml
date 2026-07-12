@@ -19,7 +19,7 @@ spec:
   sources:
   - repoURL: https://sironite.github.io/helm-home-assistant
     chart: home-assistant
-    targetRevision: "2.0.2"
+    targetRevision: "2.1.0"
     helm:
       valueFiles:
       - $values/resources/gitops-config/applications/home_assistant/values.yaml

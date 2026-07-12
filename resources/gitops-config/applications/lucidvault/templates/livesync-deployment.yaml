@@ -76,6 +76,11 @@ spec:
       - name: livesync-bridge
         image: pitazzo/livesync-bridge:latest
         imagePullPolicy: Always
+        env:
+        - name: HOME
+          value: /tmp
+        - name: DENO_DIR
+          value: /tmp/deno
         volumeMounts:
         - name: vault
           mountPath: /app/data

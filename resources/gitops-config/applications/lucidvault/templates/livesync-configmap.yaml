@@ -27,7 +27,8 @@ data:
           "type": "storage",
           "name": "lucidvault-storage",
           "group": "main",
-          "baseDir": "./data/"
+          "baseDir": "./data/",
+          "scanOfflineChanges": true
         }
       ]
     }

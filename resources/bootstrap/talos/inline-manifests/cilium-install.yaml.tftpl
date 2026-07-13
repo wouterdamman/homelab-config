@@ -59,7 +59,7 @@ spec:
       hostNetwork: true
       containers:
       - name: cilium-install
-        image: quay.io/cilium/cilium-cli-ci:latest
+        image: alpine:3.21
         env:
         - name: KUBERNETES_SERVICE_HOST
           valueFrom:
@@ -77,6 +77,9 @@ spec:
         - -c
         - |
           set -e
+          apk add --no-cache curl tar
+          CILIUM_CLI_VERSION=$(curl -sL --fail https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+          curl -sL --fail "https://github.com/cilium/cilium-cli/releases/download/$${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz" | tar xzC /usr/local/bin
           if cilium status --wait=false 2>/dev/null; then
             echo "Cilium already installed and healthy, skipping install"
             exit 0

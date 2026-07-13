@@ -30,8 +30,8 @@ if [[ -z "$SCHEMATIC_ID" ]]; then
 fi
 
 # Default wait times (in seconds)
-WORKER_WAIT_TIME=120    # 2 minutes between workers
-CP_WAIT_TIME=600        # 10 minutes between control planes
+WORKER_WAIT_TIME=30     # 30 seconds between workers
+CP_WAIT_TIME=90         # 90 seconds between control planes
 
 # Parse command line arguments
 CURRENT_VERSION=""

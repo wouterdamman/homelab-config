@@ -2,7 +2,7 @@
 
 Renovate is used to automatically track and update dependency versions across the homelab configuration repository. It scans ArgoCD Application manifests for Helm chart versions, Docker image tags in Helm values files, and Terraform provider versions, then opens pull requests when newer versions are available.
 
-Repository: [TheIronRock95/homelab-config](https://github.com/TheIronRock95/homelab-config)
+Repository: [wouterdamman/homelab-config](https://github.com/wouterdamman/homelab-config)
 Configuration file: `renovate.json` in the repository root.
 
 ---

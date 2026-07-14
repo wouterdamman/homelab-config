@@ -14,7 +14,7 @@ metadata:
 spec:
   project: infrastructure
   source:
-    repoURL: https://github.com/TheIronRock95/homelab-config.git
+    repoURL: https://github.com/wouterdamman/homelab-config.git
     path: resources/gitops-config/infrastructure/prometheus-pve-exporter
     targetRevision: main
     helm:

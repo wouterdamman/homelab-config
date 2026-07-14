@@ -4,7 +4,7 @@ Complete guide for deploying the Talos Kubernetes cluster from scratch on Proxmo
 
 ## Overview
 
-This guide provides a high-level walkthrough of the cluster deployment process. For detailed technical implementation, refer to the [Bootstrap README](https://github.com/TheIronRock95/homelab-config/blob/main/resources/bootstrap/README.md) in the repository.
+This guide provides a high-level walkthrough of the cluster deployment process. For detailed technical implementation, refer to the [Bootstrap README](https://github.com/wouterdamman/homelab-config/blob/main/resources/bootstrap/README.md) in the repository.
 
 ## What Gets Deployed
 

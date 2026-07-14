@@ -17,7 +17,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/TheIronRock95/homelab-config
+    repoURL: https://github.com/wouterdamman/homelab-config
     path: resources/gitops-config/sync-app/templates/
     targetRevision: HEAD
   destination:

@@ -42,7 +42,7 @@ configs:
     policy.csv: |
       g, sironite:Owners, role:admin
       g, sironite:sironite, role:admin
-      g, TheIronRock95, role:admin
+      g, wouterdamman, role:admin
     policy.default: role:readonly
     scopes: "[groups, preferred_username]"
 ```

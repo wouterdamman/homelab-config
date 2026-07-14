@@ -10,7 +10,7 @@ Single-page checklist for complete cluster recovery from scratch. Use this docum
 |------|---------------|-------|
 | Laptop with internet | — | [ ] |
 | 1Password account access | 1password.com | [ ] |
-| GitHub account with repo access | github.com/TheIronRock95/homelab-config | [ ] |
+| GitHub account with repo access | github.com/wouterdamman/homelab-config | [ ] |
 | Proxmox VE host access | https://10.0.10.200:8006 | [ ] |
 | Hetzner Object Storage backups intact | Hetzner Console — bucket `homelab-prd` | [ ] |
 
@@ -31,7 +31,7 @@ tofu version && kubectl version --client && op --version && talosctl version --c
 ## Phase 1: Clone Repository
 
 ```bash
-git clone https://github.com/TheIronRock95/homelab-config.git
+git clone https://github.com/wouterdamman/homelab-config.git
 cd homelab-config
 ```
 

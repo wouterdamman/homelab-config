@@ -23,7 +23,7 @@ spec:
     helm:
       valueFiles:
       - $values/resources/gitops-config/applications/zigbee2mqtt/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-config
+  - repoURL: https://github.com/wouterdamman/homelab-config
     targetRevision: HEAD
     ref: values
   destination:

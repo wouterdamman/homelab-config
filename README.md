@@ -32,11 +32,13 @@ homelab-config/
 │   │   ├── scripts/            # Automation scripts (1Password, upgrades)
 │   │   ├── talos/              # Talos module
 │   │   └── README.md           # Technical reference
-│   └── gitops-config/          # ArgoCD apps + operators
-│       ├── operators/          # Longhorn, Cilium, External Secrets
-│       ├── apps/               # ArgoCD application definitions
-│       ├── scripts/            # Helper scripts
-│       └── README.md           # Technical reference
+│   ├── gitops-config/          # ArgoCD apps + operators
+│   │   ├── operators/          # Longhorn, Cilium, External Secrets, ...
+│   │   ├── applications/       # User-facing apps (Home Assistant, EVCC, ...)
+│   │   ├── sync-app/           # Root App-of-Apps chart
+│   │   ├── scripts/            # Helper scripts
+│   │   └── README.md           # Technical reference
+│   └── infrastructure/         # Proxmox-level infra (QDevice LXC)
 └── docs/                       # Full documentation (architecture, operators, apps)
 ```
 
@@ -45,11 +47,11 @@ homelab-config/
 | Component | Technology | Version |
 |-----------|------------|---------|
 | **Virtualization** | Proxmox VE | Latest |
-| **Kubernetes** | Talos Linux | v1.13.2 |
-| **Kubernetes** | Kubernetes | v1.36.0 |
-| **Networking** | Cilium + Gateway API | v1.19.3 |
-| **GitOps** | ArgoCD | v3.4.2 |
-| **Storage** | Longhorn | v1.11.2 |
+| **Kubernetes** | Talos Linux | v1.13.6 |
+| **Kubernetes** | Kubernetes | v1.36.2 |
+| **Networking** | Cilium + Gateway API | v1.19.5 |
+| **GitOps** | ArgoCD | v3.4.5 |
+| **Storage** | Longhorn | v1.12.0 |
 | **IaC** | OpenTofu | Latest |
 | **Secrets** | 1Password + External Secrets | Latest |
 | **Backup** | Hetzner Object Storage | - |
@@ -62,6 +64,7 @@ homelab-config/
 - **3-tier storage**: Fast (3 replicas), Standard (2 replicas), Archive (1 replica)
 - **Automated DR**: Backup validation and restore testing scripts
 - **Infrastructure as Code**: Full cluster reproducibility via OpenTofu
+- **Secret hygiene**: gitleaks scanning (pre-commit, CI, and GitHub push protection); no secrets in git — everything flows through 1Password
 
 ## Local Documentation
 

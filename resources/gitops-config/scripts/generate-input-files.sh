@@ -141,7 +141,7 @@ spec:
           argocd.argoproj.io/secret-type: repository
       data:
         type: git
-        url: https://github.com/TheIronRock95/homelab-config.git
+        url: https://github.com/wouterdamman/homelab-config.git
         name: github-private-config-creds
         githubAppID: "1225477"
         githubAppInstallationID: "65046796"

@@ -23,7 +23,7 @@ spec:
     helm:
       valueFiles:
       - $values/resources/gitops-config/operators/longhorn/values.yaml
-  - repoURL: https://github.com/TheIronRock95/homelab-config
+  - repoURL: https://github.com/wouterdamman/homelab-config
     targetRevision: HEAD
     path: resources/gitops-config/operators/longhorn
     ref: values

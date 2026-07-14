@@ -1,0 +1,15 @@
+# Known false positives — verified manually 2026-07-14.
+# Format: <commit>:<file>:<rule>:<line>
+
+# Secret *name* reference (backupTargetCredentialSecret: longhorn-s3-secret), not a value
+f6f915e84231d3a2b2780f361287ec9ccb7d7016:docs/operators/longhorn.md:generic-api-key:21
+fdb239cad8855dd7031300b29c77d8343b5db029:resources/gitops-config/operators/longhorn/values.yaml:generic-api-key:12
+
+# Base64-encoded container image ref (ghcr.io/cloudnative-pg/plugin-barman-cloud-sidecar), not a secret
+85761c659f27a6c2576f87da656418b36f9e60f0:resources/gitops-config/operators/cnpg-barman-cloud/manifest.yaml:kubernetes-secret-yaml:943
+
+# Commented-out example templates from upstream argo-cd Helm chart values (placeholder "..." keys)
+0b162e132de9f80a2f3794c25a3cdeb37fe4f62f:resources/gitops-config/operators/argo-cd/values.yaml:private-key:525
+e04701667dded03643aa12113253ccbb953fc835:resources/gitops-config/operators/argo-cd/values.yaml:private-key:525
+240de3cad99f946a90c5ce76857e78bcaa4a6291:resources/gitops-config/operators/argo-cd/values.yaml:private-key:525
+0dd394de5b549fc374c11a8882125bd04526dedb:resources/gitops-config/operators/argo-cd/values.yaml:private-key:525

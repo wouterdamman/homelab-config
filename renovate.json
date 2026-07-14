@@ -7,22 +7,26 @@
   "prHourlyLimit": 0,
 
   "argocd": {
-    "fileMatch": [
-      "resources/gitops-config/sync-app/templates/.*\\.yaml"
+    "managerFilePatterns": [
+      "/resources/gitops-config/sync-app/templates/.*\\.yaml/"
     ]
   },
 
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml"],
+      "managerFilePatterns": [
+        "/resources/gitops-config/operators/cloudnative-pg/templates/.*\\.yaml/"
+      ],
       "matchStrings": ["imageName: (?<depName>[^\\s:]+):(?<currentValue>[^@\\s]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?"],
       "datasourceTemplate": "docker"
     },
     {
       "description": "Track hardcoded utility images in Helm template files",
       "customType": "regex",
-      "fileMatch": ["resources/gitops-config/.*/templates/.*\\.yaml"],
+      "managerFilePatterns": [
+        "/resources/gitops-config/.*/templates/.*\\.yaml/"
+      ],
       "matchStrings": ["image: (?<depName>busybox|redis|alpine/k8s|ghcr\\.io/coder/code-server):(?<currentValue>[^\\s\"]+)"],
       "datasourceTemplate": "docker"
     }
@@ -50,26 +54,40 @@
       "description": "Group tier-2+ patch updates into a single automerged PR",
       "matchManagers": ["argocd", "helm-values"],
       "matchUpdateTypes": ["patch"],
-      "excludePackageNames": [
-        "argo-cd", "argocd-apps", "cilium", "longhorn",
-        "cert-manager", "cloudnative-pg", "external-dns",
-        "external-secrets", "kubelet-csr-approver", "connect",
-        "kube-prometheus-stack"
-      ],
       "groupName": "Helm charts (tier-2+) - patches",
       "commitMessagePrefix": "[Tier: 2+]",
-      "automerge": true
+      "automerge": true,
+      "matchPackageNames": [
+        "!argo-cd",
+        "!argocd-apps",
+        "!cilium",
+        "!longhorn",
+        "!cert-manager",
+        "!cloudnative-pg",
+        "!external-dns",
+        "!external-secrets",
+        "!kubelet-csr-approver",
+        "!connect",
+        "!kube-prometheus-stack"
+      ]
     },
     {
       "description": "Individual PRs for tier-2+ minor and major updates",
       "matchManagers": ["argocd", "helm-values"],
       "matchUpdateTypes": ["minor", "major"],
-      "excludePackageNames": [
-        "argo-cd", "argocd-apps", "cilium", "longhorn",
-        "cert-manager", "cloudnative-pg", "external-dns",
-        "external-secrets", "kubelet-csr-approver", "connect"
-      ],
-      "commitMessagePrefix": "[Tier: 2+]"
+      "commitMessagePrefix": "[Tier: 2+]",
+      "matchPackageNames": [
+        "!argo-cd",
+        "!argocd-apps",
+        "!cilium",
+        "!longhorn",
+        "!cert-manager",
+        "!cloudnative-pg",
+        "!external-dns",
+        "!external-secrets",
+        "!kubelet-csr-approver",
+        "!connect"
+      ]
     },
     {
       "description": "Pin digests for CNPG PostgreSQL images tracked via customManager",

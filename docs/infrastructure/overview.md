@@ -64,10 +64,10 @@ Complete overview of the homelab infrastructure stack.
 | Component | Purpose | Version |
 |-----------|---------|---------|
 | Proxmox VE | Hypervisor | 8.x |
-| Talos Linux | Kubernetes OS | v1.13.2 |
-| Kubernetes | Container Orchestration | v1.36.0 |
-| Cilium | CNI + Gateway API | v1.19.3 |
-| Longhorn | Distributed Storage | v1.11.2 |
+| Talos Linux | Kubernetes OS | v1.13.6 |
+| Kubernetes | Container Orchestration | v1.36.2 |
+| Cilium | CNI + Gateway API | v1.19.5 |
+| Longhorn | Distributed Storage | v1.12.0 |
 
 ### GitOps Layer
 
@@ -177,6 +177,17 @@ homelab-config/
 ```
 
 ## Changelog
+
+### 2026-07-14
+- Repository public gemaakt na volledige secret-audit (git history, alle refs, PR/issue comments — schoon)
+- Secret scanning: gitleaks pre-commit hook, gitleaks CI workflow, GitHub Secret Scanning + Push Protection
+- Branch protection op `main`: PR verplicht, gitleaks check verplicht, geldt ook voor admins
+- Talos Linux: v1.13.2 → v1.13.6
+- Kubernetes: v1.36.0 → v1.36.2
+- Cilium: v1.19.3 → v1.19.5
+- Longhorn: v1.11.2 → v1.12.0
+- ArgoCD: chart 9.5.14 → 10.1.3 (app v3.4.5)
+- External Secrets Operator: 2.4.1 → 2.7.0
 
 ### 2026-05-15
 - Talos Linux: v1.12.2 → v1.13.2

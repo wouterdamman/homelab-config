@@ -55,7 +55,9 @@ networkPolicy:
               app.kubernetes.io/component: server
         toPorts:
           - ports:
-              - port: "443"
+              # Container port, not the Service's 443 — Cilium enforces
+              # post-DNAT (see CLAUDE.md gotcha).
+              - port: "9443"
                 protocol: TCP
 
 # Maps deep-merge with chart defaults, so only the new key is needed here.

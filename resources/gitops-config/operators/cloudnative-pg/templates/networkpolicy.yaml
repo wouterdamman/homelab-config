@@ -153,6 +153,14 @@ spec:
     - ports:
       - port: "5432"
         protocol: TCP
+  # home-finance → cnpg-shared
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: home-finance
+    toPorts:
+    - ports:
+      - port: "5432"
+        protocol: TCP
   # Disabled apps (homarr, netbox, firefly-iii) → cnpg-shared — pre-allowed for when re-enabled
   - fromEndpoints:
     - matchLabels:

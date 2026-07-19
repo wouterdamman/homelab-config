@@ -1,0 +1,34 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-private-home-finance-creds
+  namespace: argocd
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: onepassword-connect
+  target:
+    creationPolicy: Owner
+    name: github-private-home-finance-creds
+    template:
+      engineVersion: v2
+      type: Opaque
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        type: git
+        url: https://github.com/wouterdamman/home-finance.git
+        name: home-finance-repo
+        githubAppID: "1225477"
+        githubAppInstallationID: "65046796"
+        githubAppPrivateKey: '{{ `{{ .argoPrivateKey }}` }}'
+  data:
+  - secretKey: argoPrivateKey
+    remoteRef:
+      key: github-argo-app
+      property: argocd-private-acces.2025-04-22.private-key.pem
+      conversionStrategy: Default
+      decodingStrategy: None
+      metadataPolicy: None

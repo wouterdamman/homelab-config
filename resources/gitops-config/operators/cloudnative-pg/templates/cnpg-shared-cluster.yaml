@@ -88,6 +88,13 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: cnpg-shared-homarr
+      - name: homefinance
+        ensure: present
+        login: true
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: cnpg-shared-home-finance
       - name: netbox
         ensure: present
         login: true

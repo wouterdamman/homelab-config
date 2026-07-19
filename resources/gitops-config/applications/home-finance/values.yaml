@@ -1,0 +1,31 @@
+# Cluster-specific overrides for the home-finance chart. The chart's own
+# defaults already target this stack (Gateway API + ESO + cnpg-shared +
+# Cilium — see deploy/helm/home-finance/README.md upstream), so this file
+# only needs the values that are genuinely environment-specific.
+
+namespaceLabels:
+  gateway.damman.tech/app-gateway: "true"
+
+# Lists aren't deep-merged by Helm — must repeat the full entry, not just
+# the hostname override.
+httproutes:
+  - enabled: true
+    name: home-finance
+    hostname: budget.app.damman.tech
+    path: /
+    gateway:
+      name: app-gateway
+      namespace: kube-system
+      sectionName: app-https-listener
+    backend:
+      name: home-finance
+      port: 80
+
+oidc:
+  issuerURL: https://sso.app.damman.tech/application/o/home-finance/
+  clientID: jxSJ2L0WqBe95qwGrQklWVjWelNvIqkrruFC1dw0
+  redirectURL: https://budget.app.damman.tech/auth/callback
+
+# Maps deep-merge with chart defaults, so only the new key is needed here.
+env:
+  INITIAL_ADMIN_EMAILS: wdamman@fastmail.com

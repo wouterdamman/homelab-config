@@ -1,0 +1,37 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app.kubernetes.io/name: home-finance
+    app.kubernetes.io/component: finance
+    app.kubernetes.io/part-of: personal-productivity
+    homelab.damman.tech/tier: tier-4
+    homelab.damman.tech/managed-by: argocd
+  name: home-finance
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  sources:
+    - repoURL: https://github.com/wouterdamman/home-finance
+      path: deploy/helm/home-finance
+      targetRevision: v1.7.0
+      helm:
+        valueFiles:
+          - $values/resources/gitops-config/applications/home-finance/values.yaml
+    - repoURL: https://github.com/wouterdamman/homelab-config
+      targetRevision: HEAD
+      ref: values
+  destination:
+    namespace: home-finance
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

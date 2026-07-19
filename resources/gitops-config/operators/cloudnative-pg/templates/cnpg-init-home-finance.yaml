@@ -1,0 +1,56 @@
+---
+# Idempotent job to initialize homefinance database and user
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cnpg-init-home-finance
+  namespace: cnpg-system
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      serviceAccountName: cnpg-init
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: init-home-finance
+          image: alpine/k8s:1.36.2
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "=== Initializing homefinance database ==="
+
+              PRIMARY_POD=$(kubectl get pods -n cnpg-system -l cnpg.io/cluster=cnpg-shared,role=primary -o jsonpath='{.items[0].metadata.name}')
+              if [ -z "$PRIMARY_POD" ]; then
+                echo "ERROR: Could not find primary pod"
+                exit 1
+              fi
+              echo "Using primary pod: $PRIMARY_POD"
+
+              echo "Creating database if not exists..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'homefinance') THEN CREATE DATABASE homefinance OWNER postgres; RAISE NOTICE 'Created database: homefinance'; ELSE RAISE NOTICE 'Database homefinance already exists'; END IF; END \$\$;"
+
+              echo "Granting privileges..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                "GRANT ALL PRIVILEGES ON DATABASE homefinance TO homefinance;"
+
+              echo "Setting schema permissions..."
+              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -d homefinance -c \
+                "GRANT ALL ON SCHEMA public TO homefinance; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO homefinance; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO homefinance; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO homefinance; GRANT ALL ON ALL TABLES IN SCHEMA public TO homefinance; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO homefinance; GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO homefinance;"
+
+              echo "=== homefinance initialization complete ==="

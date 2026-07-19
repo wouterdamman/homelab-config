@@ -8,11 +8,17 @@ spec:
 
   ingress:
   # Server UI/API — from app-gateway and svc-gateway (container port 9000; service maps 80→9000)
+  # Port 9443 (service maps 443→9443): apps doing OIDC via sso.app.damman.tech
+  # resolve to this ClusterIP directly (internal DNS), not the gateway LB IP —
+  # needs cluster-wide HTTPS access same as HTTP, not just world:443 egress
+  # on the caller's side.
   - fromEntities:
     - cluster
     toPorts:
     - ports:
       - port: "9000"
+        protocol: TCP
+      - port: "9443"
         protocol: TCP
 
   # Prometheus scraping — server metrics endpoint

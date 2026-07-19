@@ -31,9 +31,15 @@ oidc:
   clientID: jxSJ2L0WqBe95qwGrQklWVjWelNvIqkrruFC1dw0
   redirectURL: https://budget.app.damman.tech/auth/callback
 
-# OIDC egress is automatic (chart derives it from oidc.issuerURL via toFQDNs).
 # DB egress needs manual input since postgres.cnpg.enabled=false (external,
 # shared cnpg-shared cluster) — chart can't know where that lives.
+#
+# OIDC egress: the chart's toFQDNs-derived rule (from oidc.issuerURL) did not
+# work in this cluster — sso.app.damman.tech resolves to authentik-server's
+# ClusterIP via split-horizon DNS, and that toFQDNs path was still blocked
+# (root cause not fully isolated; toEndpoints against the known pod labels
+# is the same proven mechanism already used for dbEgress, so using that
+# instead here rather than block on it).
 networkPolicy:
   cilium:
     prometheusNamespace: monitoring
@@ -41,6 +47,16 @@ networkPolicy:
       namespaceLabel: cnpg-system
       podLabels:
         cnpg.io/cluster: cnpg-shared
+    extraEgress:
+      - toEndpoints:
+          - matchLabels:
+              k8s:io.kubernetes.pod.namespace: authentik
+              app.kubernetes.io/name: authentik
+              app.kubernetes.io/component: server
+        toPorts:
+          - ports:
+              - port: "443"
+                protocol: TCP
 
 # Maps deep-merge with chart defaults, so only the new key is needed here.
 env:

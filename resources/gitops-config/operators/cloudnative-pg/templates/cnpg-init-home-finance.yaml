@@ -42,8 +42,15 @@ spec:
               echo "Using primary pod: $PRIMARY_POD"
 
               echo "Creating database if not exists..."
-              kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
-                "DO \$\$ BEGIN IF NOT EXISTS (SELECT FROM pg_database WHERE datname = 'homefinance') THEN CREATE DATABASE homefinance OWNER postgres; RAISE NOTICE 'Created database: homefinance'; ELSE RAISE NOTICE 'Database homefinance already exists'; END IF; END \$\$;"
+              DB_EXISTS=$(kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -tAc \
+                "SELECT 1 FROM pg_database WHERE datname = 'homefinance'")
+              if [ "$DB_EXISTS" != "1" ]; then
+                kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \
+                  "CREATE DATABASE homefinance OWNER postgres;"
+                echo "Created database: homefinance"
+              else
+                echo "Database homefinance already exists"
+              fi
 
               echo "Granting privileges..."
               kubectl exec -n cnpg-system "$PRIMARY_POD" -c postgres -- psql -U postgres -c \

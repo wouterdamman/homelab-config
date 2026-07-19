@@ -31,6 +31,17 @@ oidc:
   clientID: jxSJ2L0WqBe95qwGrQklWVjWelNvIqkrruFC1dw0
   redirectURL: https://budget.app.damman.tech/auth/callback
 
+# OIDC egress is automatic (chart derives it from oidc.issuerURL via toFQDNs).
+# DB egress needs manual input since postgres.cnpg.enabled=false (external,
+# shared cnpg-shared cluster) — chart can't know where that lives.
+networkPolicy:
+  cilium:
+    prometheusNamespace: monitoring
+    dbEgress:
+      namespaceLabel: cnpg-system
+      podLabels:
+        cnpg.io/cluster: cnpg-shared
+
 # Maps deep-merge with chart defaults, so only the new key is needed here.
 env:
   INITIAL_ADMIN_EMAILS: wdamman@fastmail.com

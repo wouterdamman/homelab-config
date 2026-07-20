@@ -1,0 +1,29 @@
+---
+# Assigns the cert-manager-issued certificate (see certificate.yaml, discovered
+# from /certs into Authentik as keypair "authentik-server-tls") to the default
+# Brand's web certificate — this is what makes Authentik's built-in HTTPS
+# listener (port 9443) present a real, validating certificate for
+# sso.app.damman.tech instead of its self-signed bootstrap cert.
+#
+# Declarative and idempotent (Authentik blueprints, not a one-off API call):
+# survives a full cluster redeploy with no manual step. !Find requires the
+# certificate keypair to already exist — Authentik re-applies blueprints
+# periodically, so this converges once cert discovery (also periodic) has
+# picked up the mounted cert; no explicit ordering needed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-brand-cert-blueprint
+  namespace: authentik
+data:
+  brand-cert.yaml: |
+    metadata:
+      name: Default brand - web certificate
+    version: 1
+    entries:
+      - model: authentik_brands.brand
+        identifiers:
+          default: true
+        attrs:
+          web_certificate: !Find [authentik_crypto.certificatekeypair, [name, authentik-server-tls]]
+        state: present

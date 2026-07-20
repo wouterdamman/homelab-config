@@ -2,6 +2,11 @@
 # Chart: https://github.com/goauthentik/helm
 # Docs: https://docs.goauthentik.io/
 
+# Declarative config-as-code, applied automatically — see templates/*-blueprint.yaml
+blueprints:
+  configMaps:
+    - authentik-brand-cert-blueprint
+
 global:
   env:
   # PostgreSQL (external CNPG)

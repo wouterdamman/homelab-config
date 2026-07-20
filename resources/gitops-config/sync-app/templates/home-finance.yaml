@@ -33,8 +33,10 @@ spec:
     namespace: home-finance
     server: https://kubernetes.default.svc
   syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
+    # No CreateNamespace=true: the chart owns its own Namespace resource
+    # (templates/namespace.yaml, a PreSync hook with PSS/gateway labels).
+    # Having both fight over the same object caused ArgoCD to prune+recreate
+    # the whole namespace (and everything in it) on every single sync.
     automated:
       prune: true
       selfHeal: true

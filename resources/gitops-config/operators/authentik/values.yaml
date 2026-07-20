@@ -46,6 +46,18 @@ global:
   - name: AUTHENTIK_ERROR_REPORTING__ENABLED
     value: "false"
 
+  # cert-manager-issued cert for sso.app.damman.tech, discovered from /certs
+  # (folder name -> keypair name "authentik-server-tls") and assigned to the
+  # default Brand's web certificate. See templates/certificate.yaml.
+  volumes:
+  - name: authentik-server-tls
+    secret:
+      secretName: authentik-server-tls
+  volumeMounts:
+  - name: authentik-server-tls
+    mountPath: /certs/authentik-server-tls
+    readOnly: true
+
 # ─────────────────────────────────────────────────────────────
 # Server (UI + API)
 # ─────────────────────────────────────────────────────────────

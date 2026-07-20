@@ -6,6 +6,7 @@
 blueprints:
   configMaps:
     - authentik-brand-cert-blueprint
+    - authentik-home-finance-oidc-blueprint
 
 global:
   env:
@@ -50,6 +51,15 @@ global:
   # Privacy
   - name: AUTHENTIK_ERROR_REPORTING__ENABLED
     value: "false"
+
+  # home-finance OIDC client_secret — consumed by the home-finance-oidc
+  # blueprint via !Env, not hardcoded in the blueprint YAML. See
+  # templates/home-finance-oidc-credentials.yaml.
+  - name: HOME_FINANCE_OIDC_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: home-finance-oidc
+        key: client_secret
 
   # cert-manager-issued cert for sso.app.damman.tech, discovered from /certs
   # (folder name -> keypair name "authentik-server-tls") and assigned to the

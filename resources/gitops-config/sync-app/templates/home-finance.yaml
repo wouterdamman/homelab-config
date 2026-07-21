@@ -19,16 +19,13 @@ spec:
   sources:
     - repoURL: https://github.com/wouterdamman/home-finance
       path: deploy/helm/home-finance
-      targetRevision: v1.10.0
+      targetRevision: v1.10.1
       helm:
         valueFiles:
           - $values/resources/gitops-config/applications/home-finance/values.yaml
     - repoURL: https://github.com/wouterdamman/homelab-config
       targetRevision: HEAD
       ref: values
-    - repoURL: https://github.com/wouterdamman/homelab-config
-      targetRevision: HEAD
-      path: resources/gitops-config/applications/home-finance/manifests
   destination:
     namespace: home-finance
     server: https://kubernetes.default.svc

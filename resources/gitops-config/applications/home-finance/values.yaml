@@ -6,11 +6,6 @@
 namespaceLabels:
   gateway.damman.tech/app-gateway: "true"
 
-# GHCR package (ghcr.io/wouterdamman/home-finance) is private. Secret built
-# by applications/home-finance/manifests/imagepullsecret.yaml.
-imagePullSecrets:
-  - name: ghcr-pull-secret
-
 # Lists aren't deep-merged by Helm — must repeat the full entry, not just
 # the hostname override.
 httproutes:

@@ -74,13 +74,6 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: cnpg-shared-authentik
-      - name: firefly
-        ensure: present
-        login: true
-        inherit: true
-        connectionLimit: -1
-        passwordSecret:
-          name: cnpg-shared-firefly
       - name: homarr
         ensure: present
         login: true

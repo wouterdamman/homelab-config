@@ -161,7 +161,7 @@ spec:
     - ports:
       - port: "5432"
         protocol: TCP
-  # Disabled apps (homarr, netbox, firefly-iii) → cnpg-shared — pre-allowed for when re-enabled
+  # Disabled apps (homarr, netbox) → cnpg-shared — pre-allowed for when re-enabled
   - fromEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: homarr
@@ -172,13 +172,6 @@ spec:
   - fromEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: netbox
-    toPorts:
-    - ports:
-      - port: "5432"
-        protocol: TCP
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: firefly-iii
     toPorts:
     - ports:
       - port: "5432"

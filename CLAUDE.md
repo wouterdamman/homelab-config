@@ -76,7 +76,7 @@ The `input-files/` directory holds bootstrap-time secret YAML files (gitignored)
 - Wave 2: kube-prometheus-stack (prometheus-community chart), Loki, Promtail, Authentik, prometheus-pve-exporter
 - Wave 3: proxmox (in-cluster infra manifests)
 - Wave 4: home-assistant, emqx, zigbee2mqtt
-- Wave 5: evcc, firefly-iii, homarr, netbox
+- Wave 5: evcc, home-finance, homarr, netbox
 
 Wave numbers are set per-app via `argocd.argoproj.io/sync-wave` annotation in `sync-app/templates/<app>.yaml` — check there before assuming an app's wave.
 
@@ -160,7 +160,7 @@ CloudNative-PG operator provides shared PostgreSQL. Apps connect to `cnpg-shared
 ### Dependency Updates
 Renovate runs Monday before 6am UTC and opens PRs against `resources/gitops-config/sync-app/templates/*.yaml` (Helm chart versions), `values.yaml` files (image tags), and `.tf` files (provider versions). Apps carry a `homelab.damman.tech/tier` label that drives PR behavior (see `renovate.json`, `docs/infrastructure/renovate.md`):
 - Tier 0 (`argo-cd`, `argocd-apps`, `cilium`, `longhorn`) and Tier 1 (`cert-manager`, `cloudnative-pg`, `external-dns`, `external-secrets`, `kubelet-csr-approver`, `onepassword-connect`): own PR, manual merge, any update type.
-- Tier 2+ (`authentik`, `loki`, `kube-prometheus-stack`, `promtail`, `evcc`, `home-assistant`, `zigbee2mqtt`): patch updates grouped into one auto-merged PR; minor/major get their own PR, manual merge.
+- Tier 2+ (`authentik`, `loki`, `kube-prometheus-stack`, `promtail`, `evcc`, `home-assistant`, `home-finance`, `zigbee2mqtt`): patch updates grouped into one auto-merged PR; minor/major get their own PR, manual merge.
 - `kube-prometheus-stack` patch updates are disabled (releases too frequently); `emqx/emqx` image is ignored entirely (managed manually).
 
 ## Adding a New Application

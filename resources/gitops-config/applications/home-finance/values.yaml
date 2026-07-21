@@ -63,3 +63,10 @@ networkPolicy:
 # Maps deep-merge with chart defaults, so only the new key is needed here.
 env:
   INITIAL_ADMIN_EMAILS: wdamman@fastmail.com
+
+# Avatar photos on a PersistentVolume instead of Postgres bytea rows.
+avatarStorage:
+  filesystem:
+    enabled: true
+    storageClassName: longhorn-standard
+    size: 1Gi

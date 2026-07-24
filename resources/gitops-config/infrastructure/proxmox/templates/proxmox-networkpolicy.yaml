@@ -1,0 +1,26 @@
+---
+# Egress voor de gateway envoy (reserved:ingress) naar Proxmox (world entity, extern IP:8006).
+# Losse policy naast kube-system/gateway-ingress-identity-egress (die alleen 80/443 naar world toestaat)
+# zodat de TLS-passthrough route naar pve.svc.damman.tech niet gereset wordt.
+# Cilium merget meerdere policies op dezelfde identity (union van allow-rules).
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: proxmox-gateway-ingress-egress
+spec:
+  description: >-
+    Allows the per-node Gateway API Envoy (reserved:ingress) to reach the
+    external Proxmox host on port 8006 for the TLS-passthrough route to
+    pve.svc.damman.tech. Proxmox is an out-of-cluster IP, classified as
+    "world" by Cilium.
+  endpointSelector:
+    matchExpressions:
+      - key: reserved:ingress
+        operator: Exists
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "8006"
+              protocol: TCP

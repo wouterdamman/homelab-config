@@ -27,7 +27,7 @@
       "managerFilePatterns": [
         "/resources/gitops-config/.*/templates/.*\\.yaml/"
       ],
-      "matchStrings": ["image: (?<depName>busybox|redis|alpine/k8s|ghcr\\.io/coder/code-server):(?<currentValue>[^\\s\"]+)"],
+      "matchStrings": ["image: (?<depName>busybox|redis|alpine/k8s|ghcr\\.io/coder/code-server|ghcr\\.io/goauthentik/proxy):(?<currentValue>[^\\s\"]+)"],
       "datasourceTemplate": "docker"
     }
   ],

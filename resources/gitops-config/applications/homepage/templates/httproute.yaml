@@ -21,7 +21,9 @@ spec:
         type: PathPrefix
         value: {{ .path }}
     backendRefs:
-    - name: {{ .backend.name }}
+    - group: ''
+      kind: Service
+      name: {{ .backend.name }}
       port: {{ .backend.port }}
       weight: 1
 {{- end }}

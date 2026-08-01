@@ -83,8 +83,8 @@ config:
             widget:
               type: proxmox
               url: https://pve.svc.damman.tech:8006
-              username: "{{HOMEPAGE_VAR_PROXMOX_USER}}"
-              password: "{{HOMEPAGE_VAR_PROXMOX_PASSWORD}}"
+              tokenId: "automation@pve!tofu"
+              tokenSecret: "{{HOMEPAGE_VAR_PROXMOX_TOKEN}}"
               node: pve
         - AdGuard Home:
             href: http://adguard.svc.damman.tech
@@ -161,7 +161,7 @@ authentikOutpost:
 widgetSecrets:
   secretStoreRef: onepassword-connect
   proxmox:
-    remoteKey: homepage-proxmox
+    remoteKey: "Proxmox - Automation Account"
   adguard:
     remoteKey: Adguard
 

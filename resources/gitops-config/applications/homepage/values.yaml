@@ -101,10 +101,7 @@ config:
             href: https://longhorn.svc.damman.tech
             description: Distributed storage
             icon: longhorn.png
-            widget:
-              type: longhorn
-              url: https://longhorn.svc.damman.tech
-              fields: ["nodes", "volumes"]
+            siteMonitor: https://longhorn.svc.damman.tech
         - Hubble:
             href: https://hubble.svc.damman.tech
             description: Cilium network observability

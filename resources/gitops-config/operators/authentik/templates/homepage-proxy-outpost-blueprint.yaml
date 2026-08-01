@@ -44,6 +44,10 @@ data:
           type: proxy
           providers:
             - !KeyOf homepage-proxy-provider
+          config:
+            authentik_host: http://authentik-server.authentik.svc:9000
+            authentik_host_browser: https://sso.app.damman.tech
+            log_level: info
         state: present
         id: homepage-outpost
       - model: authentik_core.application

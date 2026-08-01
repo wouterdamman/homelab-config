@@ -23,5 +23,6 @@ spec:
     backendRefs:
     - name: {{ .backend.name }}
       port: {{ .backend.port }}
+      weight: 1
 {{- end }}
 {{- end }}

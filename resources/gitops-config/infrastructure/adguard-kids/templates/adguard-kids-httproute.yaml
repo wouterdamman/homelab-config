@@ -25,3 +25,4 @@ spec:
       backendRefs:
         - name: adguard-kids
           port: 80
+          weight: 1

@@ -84,7 +84,7 @@ config:
             icon: argo-cd.png
             widget:
               type: argocd
-              url: https://argocd.svc.damman.tech
+              url: http://argo-cd-argocd-server.argocd.svc.cluster.local
               key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
               fields: ["apps", "synced", "healthy", "outOfSync"]
         - Grafana:

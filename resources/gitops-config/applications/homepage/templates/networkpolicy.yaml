@@ -98,6 +98,19 @@ spec:
       - port: "6443"
         protocol: TCP
 
+  # ArgoCD widget — talks to argocd-server directly in-cluster rather than
+  # hairpinning through the external gateway (that path 403s specifically
+  # for Node's HTTP client, cause unresolved; direct in-cluster call works
+  # and is the more efficient route anyway).
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: argocd
+        app.kubernetes.io/name: argocd-server
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+
   # In-cluster widget/link targets reached via a gateway (Cilium sees the
   # gateway LB IPs as "world"): Proxmox (8006), AdGuard x2 (80), ArgoCD,
   # Grafana, Longhorn, Hubble, Authentik, NetBox etc. (443/80 via gateways).

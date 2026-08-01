@@ -86,21 +86,21 @@ config:
               username: "automation@pve!tofu"
               password: "{{HOMEPAGE_VAR_PROXMOX_TOKEN}}"
         - AdGuard Home:
-            href: http://adguard.svc.damman.tech
+            href: https://adguard.svc.damman.tech
             description: DNS / ad-blocking
             icon: adguard-home.png
             widget:
               type: adguard
-              url: http://adguard.svc.damman.tech
+              url: https://adguard.svc.damman.tech
               username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
               password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
         - AdGuard Kids:
-            href: http://kids-adguard.svc.damman.tech
+            href: https://kids-adguard.svc.damman.tech
             description: DNS / ad-blocking (kids)
             icon: adguard-home.png
             widget:
               type: adguard
-              url: http://kids-adguard.svc.damman.tech
+              url: https://kids-adguard.svc.damman.tech
               username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
               password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
 

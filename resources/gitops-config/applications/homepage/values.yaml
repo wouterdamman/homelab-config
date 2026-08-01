@@ -106,13 +106,7 @@ config:
             href: https://hubble.svc.damman.tech
             description: Cilium network observability
             icon: cilium.png
-            widget:
-              type: iframe
-              name: hubble
-              src: https://hubble.svc.damman.tech
-              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
-              referrerPolicy: same-origin
-              loadingStrategy: lazy
+            siteMonitor: https://hubble.svc.damman.tech
         - Authentik:
             href: https://sso.svc.damman.tech/if/user/
             description: SSO / identity provider
@@ -177,13 +171,7 @@ config:
             href: https://zigbee.svc.damman.tech
             description: Zigbee gateway
             icon: zigbee2mqtt.png
-            widget:
-              type: iframe
-              name: zigbee2mqtt
-              src: https://zigbee.svc.damman.tech
-              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
-              referrerPolicy: same-origin
-              loadingStrategy: lazy
+            siteMonitor: https://zigbee.svc.damman.tech
         - EMQX:
             href: https://emqx.svc.damman.tech
             description: MQTT broker

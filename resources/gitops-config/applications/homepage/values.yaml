@@ -25,6 +25,12 @@ config:
     headerStyle: boxed
     theme: dark
     color: slate
+    statusStyle: dot
+    quicklaunch:
+      searchDescriptions: true
+      hideInternetSearch: false
+      showSearchSuggestions: true
+      hideVisitURL: false
     layout:
       Operators:
         style: row
@@ -37,9 +43,20 @@ config:
         columns: 4
 
   bookmarksYaml: |
-    []
+    - Beheer:
+        - Authentik Admin:
+            - abbr: AK
+              href: https://sso.svc.damman.tech/if/admin/
+        - 1Password:
+            - abbr: 1P
+              href: https://start.1password.com/
+        - GitHub Repo:
+            - abbr: GH
+              href: https://github.com/wouterdamman/homelab-config
 
   # widgets.yaml — top-of-page info widgets (no group)
+  # NOTE: openmeteo latitude/longitude below is a placeholder (Amsterdam
+  # city center) — adjust to your actual location for accurate weather.
   widgetsYaml: |
     - search:
         provider: duckduckgo
@@ -48,6 +65,13 @@ config:
         cpu: true
         memory: true
         expanded: true
+    - openmeteo:
+        label: Thuis
+        latitude: 52.3676
+        longitude: 4.9041
+        timezone: Europe/Amsterdam
+        units: metric
+        cache: 5
 
   # services.yaml — full dashboard. Widget entries pull secrets via
   # {{HOMEPAGE_VAR_*}} substitution, populated from the homepage-secrets
@@ -58,22 +82,49 @@ config:
             href: https://argocd.svc.damman.tech
             description: GitOps sync status
             icon: argo-cd.png
+            widget:
+              type: argocd
+              url: https://argocd.svc.damman.tech
+              key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+              fields: ["apps", "synced", "healthy", "outOfSync"]
         - Grafana:
             href: https://grafana.svc.damman.tech
             description: Metrics & dashboards
             icon: grafana.png
+            widget:
+              type: grafana
+              url: https://grafana.svc.damman.tech
+              username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
+              password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+              fields: ["dashboards", "alertstriggered"]
         - Longhorn:
             href: https://longhorn.svc.damman.tech
             description: Distributed storage
             icon: longhorn.png
+            widget:
+              type: longhorn
+              url: https://longhorn.svc.damman.tech
+              fields: ["nodes", "volumes"]
         - Hubble:
             href: https://hubble.svc.damman.tech
             description: Cilium network observability
             icon: cilium.png
+            widget:
+              type: iframe
+              name: hubble
+              src: https://hubble.svc.damman.tech
+              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
+              referrerPolicy: same-origin
+              loadingStrategy: lazy
         - Authentik:
             href: https://sso.svc.damman.tech/if/user/
             description: SSO / identity provider
             icon: authentik.png
+            widget:
+              type: authentik
+              url: https://sso.svc.damman.tech
+              key: "{{HOMEPAGE_VAR_AUTHENTIK_TOKEN}}"
+              fields: ["users", "loginsLast24H", "failedLoginsLast24H"]
 
     - Infrastructuur:
         - Proxmox VE:
@@ -109,36 +160,63 @@ config:
             href: https://ha.app.damman.tech
             description: Smart home hub
             icon: home-assistant.png
+            widget:
+              type: homeassistant
+              url: https://ha.app.damman.tech
+              key: "{{HOMEPAGE_VAR_HOMEASSISTANT_TOKEN}}"
         - EVCC:
             href: https://evcc.app.damman.tech
             description: Solar EV charging
             icon: evcc.png
+            widget:
+              type: evcc
+              url: https://evcc.app.damman.tech
         - Home Finance:
             href: https://budget.app.damman.tech
-            description: Personal finance
-            icon: firefly-iii.png
+            description: Personal finance (eigen build)
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/nextcloud-cospend.png
+            siteMonitor: https://budget.app.damman.tech
         - Zigbee2MQTT:
             href: https://zigbee.svc.damman.tech
             description: Zigbee gateway
             icon: zigbee2mqtt.png
+            widget:
+              type: iframe
+              name: zigbee2mqtt
+              src: https://zigbee.svc.damman.tech
+              classes: h-96 sm:h-96 md:h-96 lg:h-96 xl:h-96 2xl:h-96
+              referrerPolicy: same-origin
+              loadingStrategy: lazy
         - EMQX:
             href: https://emqx.svc.damman.tech
             description: MQTT broker
             icon: emqx.png
+            siteMonitor: https://emqx.svc.damman.tech
         - NetBox:
             href: https://netbox.svc.damman.tech
             description: IPAM / DCIM
             icon: netbox.png
+            siteMonitor: https://netbox.svc.damman.tech
         - LucidVault:
             href: https://lucidvault.svc.damman.tech
             description: AI knowledge vault
             icon: obsidian.png
+            siteMonitor: https://lucidvault.svc.damman.tech
 
   dockerYaml: |
     {}
 
   kubernetesYaml: |
     mode: disable
+
+  customCss: |
+    /* Slightly softer corners on service cards */
+    .services-group .rounded-md {
+      border-radius: 0.75rem;
+    }
+
+  customJs: |
+    // Reserved for future dashboard tweaks.
 
 authentikOutpost:
   image:
@@ -163,6 +241,14 @@ widgetSecrets:
     remoteKey: "Proxmox - Automation Account"
   adguard:
     remoteKey: Adguard
+  argocd:
+    remoteKey: homepage-argocd
+  grafana:
+    remoteKey: homepage-grafana
+  authentik:
+    remoteKey: homepage-authentik-api
+  homeassistant:
+    remoteKey: homepage-homeassistant
 
 httproutes:
 - enabled: true

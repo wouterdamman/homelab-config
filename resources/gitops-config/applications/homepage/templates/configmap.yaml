@@ -19,3 +19,7 @@ data:
 {{ .Values.config.dockerYaml | indent 4 }}
   kubernetes.yaml: |
 {{ .Values.config.kubernetesYaml | indent 4 }}
+  custom.css: |
+{{ .Values.config.customCss | indent 4 }}
+  custom.js: |
+{{ .Values.config.customJs | indent 4 }}

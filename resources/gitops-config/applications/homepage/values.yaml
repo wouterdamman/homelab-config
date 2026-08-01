@@ -244,7 +244,7 @@ widgetSecrets:
   argocd:
     remoteKey: homepage-argocd
   grafana:
-    remoteKey: homepage-grafana
+    remoteKey: grafana-admin
   authentik:
     remoteKey: homepage-authentik-api
   homeassistant:

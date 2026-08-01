@@ -6,6 +6,9 @@ configs:
     url: https://argocd.svc.damman.tech
     exec.enabled: false
     admin.enabled: false # Disable local admin, use GitHub SSO only
+    # Token-only local account for the homepage dashboard widget (SSO users
+    # can't self-generate API tokens). Read-only via rbac policy below.
+    accounts.homepage: apiKey
     # Exclude high-churn Cilium resources from tracking
     resource.exclusions: |
       - apiGroups: ['cilium.io']
@@ -34,6 +37,7 @@ configs:
     policy.csv: |
       g, sironite:Owners, role:admin
       g, wouterdamman, role:admin
+      g, homepage, role:readonly
     policy.default: role:readonly
     scopes: "[groups, preferred_username]"
 

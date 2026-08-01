@@ -93,7 +93,7 @@ config:
             icon: grafana.png
             widget:
               type: grafana
-              url: https://grafana.svc.damman.tech
+              url: http://prometheus-community-grafana.monitoring.svc.cluster.local
               username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
               password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
               fields: ["dashboards", "alertstriggered"]
@@ -113,7 +113,7 @@ config:
             icon: authentik.png
             widget:
               type: authentik
-              url: https://sso.svc.damman.tech
+              url: http://authentik-server.authentik.svc.cluster.local:9000
               key: "{{HOMEPAGE_VAR_AUTHENTIK_TOKEN}}"
               fields: ["users", "loginsLast24H", "failedLoginsLast24H"]
 
@@ -153,7 +153,7 @@ config:
             icon: home-assistant.png
             widget:
               type: homeassistant
-              url: https://ha.app.damman.tech
+              url: http://home-assistant.home-assistant.svc.cluster.local:8123
               key: "{{HOMEPAGE_VAR_HOMEASSISTANT_TOKEN}}"
         - EVCC:
             href: https://evcc.app.damman.tech

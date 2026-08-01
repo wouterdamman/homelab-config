@@ -98,10 +98,10 @@ spec:
       - port: "6443"
         protocol: TCP
 
-  # ArgoCD widget — talks to argocd-server directly in-cluster rather than
-  # hairpinning through the external gateway (that path 403s specifically
-  # for Node's HTTP client, cause unresolved; direct in-cluster call works
-  # and is the more efficient route anyway).
+  # ArgoCD / Grafana widgets — talk to their servers directly in-cluster
+  # rather than hairpinning through the external gateway (that path 403s
+  # specifically for Node's HTTP client, cause unresolved; direct
+  # in-cluster calls work and are the more efficient route anyway).
   - toEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: argocd
@@ -109,6 +109,31 @@ spec:
     toPorts:
     - ports:
       - port: "8080"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: grafana
+    toPorts:
+    - ports:
+      - port: "3000"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+        app.kubernetes.io/name: authentik
+        app.kubernetes.io/component: server
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: home-assistant
+        app.kubernetes.io/name: home-assistant
+    toPorts:
+    - ports:
+      - port: "8123"
         protocol: TCP
 
   # In-cluster widget/link targets reached via a gateway (Cilium sees the

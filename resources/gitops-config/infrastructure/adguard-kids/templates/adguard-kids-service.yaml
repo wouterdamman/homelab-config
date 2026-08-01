@@ -1,0 +1,38 @@
+---
+# Service voor externe AdGuard Home server (kids)
+# Maakt extern IP 10.0.10.221:80 beschikbaar binnen Kubernetes
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard-kids
+  namespace: infrastructure
+  labels:
+    app: adguard-kids
+    app.kubernetes.io/name: adguard-kids
+    app.kubernetes.io/component: external-service
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+# Endpoints voor externe AdGuard Home server
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: adguard-kids
+  namespace: infrastructure
+  labels:
+    app: adguard-kids
+    app.kubernetes.io/name: adguard-kids
+    app.kubernetes.io/component: external-service
+subsets:
+  - addresses:
+      - ip: 10.0.10.221
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP

@@ -75,7 +75,6 @@ Database and user provisioning is managed via GitOps with ArgoCD PostSync hooks.
 Each database has a dedicated init Job:
 - `cnpg-init-authentik.yaml`
 - `cnpg-init-firefly.yaml`
-- `cnpg-init-homarr.yaml`
 - `cnpg-init-netbox.yaml`
 
 **ArgoCD Hook Configuration:**

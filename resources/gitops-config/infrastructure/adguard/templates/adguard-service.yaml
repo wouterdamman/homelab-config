@@ -1,0 +1,38 @@
+---
+# Service voor externe AdGuard Home server (primary)
+# Maakt extern IP 10.0.10.220:80 beschikbaar binnen Kubernetes
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard
+  namespace: infrastructure
+  labels:
+    app: adguard
+    app.kubernetes.io/name: adguard
+    app.kubernetes.io/component: external-service
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+---
+# Endpoints voor externe AdGuard Home server
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: adguard
+  namespace: infrastructure
+  labels:
+    app: adguard
+    app.kubernetes.io/name: adguard
+    app.kubernetes.io/component: external-service
+subsets:
+  - addresses:
+      - ip: 10.0.10.220
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP

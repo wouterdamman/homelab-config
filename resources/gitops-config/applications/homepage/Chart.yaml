@@ -1,0 +1,6 @@
+apiVersion: v2
+name: homepage
+description: gethomepage/homepage dashboard for homelab management, behind Authentik forward-auth
+type: application
+version: 1.0.0
+appVersion: latest

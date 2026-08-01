@@ -66,7 +66,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 | [EVCC](applications/evcc.md) | Solar EV charging, Alfen/SolarEdge/DSMR integration |
 | [NetBox](applications/netbox.md) | IPAM/DCIM, OIDC, custom pipeline |
 | [Firefly III](applications/firefly-iii.md) | Personal finance, APP_KEY requirements, no OIDC |
-| [Homarr](applications/homarr.md) | Dashboard |
+| [Homepage](applications/homepage.md) | Dashboard, Authentik forward-auth |
 | [LucidVault](applications/lucidvault.md) | AI knowledge vault, Obsidian sync via CouchDB, MCP server for Claude Code |
 
 ---

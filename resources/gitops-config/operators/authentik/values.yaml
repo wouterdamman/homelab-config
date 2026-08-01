@@ -7,6 +7,7 @@ blueprints:
   configMaps:
     - authentik-brand-cert-blueprint
     - authentik-home-finance-oidc-blueprint
+    - authentik-homepage-proxy-outpost-blueprint
 
 global:
   env:

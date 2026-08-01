@@ -1,0 +1,55 @@
+---
+# Declarative Proxy Provider + Outpost + Application for homepage's
+# forward-auth (dedicated ghcr.io/goauthentik/proxy outpost, same
+# architecture as the existing zigbee2mqtt / codeserver outposts — those
+# were created by hand via the Authentik UI and aren't reproducible via
+# GitOps; this blueprint closes that gap for homepage so it survives a
+# full cluster rebuild without any manual Authentik object creation.
+#
+# No client_secret / !Env injection needed here (unlike the home-finance
+# OAuth2 blueprint): proxy providers don't use one. The one remaining
+# manual step is downstream of this blueprint — Authentik only generates
+# the Outpost's service-account token *after* the Outpost object exists,
+# so that token has to be copied from the Authentik UI (Outposts ->
+# homepage -> token) into the 1Password item "authentik-outpost-homepage"
+# once, after the first sync. See resources/gitops-config/applications/homepage/templates/externalsecret.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-homepage-proxy-outpost-blueprint
+  namespace: authentik
+data:
+  homepage-proxy-outpost.yaml: |
+    metadata:
+      name: homepage Proxy provider + outpost + application
+    version: 1
+    entries:
+      - model: authentik_providers_proxy.proxyprovider
+        identifiers:
+          name: homepage
+        attrs:
+          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+          invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          mode: proxy
+          internal_host: http://homepage.homepage.svc.cluster.local:3000
+          external_host: https://homepage.app.damman.tech
+          internal_host_ssl_validation: false
+          cookie_domain: app.damman.tech
+        state: present
+        id: homepage-proxy-provider
+      - model: authentik_outposts.outpost
+        identifiers:
+          name: homepage
+        attrs:
+          type: proxy
+          providers:
+            - !KeyOf homepage-proxy-provider
+        state: present
+        id: homepage-outpost
+      - model: authentik_core.application
+        identifiers:
+          slug: homepage
+        attrs:
+          name: Homepage
+          provider: !KeyOf homepage-proxy-provider
+        state: present

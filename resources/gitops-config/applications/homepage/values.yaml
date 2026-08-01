@@ -1,0 +1,180 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/gethomepage/homepage
+  tag: v1.5.1
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+config:
+  timeZone: "Europe/Amsterdam"
+
+  settingsYaml: |
+    title: Damman Homelab
+    headerStyle: boxed
+    theme: dark
+    color: slate
+    layout:
+      Operators:
+        style: row
+        columns: 4
+      Infrastructuur:
+        style: row
+        columns: 3
+      Apps:
+        style: row
+        columns: 4
+
+  bookmarksYaml: |
+    []
+
+  # widgets.yaml — top-of-page info widgets (no group)
+  widgetsYaml: |
+    - search:
+        provider: duckduckgo
+        target: _blank
+    - resources:
+        cpu: true
+        memory: true
+        expanded: true
+
+  # services.yaml — full dashboard. Widget entries pull secrets via
+  # {{HOMEPAGE_VAR_*}} substitution, populated from the homepage-secrets
+  # ExternalSecret (see templates/externalsecret.yaml).
+  servicesYaml: |
+    - Operators:
+        - ArgoCD:
+            href: https://argocd.svc.damman.tech
+            description: GitOps sync status
+            icon: argo-cd.png
+        - Grafana:
+            href: https://grafana.svc.damman.tech
+            description: Metrics & dashboards
+            icon: grafana.png
+        - Longhorn:
+            href: https://longhorn.svc.damman.tech
+            description: Distributed storage
+            icon: longhorn.png
+        - Hubble:
+            href: https://hubble.svc.damman.tech
+            description: Cilium network observability
+            icon: cilium.png
+        - Authentik:
+            href: https://sso.svc.damman.tech/if/user/
+            description: SSO / identity provider
+            icon: authentik.png
+
+    - Infrastructuur:
+        - Proxmox VE:
+            href: https://pve.svc.damman.tech:8006
+            description: Hypervisor
+            icon: proxmox.png
+            widget:
+              type: proxmox
+              url: https://pve.svc.damman.tech:8006
+              username: "{{HOMEPAGE_VAR_PROXMOX_USER}}"
+              password: "{{HOMEPAGE_VAR_PROXMOX_PASSWORD}}"
+              node: pve
+        - AdGuard Home:
+            href: http://adguard.svc.damman.tech
+            description: DNS / ad-blocking
+            icon: adguard-home.png
+            widget:
+              type: adguard-home
+              url: http://adguard.svc.damman.tech
+              username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
+              password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+        - AdGuard Kids:
+            href: http://kids-adguard.svc.damman.tech
+            description: DNS / ad-blocking (kids)
+            icon: adguard-home.png
+            widget:
+              type: adguard-home
+              url: http://kids-adguard.svc.damman.tech
+              username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
+              password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+
+    - Apps:
+        - Home Assistant:
+            href: https://ha.app.damman.tech
+            description: Smart home hub
+            icon: home-assistant.png
+        - EVCC:
+            href: https://evcc.app.damman.tech
+            description: Solar EV charging
+            icon: evcc.png
+        - Home Finance:
+            href: https://budget.app.damman.tech
+            description: Personal finance
+            icon: firefly-iii.png
+        - Zigbee2MQTT:
+            href: https://zigbee.svc.damman.tech
+            description: Zigbee gateway
+            icon: zigbee2mqtt.png
+        - EMQX:
+            href: https://emqx.svc.damman.tech
+            description: MQTT broker
+            icon: emqx.png
+        - NetBox:
+            href: https://netbox.svc.damman.tech
+            description: IPAM / DCIM
+            icon: netbox.png
+        - LucidVault:
+            href: https://lucidvault.svc.damman.tech
+            description: AI knowledge vault
+            icon: obsidian.png
+
+  dockerYaml: |
+    {}
+
+  kubernetesYaml: |
+    mode: disable
+
+authentikOutpost:
+  image:
+    repository: ghcr.io/goauthentik/proxy
+    tag: "2026.5.6"
+  authentikHost: "http://authentik-server.authentik.svc"
+  authentikHostBrowser: "https://sso.app.damman.tech"
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  externalSecret:
+    secretStoreRef: onepassword-connect
+    remoteKey: authentik-outpost-homepage
+
+widgetSecrets:
+  secretStoreRef: onepassword-connect
+  proxmox:
+    remoteKey: homepage-proxmox
+  adguard:
+    remoteKey: Adguard
+
+httproutes:
+- enabled: true
+  name: homepage-httproute
+  namespace: homepage
+  hostname: homepage.app.damman.tech
+  path: /
+  gateway:
+    name: app-gateway
+    namespace: kube-system
+    sectionName: app-https-listener
+  backend:
+    name: homepage-authentik-outpost
+    port: 9000

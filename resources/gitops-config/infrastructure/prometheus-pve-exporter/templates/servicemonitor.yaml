@@ -7,25 +7,13 @@ metadata:
     release: prometheus
 spec:
   endpoints:
+    # 10.0.10.201 removed: confirmed dead (ConnectTimeout in exporter logs),
+    # only 10.0.10.200 is a live PVE node.
     - port: http
       interval: 60s
       path: /pve
       params:
         target: ['10.0.10.200']
-        module: ['default']
-      relabelings:
-        - action: replace
-          sourceLabels:
-            - __param_target
-          targetLabel: instance
-        - action: replace
-          replacement: prometheus-pve-exporter:80
-          targetLabel: __address__
-    - port: http
-      interval: 60s
-      path: /pve
-      params:
-        target: ['10.0.10.201']
         module: ['default']
       relabelings:
         - action: replace

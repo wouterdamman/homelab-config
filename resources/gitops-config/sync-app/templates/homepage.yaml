@@ -1,0 +1,31 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: homelab
+    homelab.damman.tech/tier: tier-3
+    homelab.damman.tech/managed-by: argocd
+  name: homepage
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: apps
+  source:
+    repoURL: https://github.com/wouterdamman/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/applications/homepage
+  destination:
+    namespace: homepage
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

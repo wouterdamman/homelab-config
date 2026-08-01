@@ -47,24 +47,16 @@ Authentik provides centralized authentication and single sign-on (SSO) for homel
 
 ### Outpost (Forward Auth)
 
-Authentik uses an embedded outpost for forward authentication:
-- **Endpoint:** https://sso.svc.damman.tech/outpost.goauthentik.io
-- **Mode:** Domain-level forward auth
+The proven pattern in this cluster is a **dedicated per-app outpost**, not the domain-level embedded outpost: a small `ghcr.io/goauthentik/proxy` Deployment+Service (port 9000) runs alongside each protected app, and the app's HTTPRoute points at the outpost Service instead of the app Service directly. Live examples: `zigbee2mqtt-authentik-outpost` (zigbee2mqtt namespace), `home-assistant-authentik-outpost` (codeserver addon), `homepage-authentik-outpost` (homepage namespace).
 
 ### Forward Auth Integration
 
-To protect a service with Authentik forward auth:
+To protect a service with a dedicated Authentik outpost:
 
-1. **Create Proxy Provider** in Authentik UI:
-   - Applications → Providers → Create
-   - Type: Proxy Provider, Mode: Forward auth (domain level)
-   - External host: `https://[service].svc.damman.tech`
-
-2. **Create Application** in Authentik:
-   - Applications → Applications → Create
-   - Link to created provider
-
-3. **Update service HTTPRoute** with forward auth filter
+1. **Declare Proxy Provider + Outpost + Application** via an Authentik blueprint ConfigMap in `operators/authentik/templates/` (see `homepage-proxy-outpost-blueprint.yaml` for the pattern — `authentik_providers_proxy.proxyprovider`, mode `proxy`, `internal_host` pointing at the app's ClusterIP Service, `external_host` the public hostname).
+2. **Deploy the outpost** as its own Deployment+Service (port 9000) in the app's chart, with an ExternalSecret pulling the outpost token from 1Password.
+3. **Point the app's HTTPRoute** at the outpost Service instead of the app Service.
+4. **One manual step, unavoidable**: Authentik only generates the outpost's service-account token after the Outpost object exists. After first sync, copy the token from Authentik UI (Outposts → \<app\> → token) into the corresponding 1Password item.
 
 ### Protected Services
 
@@ -75,7 +67,9 @@ To protect a service with Authentik forward auth:
 | Longhorn | longhorn.svc.damman.tech | Forward auth | Planned |
 | Prometheus | prometheus.svc.damman.tech | Forward auth | Planned |
 | NetBox | netbox.svc.damman.tech | OIDC | ✅ Live |
-| Homarr | homarr.app.damman.tech | OIDC | ✅ Live |
+| Zigbee2MQTT | zigbee.svc.damman.tech | Forward auth (dedicated outpost) | ✅ Live |
+| Home Assistant code-server | codeserver.svc.damman.tech | Forward auth (dedicated outpost) | ✅ Live |
+| Homepage | homepage.app.damman.tech | Forward auth (dedicated outpost) | ✅ Live |
 
 ---
 

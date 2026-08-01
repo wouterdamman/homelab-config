@@ -18,6 +18,10 @@ spec:
   hostnames:
     - kids-adguard.svc.damman.tech
   rules:
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
         - name: adguard-kids
           port: 80

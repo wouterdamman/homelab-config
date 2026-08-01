@@ -37,7 +37,23 @@ spec:
           value: "homepage.app.damman.tech"
         envFrom:
         - secretRef:
-            name: homepage-secrets
+            name: homepage-proxmox-secret
+            optional: true
+        - secretRef:
+            name: homepage-adguard-secret
+            optional: true
+        - secretRef:
+            name: homepage-argocd-secret
+            optional: true
+        - secretRef:
+            name: homepage-grafana-secret
+            optional: true
+        - secretRef:
+            name: homepage-authentik-secret
+            optional: true
+        - secretRef:
+            name: homepage-homeassistant-secret
+            optional: true
         volumeMounts:
         - name: config
           mountPath: /app/config/settings.yaml

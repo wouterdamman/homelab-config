@@ -113,7 +113,7 @@ config:
             icon: authentik.png
             widget:
               type: authentik
-              url: http://authentik-server.authentik.svc.cluster.local:9000
+              url: http://authentik-server.authentik.svc.cluster.local
               key: "{{HOMEPAGE_VAR_AUTHENTIK_TOKEN}}"
               version: 2
               fields: ["users", "loginsLast24H", "failedLoginsLast24H"]

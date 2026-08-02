@@ -161,7 +161,7 @@ config:
             icon: evcc.png
             widget:
               type: evcc
-              url: https://evcc.app.damman.tech
+              url: http://evcc.evcc.svc.cluster.local:7070
         - Home Finance:
             href: https://budget.app.damman.tech
             description: Personal finance (eigen build)

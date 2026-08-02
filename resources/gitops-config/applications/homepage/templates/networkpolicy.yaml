@@ -135,6 +135,14 @@ spec:
     - ports:
       - port: "8123"
         protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: evcc
+        app.kubernetes.io/name: evcc
+    toPorts:
+    - ports:
+      - port: "7070"
+        protocol: TCP
 
   # In-cluster widget/link targets reached via a gateway (Cilium sees the
   # gateway LB IPs as "world"): Proxmox (8006), AdGuard x2 (80), ArgoCD,

@@ -161,14 +161,7 @@ spec:
     - ports:
       - port: "5432"
         protocol: TCP
-  # Disabled apps (homarr, netbox) → cnpg-shared — pre-allowed for when re-enabled
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: homarr
-    toPorts:
-    - ports:
-      - port: "5432"
-        protocol: TCP
+  # Disabled apps (netbox) → cnpg-shared — pre-allowed for when re-enabled
   - fromEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: netbox

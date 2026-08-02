@@ -45,16 +45,7 @@ config:
         columns: 4
 
   bookmarksYaml: |
-    - Beheer:
-        - Authentik Admin:
-            - abbr: AK
-              href: https://sso.svc.damman.tech/if/admin/
-        - 1Password:
-            - abbr: 1P
-              href: https://start.1password.com/
-        - GitHub Repo:
-            - abbr: GH
-              href: https://github.com/wouterdamman/homelab-config
+    []
 
   # widgets.yaml — top-of-page info widgets (no group)
   # NOTE: openmeteo latitude/longitude below is a placeholder (Amsterdam
@@ -70,6 +61,8 @@ config:
           memory: true
           showLabel: true
           label: "cluster"
+        nodes:
+          show: false
     - openmeteo:
         label: Thuis
         latitude: 52.3676

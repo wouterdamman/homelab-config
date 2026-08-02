@@ -57,6 +57,20 @@ resources:
     cpu: "2"
     memory: 2Gi
 
+# Wider than chart default (60s/150s-to-kill) — cold boot with recorder DB migration
+# or first-boot permission fixup can exceed that, causing a crashloop + RWO volume
+# multi-attach deadlock on reschedule.
+livenessProbe:
+  initialDelaySeconds: 180
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 6
+readinessProbe:
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
 addons:
   codeserver:
     enabled: true

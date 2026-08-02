@@ -19,7 +19,7 @@ spec:
   sources:
   - repoURL: https://sironite.github.io/helm-home-assistant
     chart: home-assistant
-    targetRevision: "3.0.1"
+    targetRevision: "3.1.0"
     helm:
       valueFiles:
       - $values/resources/gitops-config/applications/home_assistant/values.yaml
@@ -43,5 +43,3 @@ spec:
     - /spec/volumeClaimTemplates
     - /spec/template/spec/containers/0/resources/limits/cpu
     - /spec/template/spec/containers/1/resources/limits/cpu
-    - /spec/template/spec/containers/0/livenessProbe
-    - /spec/template/spec/containers/0/readinessProbe

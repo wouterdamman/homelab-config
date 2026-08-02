@@ -43,3 +43,5 @@ spec:
     - /spec/volumeClaimTemplates
     - /spec/template/spec/containers/0/resources/limits/cpu
     - /spec/template/spec/containers/1/resources/limits/cpu
+    - /spec/template/spec/containers/0/livenessProbe
+    - /spec/template/spec/containers/0/readinessProbe

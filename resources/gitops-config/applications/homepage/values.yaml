@@ -62,7 +62,7 @@ config:
   # city center) — adjust to your actual location for accurate weather.
   widgetsYaml: |
     - search:
-        provider: duckduckgo
+        provider: google
         target: _blank
     - kubernetes:
         cluster:

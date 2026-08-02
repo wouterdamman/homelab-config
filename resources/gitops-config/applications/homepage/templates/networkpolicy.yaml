@@ -127,10 +127,11 @@ spec:
     - ports:
       - port: "9000"
         protocol: TCP
-  - toEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: home-assistant
-        app.kubernetes.io/name: home-assistant
+  # Home Assistant runs with hostNetwork: true (needs host-level access for
+  # device discovery), so its pod IP is a node IP, not a pod-overlay IP —
+  # toEndpoints label matching doesn't identify it. Use remote-node instead.
+  - toEntities:
+    - remote-node
     toPorts:
     - ports:
       - port: "8123"

@@ -164,36 +164,42 @@ See [Longhorn Production-Grade Plan](../operators/longhorn-production-plan.md) a
 
 ```
 sync-app (Root Application)
+├── Wave -1: cluster-config (namespaces, PSS labels, shared config)
 ├── Wave 0: Core Infrastructure
-│   ├── argocd (self-managed)
-│   ├── argocd-apps (Projects)
+│   ├── longhorn (Storage)
 │   ├── cilium (CNI)
-│   └── longhorn (Storage)
+│   └── argocd (self-managed)
 ├── Wave 1: Essential Operators
+│   ├── sync-app (self-managed root app)
 │   ├── onepassword-connect (Secrets backend)
 │   ├── external-secrets (Secrets operator)
 │   ├── cert-manager (TLS certificates)
 │   ├── external-dns (DNS automation)
 │   ├── kubelet-csr-approver (Certificate approval)
 │   ├── cloudnative-pg (PostgreSQL operator)
-│   └── sync-app (self-managed root app)
+│   └── cnpg-barman-cloud (Backup plugin)
 ├── Wave 2: Monitoring & Auth
 │   ├── kube-prometheus-stack (Metrics + Grafana)
-│   ├── prometheus-pve-exporter (Proxmox metrics)
 │   ├── loki (Log aggregation)
 │   ├── promtail (Log shipping)
-│   └── authentik (SSO/IdP)
+│   ├── authentik (SSO/IdP)
+│   └── prometheus-pve-exporter (Proxmox metrics)
 ├── Wave 3: Infrastructure Apps
-│   └── proxmox (Proxmox infrastructure)
+│   ├── proxmox (Proxmox VE gateway)
+│   ├── adguard (AdGuard Home gateway)
+│   └── adguard-kids (AdGuard Home gateway, kids)
 ├── Wave 4: Home Automation
 │   ├── home-assistant
 │   ├── emqx
 │   └── zigbee2mqtt
 └── Wave 5: Additional Apps
-    └── evcc (solar charging)
+    ├── evcc (solar charging)
+    ├── home-finance (personal finance, custom-built)
+    ├── homepage (homelab dashboard)
+    └── lucidvault (AI knowledge vault)
 
 # Not currently deployed via GitOps (commented out):
-#   netbox, homarr, firefly-iii
+#   netbox
 ```
 
 See [GitOps Bootstrap](../bootstrap/gitops-bootstrap.md).

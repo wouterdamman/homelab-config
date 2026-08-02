@@ -10,7 +10,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 |----------|-------------|
 | [High-Level Design](architecture/high-level-design.md) | System overview, component map, design principles |
 | [Low-Level Design](architecture/low-level-design.md) | VLANs, compute specs, storage tiers, GitOps waves |
-| [Architecture Decision Records](architecture/adr.md) | ADR-001 through ADR-027 |
+| [Architecture Decision Records](architecture/adr.md) | ADR-001 through ADR-017 |
 
 ---
 
@@ -52,6 +52,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 | [Longhorn DR Runbook](operators/longhorn-dr-runbook.md) | Disaster recovery procedures and test scripts |
 | [CloudNative-PG](operators/cloudnative-pg.md) | Shared PostgreSQL cluster, CNPG operator |
 | [Proxmox VE Gateway](operators/proxmox-gateway.md) | TLS passthrough, Authentik OIDC, Let's Encrypt on Proxmox |
+| [AdGuard Home Gateway](operators/adguard-gateway.md) | TLS terminate, primary + kids instances, LXC subnet mask gotcha |
 
 ---
 
@@ -65,7 +66,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 | [Zigbee2MQTT](applications/zigbee2mqtt.md) | Zigbee gateway, init container config pattern |
 | [EVCC](applications/evcc.md) | Solar EV charging, Alfen/SolarEdge/DSMR integration |
 | [NetBox](applications/netbox.md) | IPAM/DCIM, OIDC, custom pipeline |
-| [Firefly III](applications/firefly-iii.md) | Personal finance, APP_KEY requirements, no OIDC |
+| [Firefly III](applications/firefly-iii.md) | ⚠️ Decommissioned 2026-07-21, replaced by custom-built Home Finance app |
 | [Homepage](applications/homepage.md) | Dashboard, Authentik forward-auth |
 | [LucidVault](applications/lucidvault.md) | AI knowledge vault, Obsidian sync via CouchDB, MCP server for Claude Code |
 

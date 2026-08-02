@@ -1,5 +1,7 @@
 # Firefly III Configuration
 
+> **⚠️ Decommissioned 2026-07-21.** Replaced by a custom-built Home Finance app. Kept here for historical reference only — do not use this as a guide for current state.
+
 **Source:** `resources/gitops-config/applications/firefly-iii/`
 **Application:** [Firefly III](https://www.firefly-iii.org/) — Personal Finance Manager
 

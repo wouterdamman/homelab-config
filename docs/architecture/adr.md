@@ -429,8 +429,10 @@ spec:
 
 ## ADR-016: Homarr - Homelab Dashboard
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-017](#adr-017-homepage---homelab-dashboard-replaces-homarr)
 **Date:** 2026-02-09
+
+Homarr was never actually deployed (its ArgoCD Application stayed commented out from the start) and was fully decommissioned 2026-08-01 — chart, CNPG database/role, and credentials removed. Replaced by [gethomepage/homepage](https://github.com/gethomepage/homepage).
 
 ### Decision
 **Homarr** as centralized homelab dashboard.
@@ -456,6 +458,27 @@ spec:
 
 ---
 
+## ADR-017: Homepage - Homelab Dashboard (replaces Homarr)
+
+**Status:** Accepted
+**Date:** 2026-08-01
+
+### Decision
+**[gethomepage/homepage](https://github.com/gethomepage/homepage)** as centralized homelab dashboard, replacing the never-deployed Homarr (ADR-016).
+
+### Why?
+- **YAML-based config:** no database dependency, fully GitOps-managed — no CNPG cluster/PostSync job needed, unlike Homarr.
+- **Wide widget support:** native widgets for Proxmox, AdGuard Home, ArgoCD, Grafana, Authentik, EVCC, Home Assistant; `siteMonitor` fallback (up/down + latency) for everything else.
+- **Authentik SSO:** via a dedicated per-app forward-auth outpost (`ghcr.io/goauthentik/proxy`), same pattern already proven for zigbee2mqtt and the Home Assistant code-server addon.
+
+### Trade-offs
+- ✅ Stateless — no database, no backup/restore surface
+- ✅ Full GitOps config as plain YAML in `applications/homepage/values.yaml`
+- ❌ Server-side widget API calls to other in-cluster apps must go through the internal Kubernetes Service, not the external gateway hostname — going external returns a bare 403 from Envoy specifically for Node's HTTP client (root cause not identified; curl on the identical path succeeds). Every widget needing this was pointed at `<service>.<namespace>.svc.cluster.local` plus a matching CiliumNetworkPolicy egress rule.
+- ❌ Next.js image config only allowlists `cdn.jsdelivr.net` for external images (background/PWA icons) — other domains (e.g. Unsplash) silently fail to render. Worked around by committing images to this repo and serving via jsdelivr's GitHub-raw proxy.
+
+---
+
 ## Implementation Roadmap
 
 ### Planned
@@ -470,10 +493,10 @@ spec:
 | **Tailscale** | Low | On Hold | WireGuard already provides sufficient remote access |
 
 ### Recently Completed
+- ✅ **Homepage** — Homelab dashboard, replaces never-deployed Homarr (2026-08-01, see ADR-017)
+- ✅ **Home Finance** — Custom-built personal finance app, replaces Firefly III (2026-07-21)
 - ✅ **CNPG Backup Validation** — Weekly automated restore testing from S3 (2026-02-09)
-- ✅ **NetBox** — IPAM/DCIM platform (2026-02-09)
-- ✅ **Homarr** — Homelab dashboard (2026-02-09)
-- ✅ **Firefly III** — Personal finance management (2026-02-08)
+- ✅ **NetBox** — IPAM/DCIM platform, currently disabled/not deployed (2026-02-09)
 - ✅ **Database GitOps Jobs** — Automatic database initialization (2026-01-28)
 - ✅ **Home Assistant Migration** — Moved to Kubernetes (2026-01-15)
 - ✅ **EMQX MQTT Broker** — Centralized IoT messaging (2026-01-16)

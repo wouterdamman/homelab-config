@@ -25,7 +25,6 @@ config:
     headerStyle: boxed
     theme: dark
     color: slate
-    statusStyle: dot
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: false

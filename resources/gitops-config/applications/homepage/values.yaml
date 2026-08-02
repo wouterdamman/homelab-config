@@ -26,7 +26,11 @@ config:
     theme: dark
     color: slate
     background:
-      image: https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=3174&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+      # homepage's Next.js image config only allowlists cdn.jsdelivr.net —
+      # arbitrary external domains (e.g. images.unsplash.com) silently fail
+      # to render. Image is committed to this repo and served via
+      # jsdelivr's GitHub-raw proxy to satisfy that allowlist.
+      image: https://cdn.jsdelivr.net/gh/wouterdamman/homelab-config@main/resources/gitops-config/applications/homepage/assets/background.jpg
       blur: sm
       saturate: 100
       brightness: 75

@@ -35,6 +35,14 @@ config:
       saturate: 100
       brightness: 75
       opacity: 100
+    pwa:
+      icons:
+        - src: https://cdn.jsdelivr.net/gh/wouterdamman/homelab-config@main/resources/gitops-config/applications/homepage/assets/icon-192x192.png
+          type: image/png
+          sizes: 192x192
+        - src: https://cdn.jsdelivr.net/gh/wouterdamman/homelab-config@main/resources/gitops-config/applications/homepage/assets/icon-512x512.png
+          type: image/png
+          sizes: 512x512
     quicklaunch:
       searchDescriptions: true
       hideInternetSearch: false
@@ -75,8 +83,8 @@ config:
           show: false
     - openmeteo:
         label: Thuis
-        latitude: 52.3676
-        longitude: 4.9041
+        latitude: 52.8739
+        longitude: 6.9458
         timezone: Europe/Amsterdam
         units: metric
         cache: 5

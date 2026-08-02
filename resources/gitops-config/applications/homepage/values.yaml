@@ -37,7 +37,10 @@ config:
         columns: 4
       Infrastructuur:
         style: row
-        columns: 3
+        columns: 4
+      Smart Home:
+        style: row
+        columns: 4
       Apps:
         style: row
         columns: 4
@@ -61,10 +64,13 @@ config:
     - search:
         provider: duckduckgo
         target: _blank
-    - resources:
-        cpu: true
-        memory: true
-        expanded: true
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: "cluster"
     - openmeteo:
         label: Thuis
         latitude: 52.3676
@@ -146,8 +152,13 @@ config:
               url: https://kids-adguard.svc.damman.tech
               username: "{{HOMEPAGE_VAR_ADGUARD_USER}}"
               password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+        - NetBox:
+            href: https://netbox.svc.damman.tech
+            description: IPAM / DCIM (uitgeschakeld)
+            icon: netbox.png
+            siteMonitor: https://netbox.svc.damman.tech
 
-    - Apps:
+    - Smart Home:
         - Home Assistant:
             href: https://ha.app.damman.tech
             description: Smart home hub
@@ -163,11 +174,6 @@ config:
             widget:
               type: evcc
               url: http://evcc.evcc.svc.cluster.local:7070
-        - Home Finance:
-            href: https://budget.app.damman.tech
-            description: Personal finance (eigen build)
-            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/nextcloud-cospend.png
-            siteMonitor: https://budget.app.damman.tech
         - Zigbee2MQTT:
             href: https://zigbee.svc.damman.tech
             description: Zigbee gateway
@@ -178,13 +184,19 @@ config:
             description: MQTT broker
             icon: emqx.png
             siteMonitor: https://emqx.svc.damman.tech
-        - NetBox:
-            href: https://netbox.svc.damman.tech
-            description: IPAM / DCIM
-            icon: netbox.png
-            siteMonitor: https://netbox.svc.damman.tech
+
+    - Apps:
+        - Home Finance:
+            href: https://budget.app.damman.tech
+            description: Personal finance (eigen build)
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/nextcloud-cospend.png
+            siteMonitor: https://budget.app.damman.tech
+        - Code-server:
+            href: https://codeserver.svc.damman.tech
+            description: Dev environment
+            icon: vscode.png
+            siteMonitor: https://codeserver.svc.damman.tech
         - LucidVault:
-            href: https://lucidvault.svc.damman.tech
             description: AI knowledge vault
             icon: obsidian.png
             siteMonitor: https://lucidvault.svc.damman.tech
@@ -193,7 +205,7 @@ config:
     {}
 
   kubernetesYaml: |
-    mode: disable
+    mode: cluster
 
   customCss: |
     /* Slightly softer corners on service cards */

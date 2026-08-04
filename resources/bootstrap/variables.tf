@@ -140,7 +140,7 @@ variable "cilium_values_path" {
 variable "gateway_api_version" {
   type        = string
   description = "Gateway API CRD version (e.g., v1.1.0, v1.2.0)"
-  default     = "v1.2.0"
+  default     = "v1.6.1"
 }
 
 ##############################

@@ -22,7 +22,7 @@ variable "cluster" {
     talos_version       = string
     proxmox_cluster     = string
     vip                 = string
-    gateway_api_version = optional(string, "v1.2.0")
+    gateway_api_version = optional(string, "v1.6.1")
   })
 }
 

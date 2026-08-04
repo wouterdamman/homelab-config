@@ -125,7 +125,7 @@ worker_specs = {
 # Versions
 talos_version  = "v1.13.2"
 cilium_version = "v1.19.3"
-gateway_api_version = "v1.1.0"
+gateway_api_version = "v1.6.1"
 ```
 
 ### 3. Initialize and Deploy
@@ -397,7 +397,7 @@ To test with local backend, comment out the `backend "s3"` block in `providers.t
 ### Optional Variables
 
 - `cilium_version`: Cilium version (default: "v1.18.5")
-- `gateway_api_version`: Gateway API CRD version (default: "v1.1.0")
+- `gateway_api_version`: Gateway API CRD version (default: "v1.6.1")
 - `talos_update_version`: Target version for upgrades
 - `nodes_to_upgrade`: List of nodes to upgrade
 - `controlplane_specs`: Control plane resource specs

@@ -42,13 +42,29 @@ spec:
             description: "{{`{{`}} $labels.id {{`}}`}} has CPU usage above 90% for more than 15 minutes."
 
         - alert: ProxmoxHighMemory
-          expr: (pve_memory_usage_bytes{id=~"qemu/.*|lxc/.*"} / pve_memory_size_bytes{id=~"qemu/.*|lxc/.*"} * 100) > 90
+          # LXC containers only: they don't run node-exporter, so this raw
+          # Proxmox-reported usage (which counts reclaimable page cache as
+          # "used") is the only signal available for them.
+          expr: (pve_memory_usage_bytes{id=~"lxc/.*"} / pve_memory_size_bytes{id=~"lxc/.*"} * 100) > 90
           for: 15m
           labels:
             severity: warning
           annotations:
             summary: "High memory usage on {{`{{`}} $labels.id {{`}}`}}"
             description: "{{`{{`}} $labels.id {{`}}`}} has memory usage above 90% for more than 15 minutes."
+
+        - alert: KubeNodeHighMemory
+          # Talos VMs run node-exporter, so use MemAvailable (correctly
+          # excludes reclaimable page cache/buffers) instead of the
+          # Proxmox-level metric, which flags healthy cache usage as
+          # pressure.
+          expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100) < 15
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Low available memory on {{`{{`}} $labels.instance {{`}}`}}"
+            description: "{{`{{`}} $labels.instance {{`}}`}} has less than 15% memory available for more than 15 minutes."
 
         - alert: ProxmoxStorageFull
           expr: (pve_disk_usage_bytes{id=~"storage/.*"} / pve_disk_size_bytes{id=~"storage/.*"} * 100) > 85

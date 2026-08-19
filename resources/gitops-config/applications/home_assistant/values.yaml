@@ -91,7 +91,7 @@ addons:
       enabled: true
       image:
         repository: ghcr.io/goauthentik/proxy
-        tag: "2026.5.6"
+        tag: "2026.8.0"
       authentikHost: "http://authentik-server.authentik.svc"
       authentikHostBrowser: "https://sso.app.damman.tech"
       externalSecret:

@@ -1,0 +1,39 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cloudnative-pg
+  namespace: cnpg-system
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: cnpg-backups
+      interval: 60s
+      rules:
+
+        - alert: CNPGBackupFailed
+          expr: cnpg_collector_last_failed_backup_timestamp > cnpg_collector_last_available_backup_timestamp
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CNPG backup failed for {{`{{`}} $labels.job {{`}}`}}"
+            description: "The most recent backup attempt for {{`{{`}} $labels.job {{`}}`}} failed and is more recent than the last successful backup."
+
+        - alert: CNPGBackupStaleHomeAssistant
+          expr: (time() - cnpg_collector_last_available_backup_timestamp{job="cnpg-system/cnpg-homeassistant"}) > 8 * 3600
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "No successful cnpg-homeassistant backup in over 8 hours"
+            description: "cnpg-homeassistant is backed up every 6 hours; no successful backup has landed in over 8 hours."
+
+        - alert: CNPGBackupStaleShared
+          expr: (time() - cnpg_collector_last_available_backup_timestamp{job="cnpg-system/cnpg-shared"}) > 30 * 3600
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "No successful cnpg-shared backup in over 30 hours"
+            description: "cnpg-shared is backed up daily; no successful backup has landed in over 30 hours."

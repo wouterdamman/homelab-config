@@ -38,8 +38,8 @@ spec:
                   echo "Starting CNPG Backup CR pruner -- $(date)"
 
                   NOW=$(date +%s)
-                  HA_THRESHOLD=$((7 * 86400))      # homeassistant: 7 days (4 backups/day)
-                  SHARED_THRESHOLD=$((30 * 86400)) # shared: 30 days (daily backups)
+                  HA_THRESHOLD=$((14 * 86400))     # homeassistant: matches ObjectStore retentionPolicy (14d)
+                  SHARED_THRESHOLD=$((14 * 86400)) # shared: matches ObjectStore retentionPolicy (14d)
 
                   TO_DELETE=$(kubectl get backup.postgresql.cnpg.io -n cnpg-system -o json | \
                     jq -r --argjson now "$NOW" \

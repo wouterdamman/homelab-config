@@ -1,6 +1,6 @@
 image:
   repository: lscr.io/linuxserver/homeassistant
-  tag: 2026.8.2@sha256:0fe257d396f052a43fc344eaddc1efad63b95a8de140d39b3be91d39cd6a77fa
+  tag: 2026.8.3@sha256:adf96a5dc4b198b0cfc4fe812580c2ee358476f649425e38300232da35e9e31e
   pullPolicy: IfNotPresent
 
 # LSIO requires PUID/PGID — HA process runs as UID 1000, not root
@@ -76,7 +76,7 @@ addons:
     enabled: true
     image:
       repository: lscr.io/linuxserver/code-server
-      tag: 4.132.0@sha256:a6d1aa1083f224d1ebb47bf9e2eb9a5624c5107447014912b768c27bb30293fc
+      tag: 4.133.0@sha256:0dc7d8d440cadbd73982a02a3362bbdd3533ec90d1c9dfd02fff9d0f14442885
     service:
       type: ClusterIP
       port: 12321
@@ -91,7 +91,7 @@ addons:
       enabled: true
       image:
         repository: ghcr.io/goauthentik/proxy
-        tag: "2026.5.6"
+        tag: "2026.8.0"
       authentikHost: "http://authentik-server.authentik.svc"
       authentikHostBrowser: "https://sso.app.damman.tech"
       externalSecret:

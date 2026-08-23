@@ -21,7 +21,9 @@ sources:
   - service
   - ingress
   - gateway-httproute
-  - gateway-tlsroute
+  # gateway-tlsroute disabled: upstream external-dns only supports TLSRoute
+  # v1alpha2, which the Gateway API CRD no longer serves (v1-only since the
+  # 2026-08-04 CRD upgrade). Re-enable once external-dns adds v1 support.
 
 policy: sync
 

@@ -49,7 +49,7 @@ rules:
   # ConfigMap permissions (also used by cnpg-backup-alert-check to persist last-known state)
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "list", "create", "delete", "update"]
+    verbs: ["get", "list", "create", "delete", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

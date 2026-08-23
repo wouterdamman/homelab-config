@@ -1,0 +1,110 @@
+---
+# Alerts on CNPG scheduled-backup failures.
+#
+# CNPG's Prometheus collector (cnpg_collector_last_available_backup_timestamp)
+# is not updated for plugin-based (barman-cloud) backups, so a PrometheusRule
+# built on it can never resolve. The only accurate source of truth is the
+# Cluster's LastBackupSucceeded condition — same one the weekly
+# backup-validation job reads. This job polls that condition and only
+# notifies on a True->False or False->True transition, to avoid repeat-spam
+# between scheduled backup attempts.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cnpg-backup-alert-check
+  namespace: cnpg-system
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          serviceAccountName: cnpg-backup-validation
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: alpine/k8s:1.36.2
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              env:
+                - name: PUSHOVER_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: cnpg-backup-validation-pushover
+                      key: user-key
+                - name: PUSHOVER_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: cnpg-backup-validation-pushover
+                      key: api-token
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+
+                  STATE_CM="cnpg-backup-alert-state"
+                  NAMESPACE="cnpg-system"
+
+                  send_pushover() {
+                    local title="$1"
+                    local message="$2"
+                    local priority="$3"
+                    curl -s -X POST https://api.pushover.net/1/messages.json \
+                      -d "token=${PUSHOVER_TOKEN}" \
+                      -d "user=${PUSHOVER_USER}" \
+                      -d "title=${title}" \
+                      -d "message=${message}" \
+                      -d "priority=${priority}" > /dev/null
+                  }
+
+                  # Ensure the state ConfigMap exists (first run: no prior state, no notification)
+                  if ! kubectl get configmap "$STATE_CM" -n "$NAMESPACE" >/dev/null 2>&1; then
+                    kubectl create configmap "$STATE_CM" -n "$NAMESPACE"
+                  fi
+
+                  for cluster in shared homeassistant; do
+                    CURRENT=$(kubectl get cluster cnpg-${cluster} -n "$NAMESPACE" \
+                      -o jsonpath='{.status.conditions[?(@.type=="LastBackupSucceeded")].status}')
+                    MESSAGE=$(kubectl get cluster cnpg-${cluster} -n "$NAMESPACE" \
+                      -o jsonpath='{.status.conditions[?(@.type=="LastBackupSucceeded")].message}')
+
+                    if [ -z "$CURRENT" ]; then
+                      echo "cnpg-${cluster}: no LastBackupSucceeded condition yet, skipping"
+                      continue
+                    fi
+
+                    PREVIOUS=$(kubectl get configmap "$STATE_CM" -n "$NAMESPACE" \
+                      -o jsonpath="{.data.${cluster}}" 2>/dev/null || echo "")
+
+                    echo "cnpg-${cluster}: previous=${PREVIOUS:-<none>} current=${CURRENT}"
+
+                    if [ -n "$PREVIOUS" ] && [ "$PREVIOUS" != "$CURRENT" ]; then
+                      if [ "$CURRENT" = "False" ]; then
+                        send_pushover \
+                          "❌ cnpg-${cluster} — Backup FAILED" \
+                          "$MESSAGE" \
+                          "1"
+                      else
+                        send_pushover \
+                          "✅ cnpg-${cluster} — Backup recovered" \
+                          "Backups are succeeding again." \
+                          "-1"
+                      fi
+                    fi
+
+                    kubectl patch configmap "$STATE_CM" -n "$NAMESPACE" \
+                      --type merge -p "{\"data\":{\"${cluster}\":\"${CURRENT}\"}}"
+                  done

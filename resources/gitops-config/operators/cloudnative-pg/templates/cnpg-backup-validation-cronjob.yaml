@@ -258,19 +258,16 @@ spec:
 
                   OVERALL_SUCCESS=true
 
-                  # Validate cnpg-shared cluster
-                  if ! validate_cluster "shared"; then
-                    OVERALL_SUCCESS=false
-                  fi
+                  # Clusters to validate — space separated, override via VALIDATE_CLUSTERS env var
+                  for cluster in ${VALIDATE_CLUSTERS:-shared homeassistant}; do
+                    if ! validate_cluster "$cluster"; then
+                      OVERALL_SUCCESS=false
+                    fi
 
-                  echo ""
-                  echo "---"
-                  echo ""
-
-                  # Validate cnpg-homeassistant cluster
-                  if ! validate_cluster "homeassistant"; then
-                    OVERALL_SUCCESS=false
-                  fi
+                    echo ""
+                    echo "---"
+                    echo ""
+                  done
 
                   # Cleanup any leftover test namespaces from previous runs (in case of crashes)
                   echo ""

@@ -14,7 +14,7 @@ metadata:
   name: cnpg-backup-alert-check
   namespace: cnpg-system
 spec:
-  schedule: "*/15 * * * *"
+  schedule: "0 */2 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

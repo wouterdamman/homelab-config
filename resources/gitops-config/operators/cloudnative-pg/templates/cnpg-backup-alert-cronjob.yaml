@@ -3,18 +3,23 @@
 #
 # CNPG's Prometheus collector (cnpg_collector_last_available_backup_timestamp)
 # is not updated for plugin-based (barman-cloud) backups, so a PrometheusRule
-# built on it can never resolve. The only accurate source of truth is the
-# Cluster's LastBackupSucceeded condition — same one the weekly
-# backup-validation job reads. This job polls that condition and only
-# notifies on a True->False or False->True transition, to avoid repeat-spam
-# between scheduled backup attempts.
+# built on it can never resolve.
+#
+# The Cluster's LastBackupSucceeded condition is NOT used here: it flips to
+# False the moment a backup *starts* (not just on actual failure), so polling
+# it produces a false FAIL/RECOVER pair on every single scheduled backup run.
+# Instead this job reads the phase of the most recent Backup CR directly
+# (running/completed/failed) — the same object the weekly backup-validation
+# job creates. "running" is skipped entirely so an in-progress backup never
+# triggers an alert. Only notifies on a completed<->failed transition, to
+# avoid repeat-spam between scheduled backup attempts.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: cnpg-backup-alert-check
   namespace: cnpg-system
 spec:
-  schedule: "0 */2 * * *"
+  schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -76,14 +81,32 @@ spec:
                   fi
 
                   for cluster in shared homeassistant; do
-                    CURRENT=$(kubectl get cluster cnpg-${cluster} -n "$NAMESPACE" \
-                      -o jsonpath='{.status.conditions[?(@.type=="LastBackupSucceeded")].status}')
-                    MESSAGE=$(kubectl get cluster cnpg-${cluster} -n "$NAMESPACE" \
-                      -o jsonpath='{.status.conditions[?(@.type=="LastBackupSucceeded")].message}')
+                    LATEST=$(kubectl get backups.postgresql.cnpg.io -n "$NAMESPACE" \
+                      -l "cnpg.io/cluster=cnpg-${cluster}" \
+                      --sort-by=.metadata.creationTimestamp \
+                      -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.phase}{"\n"}{end}' \
+                      | tail -1)
 
-                    if [ -z "$CURRENT" ]; then
-                      echo "cnpg-${cluster}: no LastBackupSucceeded condition yet, skipping"
+                    if [ -z "$LATEST" ]; then
+                      echo "cnpg-${cluster}: no backups yet, skipping"
                       continue
+                    fi
+
+                    LATEST_NAME=$(echo "$LATEST" | cut -f1)
+                    LATEST_PHASE=$(echo "$LATEST" | cut -f2)
+
+                    if [ "$LATEST_PHASE" = "running" ]; then
+                      echo "cnpg-${cluster}: backup in progress, skipping"
+                      continue
+                    fi
+
+                    if [ "$LATEST_PHASE" = "failed" ]; then
+                      CURRENT="False"
+                      MESSAGE=$(kubectl get backups.postgresql.cnpg.io "$LATEST_NAME" -n "$NAMESPACE" \
+                        -o jsonpath='{.status.error}')
+                    else
+                      CURRENT="True"
+                      MESSAGE="Backup was successful"
                     fi
 
                     PREVIOUS=$(kubectl get configmap "$STATE_CM" -n "$NAMESPACE" \

@@ -1,0 +1,23 @@
+---
+# Extra Service voor de in-process HA-MCP server (custom_components.ha_mcp_tools)
+# Zelfde pod/selector als de hoofd home-assistant Service, alleen poort 9584 i.p.v. 8123.
+# Los van de chart-Service gehouden zodat de helm-home-assistant repo niet aangepast hoeft te worden.
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-assistant-mcp
+  namespace: home-assistant
+  labels:
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: home-assistant
+    app.kubernetes.io/component: mcp
+spec:
+  type: ClusterIP
+  ports:
+  - name: mcp
+    port: 9584
+    targetPort: 9584
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: home-assistant
+    app.kubernetes.io/instance: home-assistant

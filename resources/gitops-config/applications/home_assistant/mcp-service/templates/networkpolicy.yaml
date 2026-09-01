@@ -1,0 +1,20 @@
+---
+# Extra CiliumNetworkPolicy (additief t.o.v. de chart-managed policy) die ingress
+# op poort 9584 (HA-MCP) toestaat vanaf de svc-gateway, zelfde patroon als de
+# bestaande 8123/8443 fromEntities-cluster regels.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: home-assistant-mcp
+  namespace: home-assistant
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: home-assistant
+  ingress:
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9584"
+        protocol: TCP

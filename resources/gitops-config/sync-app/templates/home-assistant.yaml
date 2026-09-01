@@ -26,6 +26,9 @@ spec:
   - repoURL: https://github.com/wouterdamman/homelab-config
     targetRevision: HEAD
     ref: values
+  - repoURL: https://github.com/wouterdamman/homelab-config
+    path: resources/gitops-config/applications/home_assistant/mcp-service
+    targetRevision: HEAD
   destination:
     namespace: home-assistant
     server: https://kubernetes.default.svc

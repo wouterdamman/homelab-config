@@ -153,3 +153,17 @@ httproutes:
   backend:
     name: home-assistant-authentik-outpost
     port: 9000
+
+- enabled: true
+  name: ha-mcp-httproute
+  namespace: home-assistant
+  hostname: ha-mcp.svc.damman.tech
+  path: /
+  timeout: "0s"
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener
+  backend:
+    name: home-assistant-mcp
+    port: 9584

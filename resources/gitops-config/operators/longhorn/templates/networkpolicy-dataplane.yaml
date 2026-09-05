@@ -1,0 +1,221 @@
+---
+# Storage data plane — instance-manager, backing-image-*, share-manager.
+# HIGHEST RISK FILE. Deliberately does NOT narrow the 10000-30000 dynamic data-plane range —
+# matches the chart's own already-open instance-manager NetworkPolicy stance (verified live).
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-instance-manager
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      longhorn.io/component: instance-manager
+  ingress:
+  # Mirrors the chart's own "instance-manager" plain NetworkPolicy: no port restriction between
+  # these 4 pod types — engine/replica control (8500-8504) and data (10000-30000) ports are
+  # dynamic and not narrowable (no fixed-range setting exists in settings.longhorn.io).
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source
+  # iSCSI — node kernel initiator (kubelet mount namespace) talking to the instance-manager,
+  # source shows up as host/remote-node identity, same-node or cross-node.
+  - fromEntities:
+    - host
+    - remote-node
+    toPorts:
+    - ports:
+      - port: "3260"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # Engine backup transfer to Hetzner Object Storage
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Reciprocal of the ingress group above — same no-port-restriction stance
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source
+  - toEntities:
+    - host
+    - remote-node
+    toPorts:
+    - ports:
+      - port: "3260"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-backing-image-manager
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      longhorn.io/component: backing-image-manager
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source
+  # Inter-backing-image-manager sync range across nodes (per Longhorn 1.12.1 networking docs)
+  - toPorts:
+    - ports:
+      - port: "30001-31000"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-backing-image-data-source
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      longhorn.io/component: backing-image-data-source
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-share-manager
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      longhorn.io/component: share-manager
+  ingress:
+  # NFS from any node's kernel client for RWX volume mounts
+  - fromEntities:
+    - host
+    - remote-node
+    toPorts:
+    - ports:
+      - port: "2049"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # recovery-backend on longhorn-manager
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9503"
+        protocol: TCP
+  # share-manager mounts the underlying volume via the local instance-manager engine
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager

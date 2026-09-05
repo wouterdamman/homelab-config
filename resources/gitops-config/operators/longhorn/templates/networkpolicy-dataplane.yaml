@@ -124,7 +124,8 @@ spec:
   # Inter-backing-image-manager sync range across nodes (per Longhorn 1.12.1 networking docs)
   - toPorts:
     - ports:
-      - port: "30001-31000"
+      - port: "30001"
+        endPort: 31000
         protocol: TCP
 
 ---

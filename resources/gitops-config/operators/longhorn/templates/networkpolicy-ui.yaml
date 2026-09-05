@@ -1,0 +1,97 @@
+---
+# Longhorn UI — reached only via the authentik-outpost-longhorn proxy (not directly via Gateway)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-ui
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: longhorn-ui
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app.kubernetes.io/name: authentik-outpost-longhorn
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+
+---
+# authentik-outpost-longhorn — actual HTTPRoute backend for longhorn.svc.damman.tech, proxies to longhorn-ui
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: authentik-outpost-longhorn
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: authentik-outpost-longhorn
+  ingress:
+  # svc-gateway HTTPRoute traffic
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP
+      - port: "9443"
+        protocol: TCP
+  # Kubelet liveness/readiness probe (/outpost.goauthentik.io/ping:9300) — confirmed live via
+  # `kubectl get deploy authentik-outpost-longhorn -o jsonpath='{.spec.template.spec.containers[*].livenessProbe}'`.
+  # Kubelet runs host-network on Talos, hits the pod IP directly as host identity, not "cluster".
+  - fromEntities:
+    - host
+    toPorts:
+    - ports:
+      - port: "9300"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-ui
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  # Outpost -> authentik-server (auth checks) — same cross-namespace toEndpoints pattern used by
+  # applications/homepage/templates/networkpolicy.yaml for its outpost, not fromEntities:cluster
+  # (authentik-server isn't behind a gateway LB IP here).
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: authentik
+        app.kubernetes.io/name: authentik
+    toPorts:
+    - ports:
+      - port: "9000"
+        protocol: TCP

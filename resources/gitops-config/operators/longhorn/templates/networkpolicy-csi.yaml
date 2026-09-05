@@ -1,0 +1,246 @@
+---
+# CSI sidecars — client-go watchers against kube-apiserver, one CNP per sidecar Deployment
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-csi-attacher
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: csi-attacher
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-csi-provisioner
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: csi-provisioner
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-csi-resizer
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: csi-resizer
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-csi-snapshotter
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: csi-snapshotter
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "8000"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+
+---
+# longhorn-csi-plugin — kubelet talks to it via Unix socket (no network rule needed for that),
+# but healthz (9808) is polled over network, and it calls longhorn-manager's API for volume ops.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-csi-plugin
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: longhorn-csi-plugin
+  ingress:
+  - fromEntities:
+    - host
+    toPorts:
+    - ports:
+      - port: "9808"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+
+---
+# longhorn-driver-deployer — registers CSI driver objects, calls longhorn-manager API
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-driver-deployer
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: longhorn-driver-deployer
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+
+---
+# engine-image — image-pulling DaemonSet only, no listening process, shares binaries via hostPath.
+# No ingress needed. DNS egress kept minimal/defensive.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-engine-image
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      longhorn.io/component: engine-image
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP

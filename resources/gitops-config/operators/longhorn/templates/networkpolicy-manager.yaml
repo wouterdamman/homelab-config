@@ -1,0 +1,123 @@
+# longhorn-manager — control plane pod, also carries admission-webhook, conversion-webhook,
+# and recovery-backend containers (ports 9500/9501/9502/9503 all on the same pod)
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: longhorn-manager
+  namespace: longhorn-system
+spec:
+  endpointSelector:
+    matchLabels:
+      app: longhorn-manager
+  ingress:
+  # CRD admission/conversion webhook calls — Talos runs kube-apiserver as a host-network static pod,
+  # Cilium does not recognize it as the kube-apiserver entity for INGRESS, use cluster entity instead.
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9501"
+        protocol: TCP
+      - port: "9502"
+        protocol: TCP
+  # Manager API — peer managers, UI, csi-plugin, driver-deployer, recurring jobs, job-task pods
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-ui
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-csi-plugin
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-driver-deployer
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  - fromEndpoints:
+    - matchExpressions:
+      - key: recurring-job.longhorn.io
+        operator: Exists
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  - fromEndpoints:
+    - matchExpressions:
+      - key: longhorn.io/job-task
+        operator: Exists
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  # Prometheus scraping — matches existing plain NetworkPolicy carve-out (PR #460), added here
+  # too since CNP is a second independent enforcement layer
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
+  # recovery-backend — matches existing longhorn-recovery-backend plain NetworkPolicy
+  - fromEndpoints:
+    - matchLabels:
+        longhorn.io/component: share-manager
+    toPorts:
+    - ports:
+      - port: "9503"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEntities:
+    - kube-apiserver
+    toPorts:
+    - ports:
+      - port: "6443"
+        protocol: TCP
+  # Hetzner Object Storage — backup transfer
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Control-plane calls into the dynamic instance-manager / backing-image group.
+  # Deliberately no toPorts restriction — instance-manager has no declared container ports,
+  # control channel (8500-8504) and data plane (10000-30000) are dynamic; the chart's own
+  # instance-manager NetworkPolicy already leaves this fully open between these pod types
+  # (verified live: kubectl get networkpolicy instance-manager -n longhorn-system -o yaml).
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: instance-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-manager
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: backing-image-data-source

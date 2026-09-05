@@ -135,7 +135,7 @@ spec:
                     namespace: $test_namespace
                   spec:
                     instances: 1
-                    imageName: ghcr.io/cloudnative-pg/postgresql:18.6@sha256:d7a81cb5da3182d95d0da5fabfb9e484e375db899dcd54b684105f1e8966e9ca
+                    imageName: ghcr.io/cloudnative-pg/postgresql:18.6@sha256:899d3ed526b659d77935dde0e6bf2d69dbbf17d3d8c6486ca8cfd04bd3c18533
                     storage:
                       size: 20Gi
                       storageClass: longhorn-monitoring

@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/name: proxmox
     app.kubernetes.io/component: tlsroute
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: pve.svc.damman.tech
+    external-dns.kubernetes.io/hostname: pve.svc.damman.tech
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io

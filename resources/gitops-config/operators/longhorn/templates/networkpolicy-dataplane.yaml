@@ -197,6 +197,14 @@ spec:
     - ports:
       - port: "2049"
         protocol: TCP
+  # longhorn-manager's gRPC control calls (mount/unmount, status)
+  - fromEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9600"
+        protocol: TCP
   egress:
   - toEndpoints:
     - matchLabels:

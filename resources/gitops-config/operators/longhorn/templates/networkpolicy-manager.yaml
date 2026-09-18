@@ -107,6 +107,14 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Manager control calls into share-manager's gRPC API (volume mount/unmount, status)
+  - toEndpoints:
+    - matchLabels:
+        longhorn.io/component: share-manager
+    toPorts:
+    - ports:
+      - port: "9600"
+        protocol: TCP
   # Control-plane calls into the dynamic instance-manager / backing-image group.
   # Deliberately no toPorts restriction — instance-manager has no declared container ports,
   # control channel (8500-8504) and data plane (10000-30000) are dynamic; the chart's own

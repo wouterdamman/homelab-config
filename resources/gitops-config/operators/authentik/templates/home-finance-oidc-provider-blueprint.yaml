@@ -5,6 +5,19 @@
 # redeploy would have wiped it entirely. This blueprint is idempotent and
 # survives a full cluster rebuild: no manual Authentik UI/API step needed
 # to get home-finance's OIDC login working again.
+#
+# The dedicated authentication flow lives in this same blueprint rather
+# than its own file. Blueprints apply independently and in no guaranteed
+# order, so with the flow split out the provider applied first, its
+# !Find for the flow resolved to null, and home-finance silently kept the
+# Brand's default flow. Entries inside one blueprint apply in order, so
+# !KeyOf below is always resolvable.
+#
+# What the flow gives home-finance, and nothing else:
+#   - a 14-day Authentik session (the shared default-authentication-login
+#     stage has session_duration=seconds=0, i.e. dies on browser close)
+#   - passkey-first login: "use a security key" -> Face ID, no password,
+#     with password + the default MFA stage kept as the fallback path
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,9 +26,117 @@ metadata:
 data:
   home-finance-oidc.yaml: |
     metadata:
-      name: home-finance OAuth2 provider + application
+      name: home-finance OAuth2 provider + application + authentication flow
     version: 1
     entries:
+      # Shared by both paths (passkey and password), so a login through
+      # either one ends up with the same 14-day session.
+      - model: authentik_stages_user_login.userloginstage
+        identifiers:
+          name: home-finance-login
+        attrs:
+          session_duration: days=14
+        state: present
+        id: home-finance-login-stage
+
+      # webauthn only: the passwordless path must not fall back to TOTP or
+      # static codes, and deny (rather than configure) because enrolling a
+      # passkey belongs in the user settings flow, not here.
+      # user_verification=required forces the biometric/PIN, which is what
+      # makes this Face ID rather than a bare touch.
+      - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        identifiers:
+          name: home-finance-webauthn-validate
+        attrs:
+          not_configured_action: deny
+          device_classes:
+            - webauthn
+          webauthn_user_verification: required
+        state: present
+        id: home-finance-webauthn-stage
+
+      - model: authentik_flows.flow
+        identifiers:
+          slug: home-finance-passwordless
+        attrs:
+          name: home-finance passwordless
+          title: Sign in to Home Finance
+          designation: authentication
+          authentication: none
+        state: present
+        id: home-finance-passwordless-flow
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf home-finance-passwordless-flow
+          order: 10
+        attrs:
+          stage: !KeyOf home-finance-webauthn-stage
+        state: present
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf home-finance-passwordless-flow
+          order: 20
+        attrs:
+          stage: !KeyOf home-finance-login-stage
+        state: present
+
+      # Own identification stage rather than the shared
+      # "default-authentication-identification" one: passwordless_flow is
+      # set per stage, and pointing the shared stage at it would offer the
+      # passkey button on every app's login page.
+      # password_stage keeps the password field inline on the same page, so
+      # there is no separate password binding in the flow below.
+      - model: authentik_stages_identification.identificationstage
+        identifiers:
+          name: home-finance-identification
+        attrs:
+          user_fields:
+            - email
+            - username
+          password_stage: !Find [authentik_stages_password.passwordstage, [name, default-authentication-password]]
+          passwordless_flow: !KeyOf home-finance-passwordless-flow
+        state: present
+        id: home-finance-identification-stage
+
+      - model: authentik_flows.flow
+        identifiers:
+          slug: home-finance-authentication
+        attrs:
+          name: home-finance authentication
+          title: Sign in to Home Finance
+          designation: authentication
+          authentication: none
+        state: present
+        id: home-finance-auth-flow
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf home-finance-auth-flow
+          order: 10
+        attrs:
+          stage: !KeyOf home-finance-identification-stage
+        state: present
+
+      # Reuses the default MFA validation stage: the password path should
+      # keep asking for the second factor exactly as it does today.
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf home-finance-auth-flow
+          order: 30
+        attrs:
+          stage: !Find [authentik_stages_authenticator_validate.authenticatorvalidatestage, [name, default-authentication-mfa-validation]]
+        state: present
+
+      - model: authentik_flows.flowstagebinding
+        identifiers:
+          target: !KeyOf home-finance-auth-flow
+          order: 100
+        attrs:
+          stage: !KeyOf home-finance-login-stage
+        state: present
+
       # home-finance requires email_verified in the ID token, which the
       # stock 'email' scope mapping does not emit. This replaces it for
       # this provider only. It was originally created by hand via the
@@ -43,9 +164,11 @@ data:
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
           # Dedicated flow: 14-day session + passkey-first login, scoped to
-          # this provider. !Find (not !KeyOf) because the flow lives in a
-          # separate blueprint — see templates/home-finance-auth-flow-blueprint.yaml.
-          authentication_flow: !Find [authentik_flows.flow, [slug, home-finance-authentication]]
+          # this provider. Defined above in this same blueprint on purpose:
+          # as a separate blueprint the provider applied first and !Find
+          # resolved to null, leaving the provider on the Brand's default
+          # flow until the next unrelated edit re-applied it.
+          authentication_flow: !KeyOf home-finance-auth-flow
           client_type: confidential
           client_id: jxSJ2L0WqBe95qwGrQklWVjWelNvIqkrruFC1dw0
           client_secret: !Env HOME_FINANCE_OIDC_CLIENT_SECRET

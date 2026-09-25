@@ -16,12 +16,36 @@ data:
       name: home-finance OAuth2 provider + application
     version: 1
     entries:
+      # home-finance requires email_verified in the ID token, which the
+      # stock 'email' scope mapping does not emit. This replaces it for
+      # this provider only. It was originally created by hand via the
+      # Authentik API and only survived because blueprints re-apply on
+      # content-hash change — codified here so the next edit to this file
+      # can't silently wipe it and break login.
+      - model: authentik_providers_oauth2.scopemapping
+        identifiers:
+          name: "home-finance OAuth Mapping: OpenID 'email' (verified)"
+        attrs:
+          scope_name: email
+          description: Email address, with email_verified forced true for home-finance
+          expression: |
+            return {
+                "email": request.user.email,
+                "email_verified": True
+            }
+        state: present
+        id: home-finance-email-scope
+
       - model: authentik_providers_oauth2.oauth2provider
         identifiers:
           name: home-finance
         attrs:
           authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+          # Dedicated flow: 14-day session + passkey-first login, scoped to
+          # this provider. !Find (not !KeyOf) because the flow lives in a
+          # separate blueprint — see templates/home-finance-auth-flow-blueprint.yaml.
+          authentication_flow: !Find [authentik_flows.flow, [slug, home-finance-authentication]]
           client_type: confidential
           client_id: jxSJ2L0WqBe95qwGrQklWVjWelNvIqkrruFC1dw0
           client_secret: !Env HOME_FINANCE_OIDC_CLIENT_SECRET
@@ -37,7 +61,7 @@ data:
           signing_key: !Find [authentik_crypto.certificatekeypair, [name, "authentik Self-signed Certificate"]]
           property_mappings:
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, openid]]
-            - !Find [authentik_providers_oauth2.scopemapping, [scope_name, email]]
+            - !KeyOf home-finance-email-scope
             - !Find [authentik_providers_oauth2.scopemapping, [scope_name, profile]]
         state: present
         id: home-finance-provider

@@ -76,7 +76,7 @@ addons:
     enabled: true
     image:
       repository: lscr.io/linuxserver/code-server
-      tag: 4.138.0@sha256:6fb8bbaf3148a56027704830a63f5880cce31dda442b42d6cca66b29a505bad6
+      tag: 4.140.0@sha256:c84b35f6238af058e3543e2e9c0532c4d3d3902ef11effea3ed90e4ec293d46d
     service:
       type: ClusterIP
       port: 12321

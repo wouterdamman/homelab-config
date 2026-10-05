@@ -9,6 +9,12 @@ resource "kubernetes_namespace" "namespaces" {
   metadata {
     name = each.value
   }
+
+  # ArgoCD adds its own tracking annotation and gateway labels to these
+  # namespaces after creation. Without this, every plan wants to strip them.
+  lifecycle {
+    ignore_changes = [metadata[0].annotations, metadata[0].labels]
+  }
 }
 
 resource "kubernetes_namespace" "longhorn_system" {
@@ -18,6 +24,10 @@ resource "kubernetes_namespace" "longhorn_system" {
     labels = {
       "pod-security.kubernetes.io/enforce" = "privileged"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [metadata[0].annotations, metadata[0].labels]
   }
 }
 

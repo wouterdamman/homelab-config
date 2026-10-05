@@ -80,10 +80,12 @@ resource "helm_release" "external_secrets" {
     })
   ]
 
-  set {
-    name  = "includeCRDs"
-    value = true
-  }
+  set = [
+    {
+      name  = "includeCRDs"
+      value = "true"
+    }
+  ]
 
   depends_on = [
     helm_release.onepassword

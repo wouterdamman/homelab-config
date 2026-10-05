@@ -47,7 +47,8 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  kubernetes {
+  # helm provider 3.x takes `kubernetes` as an attribute, not a block
+  kubernetes = {
     config_path = var.kube_config_path
   }
 }

@@ -44,16 +44,16 @@ resources:
 provider:
   name: webhook
   webhook:
+    # Repo moved kashalls -> home-operations (same project, transferred); release
+    # tags dropped the 'v' prefix at 0.10.0.
     image:
-      repository: 'ghcr.io/kashalls/external-dns-unifi-webhook'
-      tag: v0.9.0
-      digest: sha256:7f0ddbbc83a36a2a9d762e25eef9cafcb3adf0493068a27d72ae71087eafe6f0
+      repository: 'ghcr.io/home-operations/external-dns-unifi-webhook'
+      tag: 0.10.12
+      digest: sha256:5338b99662e2e15048b4e14b49e17279d384970fdcb3c29169f509f806f49cbe
       pullPolicy: IfNotPresent
     env:
       - name: UNIFI_HOST
         value: https://10.0.10.193
-      - name: UNIFI_EXTERNAL_CONTROLLER
-        value: "false"
       - name: UNIFI_API_KEY
         valueFrom:
           secretKeyRef:

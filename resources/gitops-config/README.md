@@ -298,6 +298,43 @@ tofu init -migrate-state
 tofu state list
 ```
 
+## Applying against a live cluster
+
+This workspace is a **one-time bootstrap**. It is meant to run against an empty
+cluster. Once `sync-app` is up, ArgoCD owns the stack and this configuration
+stops describing reality.
+
+Running `tofu plan` against the already-bootstrapped cluster is safe and useful
+for inspection, but the output needs reading with that in mind. A current plan
+looks roughly like this:
+
+```
+# helm_release.argo_cd          will be updated in-place
+# helm_release.argo_helm        will be updated in-place
+# helm_release.external_secrets will be created
+# helm_release.onepassword      will be created
+# null_resource.deploy_root_app must be replaced
+Plan: 3 to add, 5 to change, 1 to destroy.
+```
+
+None of that is drift to be corrected:
+
+- **`external_secrets` and `onepassword` "will be created"** — Phase 2 above
+  replaces both Terraform-deployed releases with ArgoCD Applications, which
+  removes the Helm release from the cluster. Terraform still has them in state,
+  finds them gone on refresh, and proposes to reinstall. Applying that would put
+  a second, Terraform-owned copy next to the ArgoCD-managed one. `helm list -A`
+  shows only `argo-cd` and `argocd-apps` for exactly this reason.
+- **`deploy_root_app` must be replaced** — its trigger reads
+  `helm_release.argo_cd.id`, which becomes unknown as soon as that release is
+  planned for update, so the null_resource follows.
+
+**So: do not apply this workspace against the running cluster.** Use it when
+rebuilding from scratch, where every one of those creations is correct.
+
+If `tofu plan` instead errors with `Error locating chart ... no cached repo
+found`, that is a local problem, not a state problem — run `helm repo update`.
+
 ## Managing the Stack
 
 ### Updating Versions

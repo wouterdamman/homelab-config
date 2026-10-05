@@ -7,6 +7,11 @@ fullnameOverride: prometheus
 # Prometheus
 prometheus:
   prometheusSpec:
+    # Discover ServiceMonitor targets via discovery.k8s.io/v1 EndpointSlice instead
+    # of core/v1 Endpoints, which is deprecated since Kubernetes 1.33 (cluster runs
+    # 1.36) and made client-go log a deprecation warning on every watch.
+    serviceDiscoveryRole: EndpointSlice
+
     retention: 14d
     # Doubled from 30GB alongside scrapeInterval 60s->30s to keep 14d retention intact
     retentionSize: "60GB"

@@ -3,7 +3,7 @@ data "local_file" "secret_yaml" {
 }
 
 ### Step-by-Step Namespace Creation with Validation
-resource "kubernetes_namespace" "namespaces" {
+resource "kubernetes_namespace_v1" "namespaces" {
   for_each = toset(var.namespaces)
 
   metadata {
@@ -17,7 +17,7 @@ resource "kubernetes_namespace" "namespaces" {
   }
 }
 
-resource "kubernetes_namespace" "longhorn_system" {
+resource "kubernetes_namespace_v1" "longhorn_system" {
   metadata {
     name = "longhorn-system"
 
@@ -31,13 +31,26 @@ resource "kubernetes_namespace" "longhorn_system" {
   }
 }
 
+# Renamed from the deprecated `kubernetes_namespace` resource. Provider 3.3.0
+# implements MoveResourceState for this pair, so state moves without a
+# destroy/create cycle.
+moved {
+  from = kubernetes_namespace.namespaces
+  to   = kubernetes_namespace_v1.namespaces
+}
+
+moved {
+  from = kubernetes_namespace.longhorn_system
+  to   = kubernetes_namespace_v1.longhorn_system
+}
+
 resource "kubectl_manifest" "apply_secrets" {
   count     = length(local.manifests)
   yaml_body = local.manifests[count.index]
 
   depends_on = [
-    kubernetes_namespace.namespaces,
-    kubernetes_namespace.longhorn_system
+    kubernetes_namespace_v1.namespaces,
+    kubernetes_namespace_v1.longhorn_system
   ]
 }
 
@@ -52,7 +65,7 @@ resource "helm_release" "onepassword" {
   name       = "onepassword"
   repository = "https://1password.github.io/connect-helm-charts"
   chart      = "connect"
-  namespace  = kubernetes_namespace.namespaces["onepassword"].metadata[0].name
+  namespace  = kubernetes_namespace_v1.namespaces["onepassword"].metadata[0].name
   version    = var.onepassword_version
   values = [
     yamlencode({
@@ -83,7 +96,7 @@ resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   repository = "https://charts.external-secrets.io"
   chart      = "external-secrets"
-  namespace  = kubernetes_namespace.namespaces["external-secrets"].metadata[0].name
+  namespace  = kubernetes_namespace_v1.namespaces["external-secrets"].metadata[0].name
   version    = var.external_secrets_version
   values = [
     yamlencode({
@@ -169,7 +182,7 @@ resource "time_sleep" "wait_for_cluster_secret_store" {
 resource "helm_release" "argo_cd" {
   name       = "argo-cd"
   repository = "https://argoproj.github.io/argo-helm"
-  namespace  = kubernetes_namespace.namespaces["argocd"].metadata[0].name
+  namespace  = kubernetes_namespace_v1.namespaces["argocd"].metadata[0].name
   chart      = "argo-cd"
   version    = var.argocd_version
   values     = [file("./operators/argo-cd/values.yaml")]
@@ -184,7 +197,7 @@ resource "helm_release" "argo_helm" {
   name       = "argocd-apps"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argocd-apps"
-  namespace  = kubernetes_namespace.namespaces["argocd"].metadata[0].name
+  namespace  = kubernetes_namespace_v1.namespaces["argocd"].metadata[0].name
   version    = var.argocd_apps_version
   values = [
     yamlencode({

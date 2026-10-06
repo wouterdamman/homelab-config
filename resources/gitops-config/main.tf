@@ -42,6 +42,12 @@ resource "kubectl_manifest" "apply_secrets" {
 }
 
 ### Install 1Password Connector
+#
+# Bootstrap-only. The ArgoCD `onepassword` Application takes this release over
+# once sync-app is running, and the Helm release itself disappears from the
+# cluster. A plan against an already-bootstrapped cluster therefore reports
+# this resource as "will be created" — that is expected, not drift. See
+# "Applying against a live cluster" in README.md before acting on it.
 resource "helm_release" "onepassword" {
   name       = "onepassword"
   repository = "https://1password.github.io/connect-helm-charts"
@@ -71,6 +77,8 @@ resource "helm_release" "onepassword" {
 }
 
 ### Install External Secrets Operator
+# Bootstrap-only, same handover as helm_release.onepassword above: the ArgoCD
+# `external-secrets` Application replaces it and the Helm release goes away.
 resource "helm_release" "external_secrets" {
   name       = "external-secrets"
   repository = "https://charts.external-secrets.io"

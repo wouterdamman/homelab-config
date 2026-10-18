@@ -48,7 +48,7 @@ provider:
     # tags dropped the 'v' prefix at 0.10.0.
     image:
       repository: 'ghcr.io/home-operations/external-dns-unifi-webhook'
-      tag: 0.10.12
+      tag: 0.10.13
       digest: sha256:5338b99662e2e15048b4e14b49e17279d384970fdcb3c29169f509f806f49cbe
       pullPolicy: IfNotPresent
     env:

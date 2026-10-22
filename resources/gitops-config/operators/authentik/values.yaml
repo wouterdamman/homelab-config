@@ -158,6 +158,11 @@ worker:
       cpu: 2000m
       memory: 1024Mi
 
+  # `ak healthcheck` is an exec probe that boots a Python process; the chart's
+  # 3s timeout fails under CPU contention and keeps restarting workers mid-migration.
+  startupProbe:
+    timeoutSeconds: 15
+
 # ─────────────────────────────────────────────────────────────
 # PostgreSQL (external CNPG)
 # ─────────────────────────────────────────────────────────────

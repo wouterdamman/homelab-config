@@ -19,7 +19,18 @@ Configuration file: `renovate.json` in the repository root.
 
 ## Update Schedule
 
-Renovate runs and opens PRs **every Monday before 06:00 UTC**. This prevents PR noise throughout the week and bundles updates into a single review moment.
+Tier-0 and Tier-1 PRs are opened **every Monday before 06:00 UTC**. This prevents PR noise throughout the week and bundles updates into a single review moment.
+
+Tier-2+ PRs can be opened at any time, but the grouped patch PR only **automerges between 01:00 and 05:00 UTC** (`automergeSchedule`). Without this, Renovate runs right after a manual merge to `main` and automerges immediately, piling its rollouts on top of the ones just merged by hand.
+
+### Merging manually: one rollout at a time
+
+All cluster VMs run on a single Proxmox host (`dmn-sk-pve-01`, 12 cores for 15 vCPUs). Several rollouts at once (CNI agents, DB migrations, Longhorn replica rebuilds) saturate the host. etcd and API latency then spike, probes time out and healthy pods get killed.
+
+- Merge Tier-0/Tier-1 PRs **one at a time**. Wait until the ArgoCD app is `Synced/Healthy` and `kubectl get volumes -n longhorn-system` shows no `degraded` volumes before merging the next one.
+- Don't merge Tier-0/1 PRs in the same window as other rollouts.
+
+Incident 2026-10-22: four PRs (Cilium 1.20.3, argocd-apps, Terraform providers, authentik proxy) were merged within 60s, and Renovate automerged the Tier-2+ patch group (authentik 2026.8.5) 30s later. The host hit 98% CPU. etcd elected new leaders, the `cnpg-shared` primary failed its liveness isolation check and failed over, authentik crash-looped on the DB outage, and Longhorn rebuilt replicas for about 15 minutes.
 
 ---
 
@@ -49,7 +60,7 @@ All ArgoCD applications have a tier label (`homelab.damman.tech/tier`) that refl
 |------|-------------|-------|-------|-------|
 | Tier-0 | argo-cd, argocd-apps, cilium, longhorn | Own PR, manual merge | Own PR, manual merge | Own PR, manual merge |
 | Tier-1 | cert-manager, cloudnative-pg, external-dns, external-secrets, kubelet-csr-approver, onepassword-connect | Own PR, manual merge | Own PR, manual merge | Own PR, manual merge |
-| Tier-2+ | authentik, loki, kube-prometheus-stack, promtail, evcc, home-assistant, zigbee2mqtt | Grouped PR, **automerge** | Own PR, manual merge | Own PR, manual merge |
+| Tier-2+ | authentik, loki, kube-prometheus-stack, promtail, evcc, home-assistant, zigbee2mqtt | Grouped PR, **automerge 01:00–05:00 UTC** | Own PR, manual merge | Own PR, manual merge |
 | Terraform | All providers (proxmox, kubernetes, helm, …) | Grouped PR, manual merge | Grouped PR, manual merge | Grouped PR, manual merge |
 
 ### kube-prometheus-stack exception

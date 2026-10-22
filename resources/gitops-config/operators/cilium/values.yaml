@@ -39,6 +39,12 @@ operator:
 
 # Roll out cilium agent pods automatically when ConfigMap is updated.
 rollOutCiliumPods: true
+# One node at a time (chart default 2). All VMs share one Proxmox host, so
+# restarting a third of the cluster's datapath at once saturates it.
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
 resources:
   limits:
     cpu: 1000m
@@ -75,6 +81,12 @@ gatewayAPI:
   enableAppProtocol: true
 
 envoy:
+  # One node at a time (chart default 2). All VMs share one Proxmox host, so
+  # restarting a third of the cluster's datapath at once saturates it.
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
   # 0 disables stream idle timeout (default 300s kills WebSocket connections after 5min background)
   streamIdleTimeoutDurationSeconds: 0
   securityContext:

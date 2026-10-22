@@ -40,13 +40,14 @@ spec:
     size: 5Gi
 
   # Resource configuration
+  # Working set reached ~490Mi of a 512Mi limit on 2026-10-22; give headroom.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
 
   # Backup via barman-cloud plugin (ObjectStore: cnpg-shared-backup)
   plugins:
@@ -88,6 +89,18 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: cnpg-shared-netbox
+
+  # Liveness: tolerate a slow API server. All VMs share one Proxmox host; when
+  # it saturates, etcd/API latency spikes past the default 1s isolation-check
+  # timeouts and the kubelet kills a healthy primary, forcing a failover.
+  probes:
+    liveness:
+      timeoutSeconds: 10
+      failureThreshold: 6
+      isolationCheck:
+        enabled: true
+        connectionTimeout: 5000
+        requestTimeout: 5000
 
   # Affinity - prefer different nodes for replicas
   affinity:

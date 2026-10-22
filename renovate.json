@@ -57,6 +57,7 @@
       "groupName": "Helm charts (tier-2+) - patches",
       "commitMessagePrefix": "[Tier: 2+]",
       "automerge": true,
+      "automergeSchedule": ["after 1am and before 5am"],
       "matchPackageNames": [
         "!argo-cd",
         "!argocd-apps",

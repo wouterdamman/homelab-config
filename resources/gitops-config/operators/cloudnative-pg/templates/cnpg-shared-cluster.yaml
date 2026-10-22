@@ -40,13 +40,14 @@ spec:
     size: 5Gi
 
   # Resource configuration
+  # Working set reached ~490Mi of a 512Mi limit on 2026-10-22; give headroom.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      memory: 1Gi
 
   # Backup via barman-cloud plugin (ObjectStore: cnpg-shared-backup)
   plugins:

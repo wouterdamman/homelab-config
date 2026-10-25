@@ -1,0 +1,36 @@
+---
+# Minimale rechten: alleen kubectl exec in de pod home-assistant-0 (codeserver-sidecar).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: home-assistant-git-push
+  namespace: home-assistant
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: home-assistant-git-push
+  namespace: home-assistant
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  resourceNames: ["home-assistant-0"]
+  verbs: ["get"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  resourceNames: ["home-assistant-0"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: home-assistant-git-push
+  namespace: home-assistant
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: home-assistant-git-push
+subjects:
+- kind: ServiceAccount
+  name: home-assistant-git-push
+  namespace: home-assistant

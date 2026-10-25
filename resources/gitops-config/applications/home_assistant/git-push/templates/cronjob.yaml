@@ -1,0 +1,79 @@
+---
+# Commit + push van wijzigingen die via de HA-interface in /config zijn gemaakt
+# (automations.yaml, scripts.yaml, scenes.yaml, blueprints, ...). Draait in de
+# codeserver-sidecar van home-assistant-0 via kubectl exec, zodat de bestaande
+# SSH-deploy-key (/home/coder/.ssh/id_ed25519) en de git-repo in /config gebruikt
+# worden — geen tweede mount op het RWO Longhorn-volume nodig.
+#
+# - `git add -u`: alleen al gevolgde bestanden; nieuwe bestanden en alles in
+#   .gitignore (secrets.yaml, .storage, www/community) blijven buiten git.
+# - Push eerst via github.com:22, bij falen via ssh.github.com:443 (poort 22 gaf
+#   op 2026-10-22 tijdelijk time-outs vanaf de pod).
+# - Geen wijzigingen = geen commit; pull --rebase vóór push zodat lokale commits
+#   (Wouter / Claude) niet botsen.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: home-assistant-git-push
+  namespace: home-assistant
+spec:
+  schedule: "0 3 * * *"
+  timeZone: Europe/Amsterdam
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          serviceAccountName: home-assistant-git-push
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: git-push
+            image: alpine/k8s:1.37.1
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              kubectl exec -i -n home-assistant home-assistant-0 -c codeserver -- sh -s <<'SCRIPT'
+              set -eu
+              cd /config
+              git config --global --add safe.directory /config
+              # known_hosts: gemounte file kan zonder trailing newline zijn; 443-entry erbij
+              { cat /home/coder/.ssh/known_hosts 2>/dev/null; echo; \
+                echo "[ssh.github.com]:443 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"; } > /tmp/known_hosts_push
+              SSH22="ssh -o BatchMode=yes -o ConnectTimeout=20 -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/tmp/known_hosts_push"
+              SSH443="$SSH22 -o HostName=ssh.github.com -o Port=443 -o HostKeyAlias=[ssh.github.com]:443"
+              export GIT_EDITOR=true
+              git add -u
+              if git diff --cached --quiet; then
+                echo "Geen UI-wijzigingen om te committen"
+              else
+                git diff --cached --stat
+                git -c user.name="Home Assistant (nachtelijk)" -c user.email="ha-git-push@users.noreply.github.com" \
+                  commit -q -m "Nachtelijke sync: wijzigingen via de HA-interface ($(date +%F))"
+              fi
+              for SSHCMD in "$SSH22" "$SSH443"; do
+                if GIT_SSH_COMMAND="$SSHCMD" git pull --rebase -q && GIT_SSH_COMMAND="$SSHCMD" git push -q; then
+                  echo "Gepusht: $(git log --oneline -1)"
+                  exit 0
+                fi
+                # nooit een half-afgemaakte rebase in /config laten staan
+                [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ] && git rebase --abort || true
+                echo "Push mislukt, volgende route proberen"
+              done
+              echo "Push mislukt via 22 en 443" >&2
+              exit 1
+              SCRIPT

@@ -1,6 +1,13 @@
 # tofu/talos/talos-config.tf
 resource "talos_machine_secrets" "this" {
   talos_version = var.cluster.talos_version
+
+  # The secrets bundle (CAs, cluster ID, tokens) is generated once at bootstrap.
+  # With provider 0.12 a talos_version bump re-plans every cert and key as
+  # "known after apply", which would rotate the whole PKI on a live cluster.
+  lifecycle {
+    ignore_changes = [talos_version]
+  }
 }
 
 data "talos_client_configuration" "this" {
@@ -14,9 +21,14 @@ data "talos_machine_configuration" "this" {
   for_each         = var.nodes
   cluster_name     = var.cluster.name
   cluster_endpoint = "https://${var.cluster.endpoint}:6443"
-  talos_version    = var.cluster.talos_version
-  machine_type     = each.value.machine_type
-  machine_secrets  = talos_machine_secrets.this.machine_secrets
+  talos_version    = local.config_contract
+  # Pin Kubernetes explicitly. Without it the provider uses its own default, so
+  # a provider bump silently upgrades the whole cluster on the next apply
+  # (talos provider 0.12 moved it from 1.36 to 1.37.0 on 2026-10-26).
+  # Upgrade with `talosctl upgrade-k8s`, then bump this to match.
+  kubernetes_version = local.kubernetes_version
+  machine_type       = each.value.machine_type
+  machine_secrets    = talos_machine_secrets.this.machine_secrets
   config_patches = each.value.machine_type == "controlplane" ? [
     templatefile("${path.module}/machine-config/control-plane.yaml.tftpl", {
       hostname            = each.key
@@ -31,16 +43,39 @@ data "talos_machine_configuration" "this" {
       ip                  = each.value.ip
       cidr                = 25
     })
-    ] : [
-    templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
-      hostname     = each.key
-      node_name    = each.value.host_node
-      cluster_name = var.cluster.proxmox_cluster
-      gateway      = var.cluster.gateway
-      ip           = each.value.ip
-      cidr         = 25
-    })
-  ]
+    ] : concat([
+      templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
+        hostname     = each.key
+        node_name    = each.value.host_node
+        cluster_name = var.cluster.proxmox_cluster
+        gateway      = var.cluster.gateway
+        ip           = each.value.ip
+        cidr         = 25
+      })
+    ],
+    # Talos 1.14 workload isolation (CRI, kubelet and pods in the sandboxd
+    # namespace). Rolled out per node; takes effect after a reboot.
+    contains(local.workload_isolation_nodes, each.key) ? [yamlencode({
+      apiVersion        = "v1alpha1"
+      kind              = "SecurityProfileConfig"
+      workloadIsolation = true
+    })] : [],
+  )
+}
+
+locals {
+  # Machine config contract, kept at the version the patches are written for.
+  # With contract v1.14 the provider generates KubeNetworkConfig, KubeProxyConfig
+  # and other new documents, and nodes reject them next to the v1alpha1 fields
+  # our templates set (.cluster.network, .machine.kubelet, ...). Talos 1.14 nodes
+  # accept v1.13-contract configs; bump this only after migrating the templates.
+  config_contract = "v1.13"
+
+  kubernetes_version = "1.37.0"
+
+  # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
+  # replica rebuild work under isolation.
+  workload_isolation_nodes = ["prd-w-01"]
 }
 
 resource "talos_machine_configuration_apply" "this" {
@@ -86,7 +121,9 @@ resource "talos_cluster_kubeconfig" "this" {
     v.ip if v.machine_type == "controlplane"
   ][0]
 
-  endpoint             = var.cluster.endpoint
+  # Talos API endpoint used to fetch the kubeconfig; the VIP survives a
+  # prd-cp-01 reboot. The server URL inside is rewritten in output.tf.
+  endpoint             = var.cluster.vip
   client_configuration = talos_machine_secrets.this.client_configuration
 
   timeouts = {

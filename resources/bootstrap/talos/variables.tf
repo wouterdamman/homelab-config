@@ -41,6 +41,7 @@ variable "nodes" {
     ram_dedicated       = number
     update              = optional(bool, false)
     igpu                = optional(bool, false)
+    serial_console      = optional(bool, false)
   }))
 }
 

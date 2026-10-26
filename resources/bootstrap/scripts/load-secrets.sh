@@ -16,6 +16,10 @@ if ! command -v op &> /dev/null; then
     return 1 2>/dev/null || exit 1
 fi
 
+# The Homelab vault lives in the damman-it account; pick it explicitly because
+# op refuses to sign in when several accounts are configured.
+export OP_ACCOUNT="${OP_ACCOUNT:-damman-it.1password.com}"
+
 # Check if user is signed in, auto-signin if needed
 if ! op whoami &> /dev/null; then
     echo "🔓 Signing in to 1Password..."
@@ -36,7 +40,8 @@ export TF_VAR_proxmox_username
 TF_VAR_proxmox_password=""  # Not used with token auth
 export TF_VAR_proxmox_password
 
-TF_VAR_proxmox_api_token=$(op read "op://Homelab/Proxmox - Automation Account/api_key" 2>&1 | tr -d '\n\r')
+# Item lives in the KubernetesSecrets vault; referenced by UUID so a rename does not break it.
+TF_VAR_proxmox_api_token=$(op read --no-newline "op://KubernetesSecrets/32gk32dubyjguss44z7bodjgsa/api_key")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Proxmox API token: $TF_VAR_proxmox_api_token"
     return 1 2>/dev/null || exit 1
@@ -45,7 +50,7 @@ export TF_VAR_proxmox_api_token
 
 # QDevice root password from 1Password "Homelab" vault
 echo "  Loading QDevice credentials..."
-TF_VAR_qdevice_root_password=$(op read "op://Homelab/Proxmox QDevice - Root Password/password" 2>&1 | tr -d '\n\r')
+TF_VAR_qdevice_root_password=$(op read --no-newline "op://Homelab/Proxmox QDevice - Root Password/password")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading QDevice password: $TF_VAR_qdevice_root_password"
     return 1 2>/dev/null || exit 1
@@ -59,14 +64,14 @@ export SSH_AUTH_SOCK
 
 # Hetzner Object Storage S3 backend from 1Password "Homelab" vault
 echo "  Loading Hetzner Object Storage credentials..."
-AWS_ACCESS_KEY_ID=$(op read "op://Homelab/hetzner-homelab-prd/username" 2>&1 | tr -d '\n\r')
+AWS_ACCESS_KEY_ID=$(op read --no-newline "op://Homelab/hetzner-homelab-prd/username")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Hetzner access key: $AWS_ACCESS_KEY_ID"
     return 1 2>/dev/null || exit 1
 fi
 export AWS_ACCESS_KEY_ID
 
-AWS_SECRET_ACCESS_KEY=$(op read "op://Homelab/hetzner-homelab-prd/password" 2>&1 | tr -d '\n\r')
+AWS_SECRET_ACCESS_KEY=$(op read --no-newline "op://Homelab/hetzner-homelab-prd/password")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Hetzner secret key: $AWS_SECRET_ACCESS_KEY"
     return 1 2>/dev/null || exit 1

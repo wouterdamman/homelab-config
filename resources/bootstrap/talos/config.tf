@@ -86,7 +86,8 @@ resource "talos_cluster_kubeconfig" "this" {
     v.ip if v.machine_type == "controlplane"
   ][0]
 
-  endpoint             = var.cluster.endpoint
+  # Use the VIP so the kubeconfig keeps working while prd-cp-01 reboots.
+  endpoint             = var.cluster.vip
   client_configuration = talos_machine_secrets.this.client_configuration
 
   timeouts = {

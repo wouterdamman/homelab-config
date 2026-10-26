@@ -759,7 +759,11 @@ main() {
     echo ""
     log_success "🎉 Upgrade completed successfully!"
     echo ""
-    log_info "All nodes are now running Talos $TARGET_VERSION"
+    if [ -n "$SINGLE_NODE" ] || [ -n "$SINGLE_NODE_IP" ]; then
+        log_info "${SINGLE_NODE:-$SINGLE_NODE_IP} is now running Talos $TARGET_VERSION; other nodes were not touched"
+    else
+        log_info "All nodes are now running Talos $TARGET_VERSION"
+    fi
     echo ""
 }
 

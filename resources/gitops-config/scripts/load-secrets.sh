@@ -31,14 +31,14 @@ echo "🔐 Loading secrets from 1Password..."
 
 # Hetzner Object Storage S3 backend from 1Password "Homelab" vault
 echo "  Loading Hetzner Object Storage credentials..."
-AWS_ACCESS_KEY_ID=$(op read "op://Homelab/hetzner-homelab-prd/username" 2>&1 | tr -d '\n\r')
+AWS_ACCESS_KEY_ID=$(op read --no-newline "op://Homelab/hetzner-homelab-prd/username")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Hetzner access key: $AWS_ACCESS_KEY_ID"
     return 1 2>/dev/null || exit 1
 fi
 export AWS_ACCESS_KEY_ID
 
-AWS_SECRET_ACCESS_KEY=$(op read "op://Homelab/hetzner-homelab-prd/password" 2>&1 | tr -d '\n\r')
+AWS_SECRET_ACCESS_KEY=$(op read --no-newline "op://Homelab/hetzner-homelab-prd/password")
 if [[ $? -ne 0 ]]; then
     echo "❌ Error loading Hetzner secret key: $AWS_SECRET_ACCESS_KEY"
     return 1 2>/dev/null || exit 1

@@ -22,8 +22,13 @@ data "talos_machine_configuration" "this" {
   cluster_name     = var.cluster.name
   cluster_endpoint = "https://${var.cluster.endpoint}:6443"
   talos_version    = local.config_contract
-  machine_type     = each.value.machine_type
-  machine_secrets  = talos_machine_secrets.this.machine_secrets
+  # Pin Kubernetes explicitly. Without it the provider uses its own default, so
+  # a provider bump silently upgrades the whole cluster on the next apply
+  # (talos provider 0.12 moved it from 1.36 to 1.37.0 on 2026-10-26).
+  # Upgrade with `talosctl upgrade-k8s`, then bump this to match.
+  kubernetes_version = local.kubernetes_version
+  machine_type       = each.value.machine_type
+  machine_secrets    = talos_machine_secrets.this.machine_secrets
   config_patches = each.value.machine_type == "controlplane" ? [
     templatefile("${path.module}/machine-config/control-plane.yaml.tftpl", {
       hostname            = each.key
@@ -65,6 +70,8 @@ locals {
   # our templates set (.cluster.network, .machine.kubelet, ...). Talos 1.14 nodes
   # accept v1.13-contract configs; bump this only after migrating the templates.
   config_contract = "v1.13"
+
+  kubernetes_version = "1.37.0"
 
   # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
   # replica rebuild work under isolation.

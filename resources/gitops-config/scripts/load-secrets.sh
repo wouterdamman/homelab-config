@@ -16,6 +16,10 @@ if ! command -v op &> /dev/null; then
     return 1 2>/dev/null || exit 1
 fi
 
+# The Homelab vault lives in the damman-it account; pick it explicitly because
+# op refuses to sign in when several accounts are configured.
+export OP_ACCOUNT="${OP_ACCOUNT:-damman-it.1password.com}"
+
 # Check if user is signed in
 if ! op whoami &> /dev/null; then
     echo "❌ Please sign in to 1Password first:"

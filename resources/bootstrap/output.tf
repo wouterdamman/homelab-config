@@ -13,7 +13,13 @@ resource "local_file" "talos_config" {
 }
 
 resource "local_file" "kube_config" {
-  content         = module.talos.kube_config.kubeconfig_raw
+  # The server URL comes from the cluster endpoint (prd-cp-01); point it at the
+  # VIP so kubectl keeps working while prd-cp-01 reboots.
+  content = replace(
+    module.talos.kube_config.kubeconfig_raw,
+    "https://${local.cluster_config.endpoint}:6443",
+    "https://${local.cluster_config.vip}:6443",
+  )
   filename        = "output/kube-config.yaml"
   file_permission = "0600"
 }

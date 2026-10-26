@@ -21,7 +21,7 @@ data "talos_machine_configuration" "this" {
   for_each         = var.nodes
   cluster_name     = var.cluster.name
   cluster_endpoint = "https://${var.cluster.endpoint}:6443"
-  talos_version    = var.cluster.talos_version
+  talos_version    = local.config_contract
   machine_type     = each.value.machine_type
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   config_patches = each.value.machine_type == "controlplane" ? [
@@ -59,6 +59,13 @@ data "talos_machine_configuration" "this" {
 }
 
 locals {
+  # Machine config contract, kept at the version the patches are written for.
+  # With contract v1.14 the provider generates KubeNetworkConfig, KubeProxyConfig
+  # and other new documents, and nodes reject them next to the v1alpha1 fields
+  # our templates set (.cluster.network, .machine.kubelet, ...). Talos 1.14 nodes
+  # accept v1.13-contract configs; bump this only after migrating the templates.
+  config_contract = "v1.13"
+
   # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
   # replica rebuild work under isolation.
   workload_isolation_nodes = ["prd-w-01"]
@@ -107,7 +114,8 @@ resource "talos_cluster_kubeconfig" "this" {
     v.ip if v.machine_type == "controlplane"
   ][0]
 
-  # Use the VIP so the kubeconfig keeps working while prd-cp-01 reboots.
+  # Talos API endpoint used to fetch the kubeconfig; the VIP survives a
+  # prd-cp-01 reboot. The server URL inside is rewritten in output.tf.
   endpoint             = var.cluster.vip
   client_configuration = talos_machine_secrets.this.client_configuration
 

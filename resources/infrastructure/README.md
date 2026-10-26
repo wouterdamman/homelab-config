@@ -44,6 +44,12 @@ This Terraform/OpenTofu workspace manages Proxmox infrastructure components that
 - **Template**: Debian 12 standard
 - **Service**: corosync-qnetd for cluster quorum voting
 
+### Proxmox Roles (`roles.tf`)
+- **AutomationRole**: `automation@pve` (OpenTofu token) for VMs, disks and storage
+- **TerraformVMRole**: `automation@pve` on `/vms`, adds clone and migrate
+- **MonitoringRole**: `monitoring@pve`, read-only for prometheus-pve-exporter
+- ACLs (role assignments per path) are still managed by hand with `pveum acl`
+
 ## Usage
 
 ```bash

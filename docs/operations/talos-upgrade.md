@@ -20,10 +20,10 @@ The easiest and recommended way to upgrade is using the automated script:
 cd resources/bootstrap
 
 # Dry run first (see what would happen)
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --dry-run
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --dry-run
 
 # Run actual upgrade
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0
 ```
 
 ### Single Node Upgrade (for testing)
@@ -32,13 +32,13 @@ Test upgrades on a single node first:
 
 ```bash
 # Test on specific node by name
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --node prd-cp-01
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --node prd-cp-01
 
 # Or by IP address
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --node-ip 10.0.10.130
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --node-ip 10.0.10.130
 
 # Dry run on single node
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --node prd-cp-01 --dry-run
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --node prd-cp-01 --dry-run
 ```
 
 ### Script Options
@@ -60,19 +60,19 @@ Test upgrades on a single node first:
 
 ```bash
 # Dry run to see what would happen
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --dry-run
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --dry-run
 
 # Test single node first (recommended)
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --node prd-cp-01
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --node prd-cp-01
 
 # Only upgrade workers
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --skip-control-planes
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --skip-control-planes
 
 # Full automated upgrade
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0
 
 # Faster upgrade (shorter wait times - use with caution)
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0 --worker-wait 120 --cp-wait 300
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0 --worker-wait 120 --cp-wait 300
 ```
 
 ## How It Works
@@ -134,7 +134,7 @@ export KUBECONFIG=/path/to/resources/bootstrap/output/kube-config.yaml
 SCHEMATIC_FILE="resources/bootstrap/talos/image/schematic.yaml"
 SCHEMATIC_ID=$(curl -sf -X POST https://factory.talos.dev/schematics \
   --data-binary @"$SCHEMATIC_FILE" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
-TARGET_VERSION="v1.14.0"
+TARGET_VERSION="v1.15.0"
 INSTALLER_IMAGE="factory.talos.dev/installer/${SCHEMATIC_ID}:${TARGET_VERSION}"
 ```
 
@@ -196,7 +196,7 @@ kubectl get nodes -o wide
 After successful upgrade, update `resources/bootstrap/proxmox.auto.tfvars`:
 
 ```hcl
-talos_version = "v1.14.0"
+talos_version = "v1.15.0"
 ```
 
 Apply to sync Terraform state:
@@ -222,6 +222,49 @@ kubectl top nodes             # Resource usage
 # Verify Cilium
 kubectl get pods -n kube-system -l k8s-app=cilium
 ```
+
+## Kubernetes Upgrade
+
+`upgrade-talos.sh` only upgrades the Talos OS. Kubernetes (kubelet, apiserver, controller-manager, scheduler) is upgraded separately with `talosctl upgrade-k8s`, which rolls the control plane components and kubelets one node at a time:
+
+```bash
+cd resources/bootstrap
+talosctl --talosconfig output/talos-config.yaml -n 10.0.10.130 upgrade-k8s --to <version> --dry-run
+talosctl --talosconfig output/talos-config.yaml -n 10.0.10.130 upgrade-k8s --to <version>
+```
+
+Before bumping the Kubernetes minor, check that Cilium and Longhorn list the target version as tested:
+- Cilium: `https://docs.cilium.io/en/v<cilium-minor>/network/kubernetes/compatibility/`
+- Longhorn: `https://longhorn.io/docs/<longhorn-version>/best-practices/`
+
+Also check for deprecated API usage scheduled for removal:
+
+```bash
+kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
+```
+
+## Talos 1.14 Notes
+
+- **etcd ports**: Talos 1.14 moves the etcd HTTP endpoints (`/metrics`, `/health`) from 2379 to 2383. We set `listen-metrics-urls: http://0.0.0.0:2381` explicitly in `control-plane.yaml.tftpl`, so the kube-prometheus-stack `kubeEtcd` scrape on 2381 is unaffected.
+- **Filesystem trim**: clusters upgraded from older versions have no `FilesystemTrimConfig` document, so trim is off until added. Both machine-config templates carry a weekly `FilesystemTrimConfig`. VM disks have `discard = "on"`, so trimmed blocks return to Proxmox storage.
+- **Workload isolation** (`SecurityProfileConfig`, `workloadIsolation: true`): default for new clusters only; upgraded clusters stay non-isolated. Not enabled here until validated with Longhorn (host iSCSI).
+- **`apply-config --mode=reboot` removed**: use `talosctl reboot` explicitly.
+- **Installer image**: `ghcr.io/siderolabs/installer` is no longer published. The upgrade script already uses the Image Factory installer.
+- **Gateway API extraManifests**: `talosctl upgrade-k8s` re-applies the machine config `extraManifests`. The cluster runs the Gateway API standard channel, and its `safe-upgrades` ValidatingAdmissionPolicy rejects experimental CRDs on top, so all Gateway API URLs in `control-plane.yaml.tftpl` use `config/crd/standard/`. Run `tofu apply` before `upgrade-k8s` so the nodes carry the current URLs, otherwise old CRD versions get applied.
+
+## Lessons from the 1.13 → 1.14 upgrade (2026-10-26)
+
+- **etcd shares a disk with every VM.** All OS disks, etcd included, are raw files on one consumer NVMe on pve-01. A node reboot stalled etcd `fdatasync` for 1-6s. On the first worker this caused an etcd leader election and API timeouts, and the CNPG primaries shut themselves down (liveness isolation check). PR #579 made CNPG tolerate ~3 minutes; a Proxmox `mbps_wr` throttle on the rebooting VM did not help.
+- **Wait for calm between nodes.** Before the next node, wait until Longhorn volumes are healthy, CNPG is healthy and etcd has logged no `heartbeat`/`slow fdatasync` warnings for 5 minutes:
+  ```bash
+  talosctl -n 10.0.10.130,10.0.10.131,10.0.10.132 logs etcd --tail 500 | grep -E "heartbeat|slow fdatasync|elected"
+  ```
+- **Upgrade the etcd leader last**, and move leadership off it first:
+  ```bash
+  talosctl -n <leader-ip> etcd forfeit-leadership
+  ```
+- **Strict-local volumes** (`longhorn-monitoring`) cannot move. Loki and Prometheus are down while their node reboots.
+- **Use the VIP.** The kubeconfig now points at `10.0.10.140`; with `10.0.10.130` kubectl fails while prd-cp-01 reboots.
 
 ## Rollback
 
@@ -307,7 +350,7 @@ talosctl upgrade --nodes 10.0.10.133 --image $INSTALLER_IMAGE --wait
 ```bash
 # Run automated upgrade (must run from resources/bootstrap/)
 cd resources/bootstrap
-./scripts/upgrade-talos.sh --current v1.13.2 --target v1.14.0
+./scripts/upgrade-talos.sh --current v1.14.4 --target v1.15.0
 
 # Check current versions
 kubectl get nodes -o wide

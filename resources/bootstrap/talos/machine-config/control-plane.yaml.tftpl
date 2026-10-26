@@ -45,14 +45,16 @@ cluster:
       name: none
   proxy:
     disabled: true
-  # Optional Gateway API CRDs
+  # Gateway API CRDs, standard channel only: since v1.5 the safe-upgrades
+  # ValidatingAdmissionPolicy rejects experimental CRDs on top of standard ones,
+  # which breaks `talosctl upgrade-k8s` manifest sync.
   extraManifests:
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/experimental/gateway.networking.k8s.io_gateways.yaml
+  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
   - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
+  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_tlsroutes.yaml
   - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml
   inlineManifests:
   - name: cilium-values
@@ -87,3 +89,7 @@ ntp:
   servers:
   - 0.pool.ntp.org
   - 1.pool.ntp.org
+---
+apiVersion: v1alpha1
+kind: FilesystemTrimConfig
+interval: 168h0m0s

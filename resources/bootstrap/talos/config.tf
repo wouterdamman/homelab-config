@@ -31,16 +31,30 @@ data "talos_machine_configuration" "this" {
       ip                  = each.value.ip
       cidr                = 25
     })
-    ] : [
-    templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
-      hostname     = each.key
-      node_name    = each.value.host_node
-      cluster_name = var.cluster.proxmox_cluster
-      gateway      = var.cluster.gateway
-      ip           = each.value.ip
-      cidr         = 25
-    })
-  ]
+    ] : concat([
+      templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
+        hostname     = each.key
+        node_name    = each.value.host_node
+        cluster_name = var.cluster.proxmox_cluster
+        gateway      = var.cluster.gateway
+        ip           = each.value.ip
+        cidr         = 25
+      })
+    ],
+    # Talos 1.14 workload isolation (CRI, kubelet and pods in the sandboxd
+    # namespace). Rolled out per node; takes effect after a reboot.
+    contains(local.workload_isolation_nodes, each.key) ? [yamlencode({
+      apiVersion        = "v1alpha1"
+      kind              = "SecurityProfileConfig"
+      workloadIsolation = true
+    })] : [],
+  )
+}
+
+locals {
+  # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
+  # replica rebuild work under isolation.
+  workload_isolation_nodes = ["prd-w-01"]
 }
 
 resource "talos_machine_configuration_apply" "this" {

@@ -93,14 +93,20 @@ spec:
   # Liveness: tolerate a slow API server. All VMs share one Proxmox host; when
   # it saturates, etcd/API latency spikes past the default 1s isolation-check
   # timeouts and the kubelet kills a healthy primary, forcing a failover.
+  # A Talos worker upgrade on 2026-10-26 stalled etcd for ~70s (slow fdatasync
+  # on the shared NVMe), so allow ~3 minutes of failed checks before a restart.
   probes:
     liveness:
       timeoutSeconds: 10
-      failureThreshold: 6
+      failureThreshold: 18
       isolationCheck:
         enabled: true
         connectionTimeout: 5000
         requestTimeout: 5000
+
+  # Smart shutdown waits for every client (pooler, apps) to disconnect. Keep it
+  # short so a restarting primary moves on to a fast shutdown instead of hanging.
+  smartShutdownTimeout: 15
 
   # Affinity - prefer different nodes for replicas
   affinity:

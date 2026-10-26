@@ -65,6 +65,10 @@ locals {
       # Mark node for upgrade if it's in the upgrade list
       update = contains(var.nodes_to_upgrade, name)
 
+      # prd-cp-03 has a serial0 socket added outside tofu; keep it so tofu does not
+      # remove the device and restart the VM.
+      serial_console = contains(["prd-cp-03"], name)
+
       hostname = format(
         "%s-%s-%02d",
         var.env,

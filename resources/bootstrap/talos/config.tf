@@ -1,6 +1,13 @@
 # tofu/talos/talos-config.tf
 resource "talos_machine_secrets" "this" {
   talos_version = var.cluster.talos_version
+
+  # The secrets bundle (CAs, cluster ID, tokens) is generated once at bootstrap.
+  # With provider 0.12 a talos_version bump re-plans every cert and key as
+  # "known after apply", which would rotate the whole PKI on a live cluster.
+  lifecycle {
+    ignore_changes = [talos_version]
+  }
 }
 
 data "talos_client_configuration" "this" {

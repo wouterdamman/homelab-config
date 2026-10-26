@@ -59,6 +59,15 @@ resource "proxmox_virtual_environment_vm" "this" {
     }
   }
 
+  # Serial console (socket), e.g. for `qm terminal`. Per node, because adding
+  # or removing the device needs a VM restart.
+  dynamic "serial_device" {
+    for_each = each.value.serial_console ? [1] : []
+    content {
+      device = "socket"
+    }
+  }
+
   boot_order = ["scsi0"]
 
   operating_system {

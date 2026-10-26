@@ -48,7 +48,11 @@ This Terraform/OpenTofu workspace manages Proxmox infrastructure components that
 - **AutomationRole**: `automation@pve` (OpenTofu token) for VMs, disks and storage
 - **TerraformVMRole**: `automation@pve` on `/vms`, adds clone and migrate
 - **MonitoringRole**: `monitoring@pve`, read-only for prometheus-pve-exporter
-- ACLs (role assignments per path) are still managed by hand with `pveum acl`
+
+### Proxmox ACLs (`acls.tf`)
+- Role assignments per path for `wouter@authentik`, `automation@pve` and `monitoring@pve`
+- `prevent_destroy` on every ACL. To remove one, delete its entry from `local.acls`
+- `automation@pve` still has `PVEAdmin` on `/` (to be removed with the token rotation)
 
 ## Usage
 

@@ -49,13 +49,13 @@ resource "proxmox_virtual_environment_container" "qdevice" {
     dns {
       servers = [
         "${var.cluster_cidr}.1", # UniFi Gateway
-        "1.1.1.1"                 # Cloudflare
+        "1.1.1.1"                # Cloudflare
       ]
     }
 
     ip_config {
       ipv4 {
-        address = "${var.cluster_cidr}.202/24"
+        address = "${var.cluster_cidr}.202/25"
         gateway = var.cluster_gateway
       }
     }

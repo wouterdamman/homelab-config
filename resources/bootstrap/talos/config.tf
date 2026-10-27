@@ -42,6 +42,7 @@ data "talos_machine_configuration" "this" {
       gateway             = var.cluster.gateway
       ip                  = each.value.ip
       cidr                = 25
+      workload_isolation  = contains(local.workload_isolation_nodes, each.key)
     })
     ] : concat([
       templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
@@ -77,9 +78,10 @@ locals {
 
   kubernetes_version = "1.37.0"
 
-  # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
-  # replica rebuild work under isolation.
-  workload_isolation_nodes = ["prd-w-01"]
+  # Workload isolation per node; takes effect after a reboot. Validated on
+  # prd-w-01 on 2026-10-26 (Longhorn iSCSI attach/detach and replica rebuild),
+  # enabled on all nodes on 2026-10-27.
+  workload_isolation_nodes = ["prd-cp-01", "prd-cp-02", "prd-cp-03", "prd-w-01", "prd-w-02", "prd-w-03"]
 
 }
 

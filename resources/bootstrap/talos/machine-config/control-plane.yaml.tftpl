@@ -71,7 +71,7 @@ mount:
 ---
 apiVersion: v1alpha1
 kind: SecurityProfileConfig
-workloadIsolation: false
+workloadIsolation: ${workload_isolation}
 ---
 # Gateway API CRDs, standard channel only: since v1.5 the safe-upgrades
 # ValidatingAdmissionPolicy rejects experimental CRDs on top of standard ones,

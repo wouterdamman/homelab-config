@@ -247,7 +247,7 @@ kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
 
 - **etcd ports**: Talos 1.14 moves the etcd HTTP endpoints (`/metrics`, `/health`) from 2379 to 2383. We set `listen-metrics-urls: http://0.0.0.0:2381` explicitly in `control-plane.yaml.tftpl`, so the kube-prometheus-stack `kubeEtcd` scrape on 2381 is unaffected.
 - **Filesystem trim**: clusters upgraded from older versions have no `FilesystemTrimConfig` document, so trim is off until added. Both machine-config templates carry a weekly `FilesystemTrimConfig`. VM disks have `discard = "on"`, so trimmed blocks return to Proxmox storage.
-- **Workload isolation** (`SecurityProfileConfig`, `workloadIsolation: true`): default for new clusters only; upgraded clusters stay non-isolated. `sandboxd` always runs, but the runtime only moves into it after a reboot ("applied without a reboot" is misleading). Enabled per node via `local.workload_isolation_nodes` in `talos/config.tf`; prd-w-01 since 2026-10-26, where Longhorn iSCSI attach/detach and replica rebuild were verified. Check a node with `talosctl -n <ip> read /proc/<kubelet-pid>/status | grep NSpid`: two values means kubelet runs inside the sandbox.
+- **Workload isolation** (`SecurityProfileConfig`, `workloadIsolation: true`): default for new clusters only; upgraded clusters stay non-isolated. `sandboxd` always runs, but the runtime only moves into it after a reboot ("applied without a reboot" is misleading). Enabled per node via `local.workload_isolation_nodes` in `talos/config.tf`; prd-w-01 since 2026-10-26, where Longhorn iSCSI attach/detach and replica rebuild were verified; all nodes since 2026-10-27. Check a node with `talosctl -n <ip> read /proc/<kubelet-pid>/status | grep NSpid`: two values means kubelet runs inside the sandbox.
 - **`apply-config --mode=reboot` removed**: use `talosctl reboot` explicitly.
 - **Installer image**: `ghcr.io/siderolabs/installer` is no longer published. The upgrade script already uses the Image Factory installer.
 - **Gateway API extraManifests**: `talosctl upgrade-k8s` re-applies the machine config `extraManifests`. The cluster runs the Gateway API standard channel, and its `safe-upgrades` ValidatingAdmissionPolicy rejects experimental CRDs on top, so all Gateway API URLs in `control-plane.yaml.tftpl` use `config/crd/standard/`. Run `tofu apply` before `upgrade-k8s` so the nodes carry the current URLs, otherwise old CRD versions get applied.
@@ -269,7 +269,7 @@ talosctl validate --mode metal --strict -c /tmp/out/controlplane.yaml
 talosctl -n <ip> apply-config --file /tmp/out/controlplane.yaml --dry-run
 ```
 
-Behaviour that changes with contract v1.14 on the control planes: anonymous apiserver access is allowed for `/livez`, `/readyz` and `/healthz` only (it was `--anonymous-auth=false`). `VolumeConfig EPHEMERAL` is pinned to `secure: false` and `SecurityProfileConfig` to `workloadIsolation: false`, to keep the earlier behaviour.
+Behaviour that changes with contract v1.14 on the control planes: anonymous apiserver access is allowed for `/livez`, `/readyz` and `/healthz` only (it was `--anonymous-auth=false`). `VolumeConfig EPHEMERAL` is pinned to `secure: false` and `SecurityProfileConfig` is set per node from `local.workload_isolation_nodes` (now `true` on all nodes).
 
 ## Longhorn Disk Migration (user volume)
 

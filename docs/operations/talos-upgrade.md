@@ -252,6 +252,25 @@ kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
 - **Installer image**: `ghcr.io/siderolabs/installer` is no longer published. The upgrade script already uses the Image Factory installer.
 - **Gateway API extraManifests**: `talosctl upgrade-k8s` re-applies the machine config `extraManifests`. The cluster runs the Gateway API standard channel, and its `safe-upgrades` ValidatingAdmissionPolicy rejects experimental CRDs on top, so all Gateway API URLs in `control-plane.yaml.tftpl` use `config/crd/standard/`. Run `tofu apply` before `upgrade-k8s` so the nodes carry the current URLs, otherwise old CRD versions get applied.
 
+## Machine Config Contract (multi-document Kube* configs)
+
+`local.config_contract` in `talos/config.tf` sets the contract per node type:
+
+- **Control planes: v1.14.** Kubernetes settings live in `KubeletConfig`, `KubeNodeConfig`, `KubeControllerManagerConfig`, `KubeSchedulerConfig`, `KubeProxyConfig` (disabled), `KubeExternalManifestConfig` and `KubeInlineManifestConfig`. The generated `KubeFlannelCNIConfig` is removed with `$patch: delete`. Only `machine.network` and `cluster.etcd` stay in v1alpha1.
+- **Workers: v1.13.** With v1.14, `machine.kubelet.extraMounts` is rejected ("kubelet config is already set in v1alpha1 config"), and the Longhorn bind mount on `/var/lib/longhorn` still needs it. Workers move once Longhorn runs on a `UserVolumeConfig` under `/var/mnt` (which the kubelet already sees).
+
+Before applying a contract or template change, render and dry-run it on the node (read-only):
+
+```bash
+talosctl gen secrets --from-controlplane-config output/talos-machine-config-prd-cp-01.yaml -o /tmp/secrets.yaml
+talosctl gen config talos-prd https://10.0.10.130:6443 --with-secrets /tmp/secrets.yaml \
+  --talos-version v1.14 --kubernetes-version 1.37.0 --config-patch-control-plane @patch.yaml -o /tmp/out
+talosctl validate --mode metal --strict -c /tmp/out/controlplane.yaml
+talosctl -n <ip> apply-config --file /tmp/out/controlplane.yaml --dry-run
+```
+
+Behaviour that changes with contract v1.14 on the control planes: anonymous apiserver access is allowed for `/livez`, `/readyz` and `/healthz` only (it was `--anonymous-auth=false`). `VolumeConfig EPHEMERAL` is pinned to `secure: false` and `SecurityProfileConfig` to `workloadIsolation: false`, to keep the earlier behaviour.
+
 ## Lessons from the 1.13 → 1.14 upgrade (2026-10-26)
 
 - **etcd shares a disk with every VM.** All OS disks, etcd included, are raw files on one consumer NVMe on pve-01. A node reboot stalled etcd `fdatasync` for 1-6s. On the first worker this caused an etcd leader election and API timeouts, and the CNPG primaries shut themselves down (liveness isolation check). PR #579 made CNPG tolerate ~3 minutes; a Proxmox `mbps_wr` throttle on the rebooting VM did not help.

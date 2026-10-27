@@ -1,18 +1,11 @@
 # tofu/talos/machine-config/control-plane.yaml.tftpl
+#
+# Generated with machine config contract v1.14 (see local.config_contract in
+# config.tf). Kubernetes settings live in the multi-document Kube* configs;
+# only networking and etcd stay in v1alpha1, which Talos 1.14 still accepts.
 
 machine:
   type: controlplane
-  kubelet:
-    extraArgs:
-      rotate-server-certificates: true
-    extraMounts:
-      - destination: /var/lib/longhorn
-        type: bind
-        source: /var/lib/longhorn
-        options:
-          - bind
-          - rshared
-          - rw
   network:
     interfaces:
     - deviceSelector:
@@ -25,52 +18,114 @@ machine:
       dhcp: false
       vip:
         ip: ${vip}
-  nodeLabels:
-    topology.kubernetes.io/region: ${cluster_name}
-    topology.kubernetes.io/zone: ${node_name}
 
 cluster:
-  allowSchedulingOnControlPlanes: false
   etcd:
     extraArgs:
       listen-metrics-urls: http://0.0.0.0:2381
-  controllerManager:
-    extraArgs:
-      bind-address: "0.0.0.0"
-  scheduler:
-    extraArgs:
-      bind-address: "0.0.0.0"
-  network:
-    cni:
-      name: none
-  proxy:
-    disabled: true
-  # Gateway API CRDs, standard channel only: since v1.5 the safe-upgrades
-  # ValidatingAdmissionPolicy rejects experimental CRDs on top of standard ones,
-  # which breaks `talosctl upgrade-k8s` manifest sync.
-  extraManifests:
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
-  - https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_tlsroutes.yaml
-  - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml
-  inlineManifests:
-  - name: cilium-values
-    contents: |
-      ---
-      apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: cilium-values
-        namespace: kube-system
-      data:
-        values.yaml: |-
-          ${indent(10, cilium_values)}
-  - name: cilium-bootstrap
-    contents: |
-      ${indent(6, cilium_install)}
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+extraArgs:
+  rotate-server-certificates: "true"
+---
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+# The generated document already carries the control-plane role labels and
+# the NoSchedule taint (formerly allowSchedulingOnControlPlanes: false).
+labels:
+  topology.kubernetes.io/region: ${cluster_name}
+  topology.kubernetes.io/zone: ${node_name}
+---
+apiVersion: v1alpha1
+kind: KubeControllerManagerConfig
+extraArgs:
+  bind-address: "0.0.0.0"
+---
+apiVersion: v1alpha1
+kind: KubeSchedulerConfig
+extraArgs:
+  bind-address: "0.0.0.0"
+---
+# Cilium replaces kube-proxy.
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
+---
+# Cilium is the CNI (installed by the cilium-bootstrap inline manifest, then
+# managed by ArgoCD), so drop the generated Flannel config.
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete
+---
+# Keep /var mounted without nosuid/nodev, as before contract v1.14.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+mount:
+  secure: false
+---
+apiVersion: v1alpha1
+kind: SecurityProfileConfig
+workloadIsolation: false
+---
+# Gateway API CRDs, standard channel only: since v1.5 the safe-upgrades
+# ValidatingAdmissionPolicy rejects experimental CRDs on top of standard ones,
+# which breaks `talosctl upgrade-k8s` manifest sync.
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-gatewayclasses
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-gateways
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-httproutes
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-referencegrants
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-grpcroutes
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: gateway-api-tlsroutes
+url: https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/${gateway_api_version}/config/crd/standard/gateway.networking.k8s.io_tlsroutes.yaml
+---
+apiVersion: v1alpha1
+kind: KubeExternalManifestConfig
+name: metrics-server
+url: https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.8.1/components.yaml
+---
+apiVersion: v1alpha1
+kind: KubeInlineManifestConfig
+name: cilium-values
+manifest: |
+  ---
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cilium-values
+    namespace: kube-system
+  data:
+    values.yaml: |-
+      ${indent(6, cilium_values)}
+---
+apiVersion: v1alpha1
+kind: KubeInlineManifestConfig
+name: cilium-bootstrap
+manifest: |
+  ${indent(2, cilium_install)}
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig

@@ -21,7 +21,7 @@ data "talos_machine_configuration" "this" {
   for_each         = var.nodes
   cluster_name     = var.cluster.name
   cluster_endpoint = "https://${var.cluster.endpoint}:6443"
-  talos_version    = local.config_contract
+  talos_version    = local.config_contract[each.value.machine_type]
   # Pin Kubernetes explicitly. Without it the provider uses its own default, so
   # a provider bump silently upgrades the whole cluster on the next apply
   # (talos provider 0.12 moved it from 1.36 to 1.37.0 on 2026-10-26).
@@ -64,12 +64,16 @@ data "talos_machine_configuration" "this" {
 }
 
 locals {
-  # Machine config contract, kept at the version the patches are written for.
-  # With contract v1.14 the provider generates KubeNetworkConfig, KubeProxyConfig
-  # and other new documents, and nodes reject them next to the v1alpha1 fields
-  # our templates set (.cluster.network, .machine.kubelet, ...). Talos 1.14 nodes
-  # accept v1.13-contract configs; bump this only after migrating the templates.
-  config_contract = "v1.13"
+  # Machine config contract per node type. With contract v1.14 the provider
+  # generates the multi-document Kube* configs, so the templates must not set
+  # the matching v1alpha1 fields (.machine.kubelet, .cluster.network, ...).
+  # Control planes use v1.14. Workers stay on v1.13 until Longhorn moves to a
+  # UserVolumeConfig under /var/mnt: v1.14 rejects machine.kubelet.extraMounts,
+  # which the /var/lib/longhorn bind mount still needs.
+  config_contract = {
+    controlplane = "v1.14"
+    worker       = "v1.13"
+  }
 
   kubernetes_version = "1.37.0"
 

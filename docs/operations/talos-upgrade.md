@@ -257,7 +257,7 @@ kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
 `local.config_contract` in `talos/config.tf` sets the contract per node type:
 
 - **Control planes: v1.14.** Kubernetes settings live in `KubeletConfig`, `KubeNodeConfig`, `KubeControllerManagerConfig`, `KubeSchedulerConfig`, `KubeProxyConfig` (disabled), `KubeExternalManifestConfig` and `KubeInlineManifestConfig`. The generated `KubeFlannelCNIConfig` is removed with `$patch: delete`. Only `machine.network` and `cluster.etcd` stay in v1alpha1.
-- **Workers: v1.13.** With v1.14, `machine.kubelet.extraMounts` is rejected ("kubelet config is already set in v1alpha1 config"), and the Longhorn bind mount on `/var/lib/longhorn` still needs it. Workers move once Longhorn runs on a `UserVolumeConfig` under `/var/mnt` (which the kubelet already sees).
+- **Workers: v1.13.** With v1.14, `machine.kubelet.extraMounts` is rejected ("kubelet config is already set in v1alpha1 config"). Since 2026-10-27 Longhorn runs on the Talos user volume `longhorn` (`/dev/sdb`, mounted at `/var/mnt/longhorn`, which the kubelet sees without extra mounts), so workers can now move to v1.14 as well.
 
 Before applying a contract or template change, render and dry-run it on the node (read-only):
 
@@ -270,6 +270,16 @@ talosctl -n <ip> apply-config --file /tmp/out/controlplane.yaml --dry-run
 ```
 
 Behaviour that changes with contract v1.14 on the control planes: anonymous apiserver access is allowed for `/livez`, `/readyz` and `/healthz` only (it was `--anonymous-auth=false`). `VolumeConfig EPHEMERAL` is pinned to `secure: false` and `SecurityProfileConfig` to `workloadIsolation: false`, to keep the earlier behaviour.
+
+## Longhorn Disk Migration (user volume)
+
+How a worker's Longhorn disk moved from `machine.disks` on `/var/lib/longhorn` to the `UserVolumeConfig` `longhorn` on `/var/mnt/longhorn` (2026-10-27). The same steps apply when rebuilding a worker disk:
+
+1. Longhorn: on the node disk, set `allowScheduling: false` and `evictionRequested: true`. Wait until no replicas remain on the node. Lower 3-replica volumes to 2 first (only 3 workers, hard anti-affinity). Strict-local volumes (Loki, Prometheus) cannot move: cordon the node, delete their PVCs and pods, and they come back empty elsewhere.
+2. Delete leftover "ghost" replica CRs (no node, disk or data directory) once the volume has enough running replicas. Longhorn 1.13 leaves them behind after evictions.
+3. Drain the node, add it to `local.longhorn_uservolume_nodes`, then plan and apply only that node.
+4. Reboot (the old mount stays active until then), then `talosctl -n <ip> wipe disk sdb --drop-partition`. Talos provisions and mounts `/var/mnt/longhorn`.
+5. Longhorn node: replace the `default-disk` (`/var/lib/longhorn/`) with a disk at `/var/mnt/longhorn`, then uncordon.
 
 ## Lessons from the 1.13 → 1.14 upgrade (2026-10-26)
 

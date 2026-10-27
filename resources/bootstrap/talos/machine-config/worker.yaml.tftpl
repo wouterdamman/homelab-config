@@ -1,11 +1,9 @@
 # tofu/talos/machine-config/worker.yaml.tftpl
 machine:
   type: worker
-  # Disk mount configuration for Longhorn storage
-  disks:
-    - device: /dev/sdb
-      partitions:
-        - mountpoint: /var/lib/longhorn
+  # Longhorn storage on /dev/sdb is added per node in config.tf: either the
+  # legacy machine.disks mount on /var/lib/longhorn or a UserVolumeConfig on
+  # /var/mnt/longhorn (local.longhorn_uservolume_nodes).
   kubelet:
     extraArgs:
       rotate-server-certificates: true
@@ -16,14 +14,6 @@ machine:
     extraConfig:
       imageGCHighThresholdPercent: 70
       imageGCLowThresholdPercent: 60
-    extraMounts:
-      - destination: /var/lib/longhorn
-        type: bind
-        source: /var/lib/longhorn
-        options:
-          - bind
-          - rshared
-          - rw
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}

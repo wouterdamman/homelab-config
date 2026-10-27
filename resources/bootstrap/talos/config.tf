@@ -53,6 +53,33 @@ data "talos_machine_configuration" "this" {
         cidr         = 25
       })
     ],
+    # Longhorn disk. Migrated nodes use a Talos user volume on /dev/sdb,
+    # mounted at /var/mnt/longhorn (the kubelet sees /var/mnt by default).
+    # The others keep the legacy partition mount on /var/lib/longhorn, which
+    # needs a kubelet bind mount and blocks machine config contract v1.14.
+    contains(local.longhorn_uservolume_nodes, each.key) ? [yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "UserVolumeConfig"
+      name       = "longhorn"
+      provisioning = {
+        diskSelector = { match = "disk.dev_path == \"/dev/sdb\"" }
+        minSize      = "200GB"
+        grow         = true
+      }
+      filesystem = { type = "xfs" }
+      })] : [yamlencode({
+      machine = {
+        disks = [{ device = "/dev/sdb", partitions = [{ mountpoint = "/var/lib/longhorn" }] }]
+        kubelet = {
+          extraMounts = [{
+            destination = "/var/lib/longhorn"
+            type        = "bind"
+            source      = "/var/lib/longhorn"
+            options     = ["bind", "rshared", "rw"]
+          }]
+        }
+      }
+    })],
     # Talos 1.14 workload isolation (CRI, kubelet and pods in the sandboxd
     # namespace). Rolled out per node; takes effect after a reboot.
     contains(local.workload_isolation_nodes, each.key) ? [yamlencode({
@@ -80,6 +107,12 @@ locals {
   # Validated on prd-w-01 on 2026-10-26: Longhorn iSCSI attach/detach and
   # replica rebuild work under isolation.
   workload_isolation_nodes = ["prd-w-01"]
+
+  # Workers whose Longhorn disk moved to a UserVolumeConfig (phase 3 of the
+  # Talos multi-document migration). Migrate one node at a time: evict its
+  # Longhorn replicas, add it here, apply, wipe /dev/sdb, then switch the
+  # Longhorn disk path to /var/mnt/longhorn.
+  longhorn_uservolume_nodes = []
 }
 
 resource "talos_machine_configuration_apply" "this" {

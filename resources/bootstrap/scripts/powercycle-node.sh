@@ -72,7 +72,14 @@ wait_calm() {
   done
 }
 
+proxmox_ssh_ok() {
+  ssh -o BatchMode=yes -o ConnectTimeout=10 "$PROXMOX_HOST" true 2>/dev/null
+}
+
 log "== $NODE (ip $IP, vmid $VMID, control plane: $IS_CP, dry-run: $DRY_RUN)"
+# The VM can only be started again over ssh (qm start). With a locked
+# 1Password SSH agent a shutdown would leave the node down, so check first.
+proxmox_ssh_ok || die "no ssh access to $PROXMOX_HOST (1Password SSH agent locked?), not touching $NODE"
 log "pending Proxmox changes:"
 ssh -o BatchMode=yes "$PROXMOX_HOST" "qm pending $VMID" | grep -E '^(new|del)' || log "  none (power cycle will not change hardware)"
 
@@ -88,12 +95,19 @@ if $IS_CP; then
   fi
 fi
 
+proxmox_ssh_ok || die "lost ssh access to $PROXMOX_HOST while waiting, not touching $NODE"
+
 log "cordon + drain $NODE"
 run kubectl cordon "$NODE"
 # Longhorn keeps instance-managers of strict-local volumes behind a PDB; the
 # drain then times out, which is expected. The shutdown stops them anyway.
 run kubectl drain "$NODE" --ignore-daemonsets --delete-emptydir-data \
   --grace-period=120 --timeout=10m || log "drain did not finish cleanly, continuing"
+
+if ! proxmox_ssh_ok; then
+  run kubectl uncordon "$NODE"
+  die "lost ssh access to $PROXMOX_HOST after the drain; uncordoned $NODE, not shutting it down"
+fi
 
 log "shutting down $NODE"
 run talosctl -n "$IP" shutdown --wait=false

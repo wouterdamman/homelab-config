@@ -112,7 +112,7 @@ locals {
   # Talos multi-document migration). Migrate one node at a time: evict its
   # Longhorn replicas, add it here, apply, wipe /dev/sdb, then switch the
   # Longhorn disk path to /var/mnt/longhorn.
-  longhorn_uservolume_nodes = []
+  longhorn_uservolume_nodes = ["prd-w-02", "prd-w-03"]
 }
 
 resource "talos_machine_configuration_apply" "this" {

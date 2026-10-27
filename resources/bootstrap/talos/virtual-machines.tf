@@ -35,7 +35,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   disk {
     datastore_id = each.value.datastore_id
     interface    = "scsi0"
-    iothread     = false
+    iothread     = true
     cache        = "none"
     discard      = "on"
     ssd          = false
@@ -50,7 +50,7 @@ resource "proxmox_virtual_environment_vm" "this" {
     content {
       datastore_id = "storage"
       interface    = "scsi1"
-      iothread     = false
+      iothread     = true
       cache        = "none"
       discard      = "on"
       ssd          = false
@@ -73,6 +73,11 @@ resource "proxmox_virtual_environment_vm" "this" {
   operating_system {
     type = "l26" # Linux Kernel 2.6 - 6.X.
   }
+
+  # Stage hardware changes (RAM, iothread) instead of letting the provider
+  # reboot VMs on apply. Roll them out node by node with a drain and a power
+  # cycle; see docs/operations/talos-upgrade.md.
+  reboot_after_update = false
 
   lifecycle {
     ignore_changes = [

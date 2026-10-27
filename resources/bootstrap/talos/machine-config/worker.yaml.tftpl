@@ -1,22 +1,48 @@
 # tofu/talos/machine-config/worker.yaml.tftpl
+#
+# Generated with machine config contract v1.14 (see local.config_contract in
+# config.tf): Kubernetes, network and storage settings live in multi-document
+# configs. Workload isolation is set per node in config.tf.
 machine:
   type: worker
-  # Longhorn storage on /dev/sdb is added per node in config.tf: either the
-  # legacy machine.disks mount on /var/lib/longhorn or a UserVolumeConfig on
-  # /var/mnt/longhorn (local.longhorn_uservolume_nodes).
-  kubelet:
-    extraArgs:
-      rotate-server-certificates: true
-    # Start image GC well before the imagefs eviction threshold (85% used).
-    # With the default high threshold of 85 both trigger together: the node
-    # gets DiskPressure while GC slowly deletes hundreds of old images
-    # (prd-w-03 on 2026-10-27: 531 images / 57 GB over 26 minutes).
-    extraConfig:
-      imageGCHighThresholdPercent: 70
-      imageGCLowThresholdPercent: 60
-  nodeLabels:
-    topology.kubernetes.io/region: ${cluster_name}
-    topology.kubernetes.io/zone: ${node_name}
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+extraArgs:
+  rotate-server-certificates: "true"
+config:
+  # Start image GC well before the imagefs eviction threshold (85% used).
+  # With the default high threshold of 85 both trigger together: the node
+  # gets DiskPressure while GC slowly deletes hundreds of old images
+  # (prd-w-03 on 2026-10-27: 531 images / 57 GB over 26 minutes).
+  imageGCHighThresholdPercent: 70
+  imageGCLowThresholdPercent: 60
+---
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  topology.kubernetes.io/region: ${cluster_name}
+  topology.kubernetes.io/zone: ${node_name}
+---
+# Longhorn data disk: /dev/sdb as a Talos user volume on /var/mnt/longhorn.
+# The kubelet sees /var/mnt without extra mounts.
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: longhorn
+provisioning:
+  diskSelector:
+    match: disk.dev_path == "/dev/sdb"
+  minSize: 200GB
+  grow: true
+filesystem:
+  type: xfs
+---
+# Keep /var mounted without nosuid/nodev, as before contract v1.14.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+mount:
+  secure: false
 ---
 # Static address on the single virtio NIC (ens18 on every VM); no DHCP because
 # no DHCPv4Config document exists. Route without destination = default route.

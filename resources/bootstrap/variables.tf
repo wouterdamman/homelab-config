@@ -178,10 +178,14 @@ variable "controlplane_specs" {
     disk = number
   })
   description = "Hardware specs for control plane nodes (CPU cores, RAM in MB, disk in GB)"
+  # Production sizing (all six VMs share pve-01, 62 GB RAM). Kept here instead
+  # of the gitignored tfvars so changes go through review. CPs went 5 -> 7 GB
+  # and workers 12 -> 11 GB on 2026-10-27: etcd and the apiserver used 88-89% of
+  # 5 GB, and the host must keep ~9 GB free.
   default = {
-    cpu  = 4
-    ram  = 8192
-    disk = 250
+    cpu  = 2
+    ram  = 7168
+    disk = 60
   }
 }
 
@@ -194,8 +198,8 @@ variable "worker_specs" {
   })
   description = "Hardware specs for worker nodes (CPU cores, RAM in MB, disk in GB, secondary_disk for Longhorn in GB)"
   default = {
-    cpu            = 2
-    ram            = 4096
+    cpu            = 3
+    ram            = 11264
     disk           = 250
     secondary_disk = 268
   }

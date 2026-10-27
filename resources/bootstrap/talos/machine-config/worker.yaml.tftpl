@@ -9,6 +9,13 @@ machine:
   kubelet:
     extraArgs:
       rotate-server-certificates: true
+    # Start image GC well before the imagefs eviction threshold (85% used).
+    # With the default high threshold of 85 both trigger together: the node
+    # gets DiskPressure while GC slowly deletes hundreds of old images
+    # (prd-w-03 on 2026-10-27: 531 images / 57 GB over 26 minutes).
+    extraConfig:
+      imageGCHighThresholdPercent: 70
+      imageGCLowThresholdPercent: 60
     extraMounts:
       - destination: /var/lib/longhorn
         type: bind

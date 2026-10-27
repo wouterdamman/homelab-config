@@ -266,6 +266,18 @@ kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
 - **Strict-local volumes** (`longhorn-monitoring`) cannot move. Loki and Prometheus are down while their node reboots.
 - **Use the VIP.** The kubeconfig now points at `10.0.10.140`; with `10.0.10.130` kubectl fails while prd-cp-01 reboots.
 
+## Hardware Changes (RAM, iothread, devices)
+
+`reboot_after_update = false` on the VMs: `tofu apply` only stages hardware changes in Proxmox (`qm pending <vmid>`). A guest reboot does not apply them, because the QEMU process stays the same. Roll them out node by node:
+
+```bash
+cd resources/bootstrap
+./scripts/powercycle-node.sh prd-w-01 --dry-run
+./scripts/powercycle-node.sh prd-w-01
+```
+
+The script waits until the cluster is calm (5 minutes without etcd warnings, etcd 3/3, CNPG and Longhorn healthy, all nodes Ready). It then moves etcd leadership away if needed, drains, runs `talosctl shutdown` and `qm start`, waits for Ready (and etcd 3/3 on control planes), and uncordons. Order: workers, then control planes, with the etcd leader last.
+
 ## Rollback
 
 ### Automatic Rollback

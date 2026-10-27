@@ -178,6 +178,11 @@ grafana:
     storageClassName: longhorn-standard
     size: 5Gi
 
+  # RWO volume: a rolling update deadlocks (the new pod waits for the volume
+  # the old pod still holds), so stop the old pod first.
+  deploymentStrategy:
+    type: Recreate
+
   # Resources
   resources:
     requests:

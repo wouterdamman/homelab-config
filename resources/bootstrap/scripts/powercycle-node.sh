@@ -18,8 +18,11 @@ export TALOSCONFIG="${SCRIPT_DIR}/../output/talos-config.yaml"
 export KUBECONFIG="${SCRIPT_DIR}/../output/kube-config.yaml"
 
 PROXMOX_HOST="root@10.0.10.200"
+# Optional ssh jump host, e.g. PROXMOX_JUMP=root@10.0.10.201 when pve-01 port 22
+# is not reachable directly.
+PROXMOX_JUMP="${PROXMOX_JUMP:-}"
 CP_IPS="10.0.10.130,10.0.10.131,10.0.10.132"
-CALM_MINUTES=5
+CALM_MINUTES="${CALM_MINUTES:-5}"
 CALM_TIMEOUT_MIN=30
 
 NODE="${1:-}"
@@ -41,7 +44,9 @@ IS_CP=false
 [[ "$NODE" == prd-cp-* ]] && IS_CP=true
 
 etcd_members() {
-  talosctl -n "$CP_IPS" etcd status 2>/dev/null | awk 'NR>1' | wc -l | tr -d ' '
+  # Count only rows with a member ID; unreachable nodes must not count.
+  talosctl -n "$CP_IPS" etcd status 2>/dev/null \
+    | awk 'NR>1 && $2 ~ /^[0-9a-f]+$/ && length($2)==16' | wc -l | tr -d ' ' || true
 }
 
 etcd_warnings_since() {
@@ -72,8 +77,17 @@ wait_calm() {
   done
 }
 
+# One multiplexed connection for all Proxmox calls. The stop-wait loop polls
+# every 5s; a new connection per poll got port 22 dropped on the way to pve-01
+# mid-shutdown (2026-10-27), leaving the VM stopped.
+pve() {
+  ssh -o BatchMode=yes -o ConnectTimeout=10 \
+    -o ControlMaster=auto -o ControlPath="${TMPDIR:-/tmp}/pc-%r@%h:%p" -o ControlPersist=15m \
+    ${PROXMOX_JUMP:+-J "$PROXMOX_JUMP"} "$PROXMOX_HOST" "$@"
+}
+
 proxmox_ssh_ok() {
-  ssh -o BatchMode=yes -o ConnectTimeout=10 "$PROXMOX_HOST" true 2>/dev/null
+  pve true 2>/dev/null
 }
 
 log "== $NODE (ip $IP, vmid $VMID, control plane: $IS_CP, dry-run: $DRY_RUN)"
@@ -81,7 +95,7 @@ log "== $NODE (ip $IP, vmid $VMID, control plane: $IS_CP, dry-run: $DRY_RUN)"
 # 1Password SSH agent a shutdown would leave the node down, so check first.
 proxmox_ssh_ok || die "no ssh access to $PROXMOX_HOST (1Password SSH agent locked?), not touching $NODE"
 log "pending Proxmox changes:"
-ssh -o BatchMode=yes "$PROXMOX_HOST" "qm pending $VMID" | grep -E '^(new|del)' || log "  none (power cycle will not change hardware)"
+pve "qm pending $VMID" | grep -E '^(new|del)' || log "  none (power cycle will not change hardware)"
 
 wait_calm
 
@@ -113,7 +127,7 @@ log "shutting down $NODE"
 run talosctl -n "$IP" shutdown --wait=false
 if ! $DRY_RUN; then
   for _ in $(seq 1 60); do
-    st=$(ssh -o BatchMode=yes "$PROXMOX_HOST" "qm status $VMID" | awk '{print $2}')
+    st=$(pve "qm status $VMID" 2>/dev/null | awk '{print $2}' || true)
     [[ "$st" == "stopped" ]] && break
     sleep 5
   done
@@ -121,9 +135,16 @@ if ! $DRY_RUN; then
 fi
 
 log "starting VM $VMID"
-run ssh -o BatchMode=yes "$PROXMOX_HOST" "qm start $VMID"
+run pve "qm start $VMID"
 
 if ! $DRY_RUN; then
+  # The Node object still says Ready for a while after the shutdown, so wait
+  # for the rebooted kubelet on the node itself first.
+  log "waiting for kubelet on $NODE"
+  for _ in $(seq 1 90); do
+    talosctl -n "$IP" service kubelet 2>/dev/null | grep -qE "HEALTH +OK" && break
+    sleep 10
+  done
   log "waiting for $NODE to become Ready"
   for _ in $(seq 1 90); do
     kubectl get node "$NODE" --no-headers 2>/dev/null | grep -q " Ready" && break
@@ -139,6 +160,6 @@ fi
 log "uncordon $NODE"
 run kubectl uncordon "$NODE"
 
-left=$(ssh -o BatchMode=yes "$PROXMOX_HOST" "qm pending $VMID" | grep -cE '^(new|del)' || true)
+left=$(pve "qm pending $VMID" | grep -cE '^(new|del)' || true)
 log "pending Proxmox changes left on $VMID: $left"
 log "== $NODE done"

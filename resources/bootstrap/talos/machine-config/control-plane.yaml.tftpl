@@ -1,28 +1,32 @@
 # tofu/talos/machine-config/control-plane.yaml.tftpl
 #
 # Generated with machine config contract v1.14 (see local.config_contract in
-# config.tf). Kubernetes settings live in the multi-document Kube* configs;
-# only networking and etcd stay in v1alpha1, which Talos 1.14 still accepts.
+# config.tf). Kubernetes and network settings live in multi-document configs;
+# only etcd stays in v1alpha1, which Talos 1.14 still accepts.
 
 machine:
   type: controlplane
-  network:
-    interfaces:
-    - deviceSelector:
-        physical: true
-      addresses:
-      - ${ip}/${cidr}
-      routes:
-      - network: 0.0.0.0/0
-        gateway: ${gateway}
-      dhcp: false
-      vip:
-        ip: ${vip}
 
 cluster:
   etcd:
     extraArgs:
       listen-metrics-urls: http://0.0.0.0:2381
+---
+# Static address on the single virtio NIC (ens18 on every VM); no DHCP because
+# no DHCPv4Config document exists. Route without destination = default route.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ens18
+up: true
+addresses:
+  - address: ${ip}/${cidr}
+routes:
+  - gateway: ${gateway}
+---
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: ${vip}
+link: ens18
 ---
 apiVersion: v1alpha1
 kind: KubeletConfig

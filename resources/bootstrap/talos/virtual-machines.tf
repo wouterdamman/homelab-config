@@ -21,6 +21,12 @@ resource "proxmox_virtual_environment_vm" "this" {
   cpu {
     cores = each.value.cpu
     type  = "x86-64-v2-AES"
+    # cgroup v2 cpu.weight (default 100). pve-01 has 6 cores / 12 threads for
+    # 15 vCPUs. Normal load is ~4 cores, but during reboots and Longhorn
+    # rebuilds the workers peak at 3 cores each and etcd misses heartbeats.
+    # Give the control planes 4x the weight so etcd and the apiserver win
+    # under contention; idle CPU is still shared freely.
+    units = each.value.machine_type == "controlplane" ? 400 : 100
   }
 
   memory {

@@ -34,6 +34,22 @@ defaultSettings:
   # 2026-10-27); the kubelet sees /var/mnt without extra mounts.
   defaultDataPath: /var/mnt/longhorn
 
+# Requests so the scheduler and descheduler account for Longhorn's own pods
+# (sized from kubectl top on 2026-10-27). No limits: throttling or OOM-killing
+# the manager stalls volume operations. Instance managers, CSI sidecars and the
+# UI have no resources knob in the chart.
+longhornManager:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 192Mi
+
+longhornGlobalManager:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
 # Prometheus metrics
 metrics:
   serviceMonitor:

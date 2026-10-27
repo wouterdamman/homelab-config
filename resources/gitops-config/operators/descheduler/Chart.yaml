@@ -1,0 +1,5 @@
+apiVersion: v2
+name: descheduler
+description: Descheduler - rebalances pods after node reboots (local templates; upstream chart deployed via dual-source)
+type: application
+version: 1.0.0

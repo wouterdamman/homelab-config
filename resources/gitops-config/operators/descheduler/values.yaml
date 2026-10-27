@@ -1,0 +1,73 @@
+# Descheduler: moves pods off busy nodes after a reboot or upgrade, so the
+# scheduler can place them on the emptied node. It only evicts (through the
+# eviction API, so PDBs apply); the default scheduler picks the new node.
+
+# Long-running Deployment instead of the chart's 2-minute CronJob.
+kind: Deployment
+deschedulingInterval: 30m
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+# PSS restricted
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+deschedulerPolicy:
+  # Per run, so a rebalance happens in small steps.
+  maxNoOfPodsToEvictPerNode: 2
+  maxNoOfPodsToEvictTotal: 5
+  profiles:
+    - name: default
+      pluginConfig:
+        - name: DefaultEvictor
+          args:
+            # Only evict a pod when another node can actually take it.
+            nodeFit: true
+            # Pods with a PVC (Home Assistant, CNPG, emqx, zigbee2mqtt,
+            # lucidvault, Grafana, Loki, Prometheus) stay put.
+            podProtections:
+              # emptyDir is scratch space (tmp dirs for read-only root
+              # filesystems); losing it on a move is fine.
+              defaultDisabled:
+                - PodsWithLocalStorage
+              extraEnabled:
+                - PodsWithPVC
+        - name: RemoveDuplicates
+          args:
+            namespaces: &excluded
+              exclude:
+                - kube-system
+                - longhorn-system
+                - cnpg-system
+                - home-assistant
+                - emqx
+                - zigbee2mqtt
+                - home-finance
+        - name: RemovePodsViolatingTopologySpreadConstraint
+          args:
+            namespaces: *excluded
+        # Percentages of allocatable, based on pod requests (like the scheduler).
+        # Underutilized: below all thresholds. Overutilized: above any target.
+        - name: LowNodeUtilization
+          args:
+            thresholds:
+              cpu: 35
+              memory: 25
+              pods: 25
+            targetThresholds:
+              cpu: 55
+              memory: 45
+              pods: 40
+            evictableNamespaces: *excluded
+      plugins:
+        balance:
+          enabled:
+            - RemoveDuplicates
+            - RemovePodsViolatingTopologySpreadConstraint
+            - LowNodeUtilization

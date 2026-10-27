@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: descheduler
+    app.kubernetes.io/component: scheduling
+    app.kubernetes.io/part-of: homelab-infrastructure
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
+  name: descheduler
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://kubernetes-sigs.github.io/descheduler
+    chart: descheduler
+    targetRevision: 0.37.0
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/descheduler/values.yaml
+  - repoURL: 'https://github.com/wouterdamman/homelab-config'
+    path: resources/gitops-config/operators/descheduler
+    targetRevision: HEAD
+    ref: values
+  destination:
+    namespace: descheduler
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

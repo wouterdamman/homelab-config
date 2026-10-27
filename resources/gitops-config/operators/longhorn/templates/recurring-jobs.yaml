@@ -1,4 +1,9 @@
 ---
+# Jobs only run for volumes in their groups. Volumes join a group through the
+# StorageClass recurringJobSelector (new volumes) or the Longhorn volume label
+# recurring-job-group.longhorn.io/<group>=enabled. Without groups no volume
+# was backed up from May to 2026-10-27.
+#
 # Fast Storage Tier - Hourly snapshots + Daily backups
 apiVersion: longhorn.io/v1beta2
 kind: RecurringJob
@@ -11,6 +16,8 @@ spec:
   cron: "0 * * * *"  # Every hour
   retain: 24         # Keep 24 hours
   concurrency: 2
+  groups:
+    - fast
   labels:
     tier: fast
 
@@ -26,6 +33,8 @@ spec:
   cron: "0 2 * * *"  # Daily at 02:00
   retain: 30         # Keep 30 days
   concurrency: 2
+  groups:
+    - fast
   labels:
     tier: fast
 
@@ -42,6 +51,8 @@ spec:
   cron: "0 3 * * *"  # Daily at 03:00
   retain: 7          # Keep 7 days
   concurrency: 2
+  groups:
+    - standard
   labels:
     tier: standard
 
@@ -57,6 +68,8 @@ spec:
   cron: "0 4 * * *"  # Daily at 04:00
   retain: 14         # Keep 14 days
   concurrency: 2
+  groups:
+    - standard
   labels:
     tier: standard
 
@@ -73,6 +86,8 @@ spec:
   cron: "0 5 * * 0"  # Weekly on Sunday at 05:00
   retain: 4          # Keep 4 weeks
   concurrency: 1
+  groups:
+    - archive
   labels:
     tier: archive
 
@@ -88,6 +103,8 @@ spec:
   cron: "0 6 * * 0"  # Weekly on Sunday at 06:00
   retain: 4          # Keep 4 weeks
   concurrency: 1
+  groups:
+    - archive
   labels:
     tier: archive
 
@@ -104,6 +121,10 @@ spec:
   cron: "0 1 1 * *"  # Monthly on 1st at 01:00
   retain: 12         # Keep 12 months
   concurrency: 1
+  groups:
+    - fast
+    - standard
+    - archive
   labels:
     tier: all
     purpose: dr

@@ -4,6 +4,9 @@ kind: StorageClass
 metadata:
   name: longhorn-fast
   annotations:
+    # StorageClass parameters are immutable; let ArgoCD recreate it on change.
+    # Existing PVs are not affected.
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
     storageclass.kubernetes.io/is-default-class: "false"
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
@@ -13,12 +16,16 @@ parameters:
   numberOfReplicas: "3"
   staleReplicaTimeout: "30"
   dataLocality: "best-effort"
+  recurringJobSelector: '[{"name":"fast","isGroup":true}]'
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: longhorn-standard
   annotations:
+    # StorageClass parameters are immutable; let ArgoCD recreate it on change.
+    # Existing PVs are not affected.
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
@@ -28,12 +35,16 @@ parameters:
   numberOfReplicas: "2"
   staleReplicaTimeout: "30"
   dataLocality: "best-effort"
+  recurringJobSelector: '[{"name":"standard","isGroup":true}]'
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: longhorn-archive
   annotations:
+    # StorageClass parameters are immutable; let ArgoCD recreate it on change.
+    # Existing PVs are not affected.
+    argocd.argoproj.io/sync-options: Replace=true,Force=true
     storageclass.kubernetes.io/is-default-class: "false"
 provisioner: driver.longhorn.io
 allowVolumeExpansion: true
@@ -43,6 +54,7 @@ parameters:
   numberOfReplicas: "1"
   staleReplicaTimeout: "30"
   dataLocality: "disabled"
+  recurringJobSelector: '[{"name":"archive","isGroup":true}]'
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass

@@ -240,6 +240,13 @@ grafana:
       searchNamespace: ALL
     datasources:
       enabled: true
+    # Applies to both the dashboards and datasources sidecar (~90Mi each).
+    resources:
+      requests:
+        cpu: 10m
+        memory: 96Mi
+      limits:
+        memory: 192Mi
 
 # Kubelet - disable probes endpoint, allowlist alleen essentiële cadvisor metrics
 # Reduceert series van ~275k naar geschatte ~60-80k
@@ -283,6 +290,23 @@ kube-state-metrics:
     limits:
       cpu: 100m
       memory: 128Mi
+
+# Prometheus Operator, plus the config-reloader sidecar it injects into
+# Prometheus and Alertmanager
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  prometheusConfigReloader:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+      limits:
+        memory: 64Mi
 
 # etcd metrics - Talos exposes etcd metrics on port 2381
 kubeEtcd:

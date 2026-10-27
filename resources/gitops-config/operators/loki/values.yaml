@@ -107,3 +107,12 @@ lokiCanary:
 # Test disabled
 test:
   enabled: false
+
+# Rules sidecar (loki-sc-rules, ~90Mi)
+sidecar:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 96Mi
+    limits:
+      memory: 192Mi

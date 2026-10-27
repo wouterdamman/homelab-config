@@ -24,19 +24,20 @@ machine:
           - bind
           - rshared
           - rw
-  network:
-    interfaces:
-    - deviceSelector:
-        physical: true
-      addresses:
-      - ${ip}/${cidr}
-      routes:
-      - network: 0.0.0.0/0
-        gateway: ${gateway}
-      dhcp: false
   nodeLabels:
     topology.kubernetes.io/region: ${cluster_name}
     topology.kubernetes.io/zone: ${node_name}
+---
+# Static address on the single virtio NIC (ens18 on every VM); no DHCP because
+# no DHCPv4Config document exists. Route without destination = default route.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ens18
+up: true
+addresses:
+  - address: ${ip}/${cidr}
+routes:
+  - gateway: ${gateway}
 ---
 apiVersion: v1alpha1
 kind: HostnameConfig

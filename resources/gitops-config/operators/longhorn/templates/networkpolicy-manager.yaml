@@ -107,6 +107,17 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Peer managers: API requests for a volume are forwarded to the manager on the
+  # node that owns it (snapshotBackup, attach, ...). Without this, every
+  # cross-node forward timed out and returned 502 (recurring backups failed for
+  # volumes attached on another node).
+  - toEndpoints:
+    - matchLabels:
+        app: longhorn-manager
+    toPorts:
+    - ports:
+      - port: "9500"
+        protocol: TCP
   # Manager control calls into share-manager's gRPC API (volume mount/unmount, status)
   - toEndpoints:
     - matchLabels:

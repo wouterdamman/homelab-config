@@ -6,8 +6,9 @@
 # recurring-job.longhorn.io/source label (see the CNPG Cluster manifests).
 #
 # Everything except the hourly snapshot runs at :30, so it never overlaps
-# with it, and backups run one volume at a time. All VMs share one NVMe on
-# pve-01; parallel backups at 02:00/04:00 caused etcd heartbeat warnings.
+# with it, and backups run one volume at a time. Everything runs on one
+# Proxmox host; parallel backups at 02:00/04:00 coincided with etcd heartbeat
+# warnings.
 #
 # Fast Storage Tier - Hourly snapshots + Daily backups
 apiVersion: longhorn.io/v1beta2

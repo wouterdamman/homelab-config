@@ -97,7 +97,7 @@ Complete overview of the homelab infrastructure stack.
 | Cluster | Purpose | Instances | Storage | Backup |
 |---------|---------|-----------|---------|--------|
 | **cnpg-shared** | Authentik, NetBox, small apps | 2 | 5Gi | Daily @ 03:00, 14d retention |
-| **cnpg-homeassistant** | Home Assistant recorder | 2 | 10Gi | Every 6h, 30d retention |
+| **cnpg-homeassistant** | Home Assistant recorder | 2 | 10Gi | Daily @ 00:00, 14d retention |
 
 **Service Endpoints:**
 - Read-Write: `cnpg-{cluster}-rw.cnpg-system.svc.cluster.local:5432`

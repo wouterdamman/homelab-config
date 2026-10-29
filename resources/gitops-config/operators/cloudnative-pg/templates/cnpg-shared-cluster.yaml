@@ -8,6 +8,15 @@ spec:
   imageName: ghcr.io/cloudnative-pg/postgresql:18.6@sha256:899d3ed526b659d77935dde0e6bf2d69dbbf17d3d8c6486ca8cfd04bd3c18533
   instances: 2
 
+  # Keep the Longhorn snapshot and backup jobs off the PG volumes. With this
+  # label on the PVC, Longhorn takes the volume's recurring-job groups from
+  # the PVC (none) instead of the StorageClass. Postgres rewrites pages all
+  # the time, so hourly snapshots grew past the volume size, and barman
+  # already ships base backups and WAL to S3.
+  inheritedMetadata:
+    labels:
+      recurring-job.longhorn.io/source: enabled
+
   # PostgreSQL configuration
   postgresql:
     parameters:

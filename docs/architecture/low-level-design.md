@@ -351,7 +351,7 @@ EMQX Cluster (3 replicas, emqx.emqx:1883)
 | Home Assistant deployed in K8s | ✅ | 2026-01-28 |
 | Old HA (10.0.10.165) decommissioned | ✅ | 2026-01-28 |
 
-**Database:** `cnpg-homeassistant` cluster (10Gi, backups every 6h, 30-day retention)
+**Database:** `cnpg-homeassistant` cluster (10Gi, daily backups, 14-day retention)
 
 ---
 

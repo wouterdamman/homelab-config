@@ -57,12 +57,16 @@ controller:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
     effect: NoSchedule
+  # CPU measured over 7 days (2026-10-29): max 616m, p99 198m. The request
+  # covers the p99. Limits on the ArgoCD pods are sized from the same data
+  # (repo-server max 87m, server 68m, applicationset 2m) so the 2-vCPU
+  # control planes are not overcommitted more than needed.
   resources:
     limits:
-      cpu: 1500m
+      cpu: 1000m
       memory: 1536Mi
     requests:
-      cpu: 100m
+      cpu: 200m
       memory: 512Mi
   containerSecurityContext:
     runAsNonRoot: true
@@ -88,7 +92,7 @@ applicationSet:
     effect: NoSchedule
   resources:
     limits:
-      cpu: 500m
+      cpu: 200m
       memory: 128Mi
     requests:
       cpu: 10m
@@ -120,7 +124,7 @@ repoServer:
     enabled: true
   resources:
     limits:
-      cpu: 1000m
+      cpu: 500m
       memory: 512Mi
     requests:
       cpu: 100m
@@ -152,7 +156,7 @@ server:
     enabled: true
   resources:
     limits:
-      cpu: 500m
+      cpu: 250m
       memory: 128Mi
     requests:
       cpu: 2m

@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: descheduler
+  namespace: descheduler
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: pod-distribution
+      interval: 5m
+      rules:
+
+        - alert: WorkerPodDistributionSkewed
+          # After node reboots the pods piled up on one worker. The
+          # descheduler (every 30m) should even this out; if the busiest
+          # worker still runs 1.5x the pods of the quietest one after 2h,
+          # it is not doing its job.
+          expr: |
+            max(count by (node) (kube_pod_info{node=~"prd-w-.*"} * on (namespace, pod) group_left () (kube_pod_status_phase{phase="Running"} == 1)))
+            /
+            min(count by (node) (kube_pod_info{node=~"prd-w-.*"} * on (namespace, pod) group_left () (kube_pod_status_phase{phase="Running"} == 1)))
+            > 1.5
+          for: 2h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Running pods are unevenly spread over the workers"
+            description: "The busiest worker runs {{`{{`}} $value | printf \"%.1f\" {{`}}`}}x the pods of the quietest one for 2h. Check the descheduler logs and kubectl get pods -A -o wide."

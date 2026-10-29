@@ -31,6 +31,11 @@ kubectl --kubeconfig resources/bootstrap/output/kubeconfig <subcommand>
 
 # Rolling Talos upgrade
 resources/bootstrap/scripts/upgrade-talos.sh
+
+# Power-cycle one node (applies staged Proxmox hardware changes). Waits for a calm
+# cluster, silences node alerts, switches CNPG primaries away, drains, stops/starts
+# the VM and waits for Longhorn + CNPG healthy. Needs the kubectl cnpg plugin.
+resources/bootstrap/scripts/powercycle-node.sh <node> [--dry-run]
 ```
 
 ### Validate Terraform
@@ -150,6 +155,12 @@ Longhorn with four storage classes:
 - `longhorn-monitoring`: 1 replica, strict-local (metrics/log data, no backups)
 
 S3 backups go to Hetzner Object Storage.
+
+Recurring jobs (`operators/longhorn/templates/recurring-jobs.yaml`) select volumes by group: hourly snapshots for `fast` at :00, everything else at :30 (daily backups fast 02:30 and standard 04:30, concurrency 1). `LonghornVolumeBackupTooOld` alerts when a fast/standard volume has no backup younger than 36h.
+
+**CNPG volumes are not in any Longhorn job group.** The Cluster manifests put `recurring-job.longhorn.io/source: enabled` on the PVCs (via `inheritedMetadata`), so Longhorn takes the groups from the PVC, which has none. Postgres is backed up by barman only (base backups + WAL to S3). Keep that label on every CNPG cluster.
+
+**Physical disks (single host, pve-01):** all VM OS disks, including etcd on the control planes, are raw files on one consumer NVMe (`local`). All Longhorn data is on a 4 TB Samsung 870 QVO (LVM `storage`, worker `scsi1`). Measured fsync p99 is 1.8 ms on the NVMe and 20 ms on the QVO, so never move etcd/control-plane disks to the QVO. Roll out reboots one node at a time.
 
 ### Authentication
 Authentik provides OIDC/SSO for all apps that support it. Apps that need OIDC reference Authentik as their identity provider.

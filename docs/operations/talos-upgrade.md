@@ -305,7 +305,15 @@ cd resources/bootstrap
 ./scripts/powercycle-node.sh prd-w-01
 ```
 
-The script waits until the cluster is calm (5 minutes without etcd warnings, etcd 3/3, CNPG and Longhorn healthy, all nodes Ready). It then moves etcd leadership away if needed, drains, runs `talosctl shutdown` and `qm start`, waits for Ready (and etcd 3/3 on control planes), and uncordons. Order: workers, then control planes, with the etcd leader last.
+The script waits until the cluster is calm (5 minutes without etcd warnings, etcd 3/3, CNPG and Longhorn healthy, all nodes Ready). It then:
+
+1. Adds Alertmanager silences (90 minutes) for alerts with the node name, the node IP or the Proxmox VM ID, plus the cluster-wide symptoms of a missing node (`TargetDown`, `KubePodNotReady`, replica mismatches, etcd member alerts). The silences are expired when the script exits, also on failure, so a node left down still alerts.
+2. Moves etcd leadership away (control planes).
+3. Switches every CNPG primary on the node over to a ready replica on another node (`kubectl cnpg promote`). The primary PDB allows no disruption, so without this the drain times out and the shutdown forces an unplanned failover. No ready replica elsewhere stops the script.
+4. Drains, runs `talosctl shutdown` and `qm start`, waits for Ready (and etcd 3/3 on control planes), and uncordons.
+5. Waits up to 30 minutes until all Longhorn volumes and CNPG clusters are healthy again, and fails otherwise, so a loop over several nodes stops there.
+
+Requires the `kubectl cnpg` plugin. Order: workers, then control planes, with the etcd leader last.
 
 ## Rollback
 

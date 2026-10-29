@@ -2,7 +2,8 @@
 # Jobs only run for volumes in their groups. Volumes join a group through the
 # StorageClass recurringJobSelector (new volumes) or the Longhorn volume label
 # recurring-job-group.longhorn.io/<group>=enabled. Without groups no volume
-# was backed up from May to 2026-10-27.
+# was backed up from May to 2026-10-27. CNPG PVCs opt out through the
+# recurring-job.longhorn.io/source label (see the CNPG Cluster manifests).
 #
 # Everything except the hourly snapshot runs at :30, so it never overlaps
 # with it, and backups run one volume at a time. All VMs share one NVMe on

@@ -17,9 +17,10 @@ spec:
           # blocked manager-to-manager traffic) and nothing alerted. A volume
           # that was never backed up reports 0, so it fires as well.
           # longhorn-monitoring and longhorn-archive volumes are left out
-          # (no backups, weekly backups).
+          # (no backups, weekly backups), and so are the CNPG volumes, which
+          # barman backs up instead.
           expr: |
-            (time() - max by (volume, pvc, pvc_namespace) (longhorn_volume_last_backup_at)) > 36 * 3600
+            (time() - max by (volume, pvc, pvc_namespace) (longhorn_volume_last_backup_at{pvc_namespace!="cnpg-system"})) > 36 * 3600
             and on (pvc, pvc_namespace)
             label_replace(
               label_replace(

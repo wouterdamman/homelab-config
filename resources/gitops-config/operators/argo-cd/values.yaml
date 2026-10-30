@@ -122,9 +122,11 @@ repoServer:
   replicas: 2
   pdb:
     enabled: true
+  # Helm rendering comes in sub-minute bursts that a 5m rate hides (max 87m);
+  # at 500m the repo-servers were throttled 28-64% during syncs.
   resources:
     limits:
-      cpu: 500m
+      cpu: 1000m
       memory: 512Mi
     requests:
       cpu: 100m

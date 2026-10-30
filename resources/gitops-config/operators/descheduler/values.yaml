@@ -19,8 +19,13 @@ podSecurityContext:
     type: RuntimeDefault
 
 deschedulerPolicy:
-  # Per run, so a rebalance happens in small steps.
-  maxNoOfPodsToEvictPerNode: 2
+  # Workers only. The control planes are tainted and run a fixed set of pods;
+  # with them in the pool LowNodeUtilization could classify one as
+  # underutilized and evict pods that tolerate the taint (Prometheus, ArgoCD).
+  nodeSelector: "!node-role.kubernetes.io/control-plane"
+  # Per run, so a rebalance happens in small steps. All moves come off the
+  # busiest node, so the per-node cap equals the total.
+  maxNoOfPodsToEvictPerNode: 5
   maxNoOfPodsToEvictTotal: 5
   profiles:
     - name: default
@@ -54,16 +59,19 @@ deschedulerPolicy:
             namespaces: *excluded
         # Percentages of allocatable, based on pod requests (like the scheduler).
         # Underutilized: below all thresholds. Overutilized: above any target.
+        # The DaemonSets alone put a worker at about 30% CPU requests, so a
+        # freshly rebooted worker sat at 40% and never counted as
+        # underutilized with cpu: 35 (2026-10-30, 14/42/39 pods for hours).
         - name: LowNodeUtilization
           args:
             thresholds:
-              cpu: 35
-              memory: 25
-              pods: 25
+              cpu: 50
+              memory: 35
+              pods: 30
             targetThresholds:
-              cpu: 55
+              cpu: 60
               memory: 45
-              pods: 40
+              pods: 35
             evictableNamespaces: *excluded
       plugins:
         balance:

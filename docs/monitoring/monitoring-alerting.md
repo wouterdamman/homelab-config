@@ -241,7 +241,7 @@ curl http://localhost:9221/pve?target=10.0.10.200
 | Alert | Rule file | Fires when |
 |-------|-----------|------------|
 | `LonghornVolumeBackupTooOld` | `operators/longhorn/templates/prometheusrule.yaml` | A `longhorn-fast`/`longhorn-standard` volume has no backup younger than 36h (also when it never had one), for 1h |
-| `WorkerPodDistributionSkewed` | `operators/descheduler/templates/prometheusrule.yaml` | The busiest worker runs more than 1.5x the Running pods of the quietest one, for 2h |
+| `WorkerPodDistributionSkewed` | `operators/descheduler/templates/prometheusrule.yaml` | The busiest worker has more than 1.4x the Running CPU requests of the quietest one, for 2h |
 | `Proxmox*`, `KubeNodeHighMemory` | `infrastructure/prometheus-pve-exporter/templates/prometheusrule.yaml` | See Proxmox VE Monitoring |
 
 A failed Longhorn backup job is covered by the default `KubeJobFailed`.

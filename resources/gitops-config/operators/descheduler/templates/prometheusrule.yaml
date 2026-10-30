@@ -12,18 +12,20 @@ spec:
       rules:
 
         - alert: WorkerPodDistributionSkewed
-          # After node reboots the pods piled up on one worker. The
-          # descheduler (every 30m) should even this out; if the busiest
-          # worker still runs 1.5x the pods of the quietest one after 2h,
-          # it is not doing its job.
+          # After node reboots the pods piled up on one worker. The descheduler
+          # (every 30m) balances CPU and memory requests, not pod counts: pods
+          # with a PVC and excluded namespaces stay put, so after the prd-w-01
+          # power cycle on 2026-10-30 it settled at 19/38/38 pods with requests
+          # at 1.25x. Compare Running CPU requests instead; 1.73x before the
+          # descheduler fix, so 1.4x for 2h means it is not doing its job.
           expr: |
-            max(count by (node) (kube_pod_info{node=~"prd-w-.*"} * on (namespace, pod) group_left () (kube_pod_status_phase{phase="Running"} == 1)))
+            max(sum by (node) (kube_pod_container_resource_requests{resource="cpu", node=~"prd-w-.*"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1)))
             /
-            min(count by (node) (kube_pod_info{node=~"prd-w-.*"} * on (namespace, pod) group_left () (kube_pod_status_phase{phase="Running"} == 1)))
-            > 1.5
+            min(sum by (node) (kube_pod_container_resource_requests{resource="cpu", node=~"prd-w-.*"} * on (namespace, pod) group_left () (max by (namespace, pod) (kube_pod_status_phase{phase="Running"}) == 1)))
+            > 1.4
           for: 2h
           labels:
             severity: warning
           annotations:
-            summary: "Running pods are unevenly spread over the workers"
-            description: "The busiest worker runs {{`{{`}} $value | printf \"%.1f\" {{`}}`}}x the pods of the quietest one for 2h. Check the descheduler logs and kubectl get pods -A -o wide."
+            summary: "CPU requests are unevenly spread over the workers"
+            description: "The busiest worker has {{`{{`}} $value | printf \"%.2f\" {{`}}`}}x the CPU requests of the quietest one for 2h. Check the descheduler logs and kubectl describe nodes."

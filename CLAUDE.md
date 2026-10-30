@@ -38,6 +38,8 @@ resources/bootstrap/scripts/upgrade-talos.sh
 resources/bootstrap/scripts/powercycle-node.sh <node> [--dry-run]
 ```
 
+After a node reboot the pods pile up on the other workers. The descheduler (`operators/descheduler/values.yaml`, every 30m, workers only, max 5 evictions per run) moves them back using LowNodeUtilization on requests; pods with a PVC and the excluded namespaces (kube-system, longhorn-system, cnpg-system, home-assistant, emqx, zigbee2mqtt, home-finance) stay put. Expect 1-3 runs. `WorkerPodDistributionSkewed` fires if the Running pod count is still more than 1.5x apart after 2h.
+
 ### Validate Terraform
 ```bash
 cd resources/bootstrap && tofu validate

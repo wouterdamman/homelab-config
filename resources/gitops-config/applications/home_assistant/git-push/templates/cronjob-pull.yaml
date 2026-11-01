@@ -9,6 +9,7 @@
 #   systeem_deploy_herladen). Voor wat HA niet zelf kan zien schrijft deze job een signaalbestand in
 #   /config/.deploy/ (niet in git): `herstart-<sha>` bij configuration.yaml/recorder.yaml,
 #   `themes-<sha>` bij themes/. Dashboards (YAML) hebben alleen een browser-refresh nodig.
+#   Daarnaast `.deploy/versie` met de semver-tag van HEAD (CI maakt die tag na een groene deploy).
 # - Zelfde ServiceAccount/RBAC als de nachtelijke push (alleen exec in home-assistant-0).
 apiVersion: batch/v1
 kind: CronJob
@@ -57,15 +58,21 @@ spec:
               SSH443="$SSH22 -o HostName=ssh.github.com -o Port=443 -o HostKeyAlias=[ssh.github.com]:443"
               ok=""
               for SSHCMD in "$SSH443" "$SSH22"; do
-                if GIT_SSH_COMMAND="$SSHCMD" git fetch -q origin deploy; then ok=1; break; fi
+                if GIT_SSH_COMMAND="$SSHCMD" git fetch -q --tags origin deploy; then ok=1; break; fi
               done
               [ -n "$ok" ] || { echo "fetch mislukt via 443 en 22" >&2; exit 1; }
+              mkdir -p .deploy
+              # Gedeployde versie (semver-tag van de CI) voor sensor.config_versie in HA; alleen schrijven als hij verandert.
+              schrijf_versie() {
+                v=$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD 2>/dev/null || echo onbekend)
+                [ "$(cat .deploy/versie 2>/dev/null)" = "$v" ] || echo "$v" > .deploy/versie
+              }
               target=$(git rev-parse origin/deploy)
               head=$(git rev-parse HEAD)
-              [ "$target" = "$head" ] && exit 0
-              if git merge-base --is-ancestor "$target" HEAD; then exit 0; fi
+              if [ "$target" = "$head" ] || git merge-base --is-ancestor "$target" HEAD; then schrijf_versie; exit 0; fi
               if ! git merge-base --is-ancestor HEAD "$target"; then
                 echo "Lokale commits op /config die niet in deploy zitten: geen fast-forward (nachtelijke push lost dit op)"
+                schrijf_versie
                 exit 0
               fi
               changed=$(git diff --name-only HEAD "$target")
@@ -73,7 +80,7 @@ spec:
               short=$(git rev-parse --short HEAD)
               echo "Bijgewerkt naar $(git log --oneline -1)"
               echo "$changed"
-              mkdir -p .deploy
+              schrijf_versie
               if echo "$changed" | grep -qE '^(configuration|recorder)\.yaml$'; then echo "$changed" > ".deploy/herstart-$short"; fi
               if echo "$changed" | grep -q '^themes/'; then echo "$changed" > ".deploy/themes-$short"; fi
               find .deploy -type f -mmin +1440 -delete 2>/dev/null || true

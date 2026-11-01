@@ -2,4 +2,4 @@ apiVersion: v2
 name: home-assistant-git-push
 description: CronJobs in de codeserver-sidecar van Home Assistant - nachtelijk UI-wijzigingen in /config committen en pushen, en elke 2 minuten /config fast-forwarden naar de door CI goedgekeurde branch deploy
 type: application
-version: 1.1.0
+version: 1.2.0

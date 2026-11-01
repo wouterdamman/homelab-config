@@ -10,6 +10,8 @@
 #   /config/.deploy/ (niet in git): `herstart-<sha>` bij configuration.yaml/recorder.yaml,
 #   `themes-<sha>` bij themes/. Dashboards (YAML) hebben alleen een browser-refresh nodig.
 #   Daarnaast `.deploy/versie` met de semver-tag van HEAD (CI maakt die tag na een groene deploy).
+# - Dashboards (YAML) cachet HA tot een force-load; bij wijzigingen in dashboards/ doet deze job die
+#   force zelf via de websocket-API (long-lived token `hot_reload` in secrets.yaml, alleen in de pod).
 # - Zelfde ServiceAccount/RBAC als de nachtelijke push (alleen exec in home-assistant-0).
 apiVersion: batch/v1
 kind: CronJob
@@ -83,5 +85,26 @@ spec:
               schrijf_versie
               if echo "$changed" | grep -qE '^(configuration|recorder)\.yaml$'; then echo "$changed" > ".deploy/herstart-$short"; fi
               if echo "$changed" | grep -q '^themes/'; then echo "$changed" > ".deploy/themes-$short"; fi
+              # YAML-dashboards houdt HA in het geheugen tot een force-load: na een dashboard-wijziging
+              # zelf forceren via de websocket-API (token `hot_reload` uit secrets.yaml, blijft in de pod).
+              if echo "$changed" | grep -q '^dashboards/'; then
+                HA_TOKEN=$(sed -n 's/^hot_reload:[[:space:]]*"\{0,1\}\([^"]*\)"\{0,1\}[[:space:]]*$/\1/p' /mnt/ha-secrets/secrets.yaml)
+                if [ -z "$HA_TOKEN" ]; then
+                  echo "Geen hot_reload-token in secrets.yaml: dashboard niet opnieuw ingelezen" >&2
+                else
+                  HA_TOKEN="$HA_TOKEN" /app/code-server/lib/node -e '
+                    const ws = new WebSocket("ws://127.0.0.1:8123/api/websocket");
+                    const stop = (code, msg) => { (code ? console.error : console.log)(msg); process.exit(code); };
+                    setTimeout(() => stop(1, "Dashboard-reload: timeout"), 15000);
+                    ws.onerror = () => stop(1, "Dashboard-reload: websocket-fout");
+                    ws.onmessage = (e) => {
+                      const m = JSON.parse(e.data);
+                      if (m.type === "auth_required") ws.send(JSON.stringify({type: "auth", access_token: process.env.HA_TOKEN}));
+                      else if (m.type === "auth_invalid") stop(1, "Dashboard-reload: token ongeldig");
+                      else if (m.type === "auth_ok") ws.send(JSON.stringify({id: 1, type: "lovelace/config", url_path: "ons-huis", force: true}));
+                      else if (m.id === 1) stop(m.success ? 0 : 1, m.success ? "Dashboard Huis opnieuw ingelezen" : "Dashboard-reload mislukt: " + JSON.stringify(m.error));
+                    };' || true
+                fi
+              fi
               find .deploy -type f -mmin +1440 -delete 2>/dev/null || true
               SCRIPT

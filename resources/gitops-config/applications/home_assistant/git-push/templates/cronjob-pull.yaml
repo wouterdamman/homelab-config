@@ -1,0 +1,80 @@
+---
+# Auto-pull (home-assistant repo, "verbouwing" fase 5): elke 2 minuten /config fast-forwarden naar
+# de branch `deploy`. Die zet de CI van de home-assistant-repo alleen na een groene check
+# (yamllint + HA check_config), dus een kapotte config komt nooit vanzelf op de pod.
+#
+# - Alleen fast-forward. Lokale commits op /config (UI-wijzigingen die nog niet gepusht zijn) of
+#   lokale wijzigingen in dezelfde bestanden: niets doen / falen, de nachtelijke git-push lost het op.
+# - Herladen doet HA zelf: folder_watcher ziet packages/*.yaml veranderen (automation
+#   systeem_deploy_herladen). Voor wat HA niet zelf kan zien schrijft deze job een signaalbestand in
+#   /config/.deploy/ (niet in git): `herstart-<sha>` bij configuration.yaml/recorder.yaml,
+#   `themes-<sha>` bij themes/. Dashboards (YAML) hebben alleen een browser-refresh nodig.
+# - Zelfde ServiceAccount/RBAC als de nachtelijke push (alleen exec in home-assistant-0).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: home-assistant-git-pull
+  namespace: home-assistant
+spec:
+  schedule: "*/2 * * * *"
+  timeZone: Europe/Amsterdam
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 90
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          serviceAccountName: home-assistant-git-push
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: git-pull
+            image: alpine/k8s:1.37.1
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+              kubectl exec -i -n home-assistant home-assistant-0 -c codeserver -- sh -s <<'SCRIPT'
+              set -eu
+              cd /config
+              git config --global --add safe.directory /config
+              { cat /home/coder/.ssh/known_hosts 2>/dev/null; echo; \
+                echo "[ssh.github.com]:443 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"; } > /tmp/known_hosts_pull
+              SSH22="ssh -o BatchMode=yes -o ConnectTimeout=15 -i /home/coder/.ssh/id_ed25519 -o UserKnownHostsFile=/tmp/known_hosts_pull"
+              SSH443="$SSH22 -o HostName=ssh.github.com -o Port=443 -o HostKeyAlias=[ssh.github.com]:443"
+              ok=""
+              for SSHCMD in "$SSH443" "$SSH22"; do
+                if GIT_SSH_COMMAND="$SSHCMD" git fetch -q origin deploy; then ok=1; break; fi
+              done
+              [ -n "$ok" ] || { echo "fetch mislukt via 443 en 22" >&2; exit 1; }
+              target=$(git rev-parse origin/deploy)
+              head=$(git rev-parse HEAD)
+              [ "$target" = "$head" ] && exit 0
+              if git merge-base --is-ancestor "$target" HEAD; then exit 0; fi
+              if ! git merge-base --is-ancestor HEAD "$target"; then
+                echo "Lokale commits op /config die niet in deploy zitten: geen fast-forward (nachtelijke push lost dit op)"
+                exit 0
+              fi
+              changed=$(git diff --name-only HEAD "$target")
+              git merge --ff-only -q "$target"
+              short=$(git rev-parse --short HEAD)
+              echo "Bijgewerkt naar $(git log --oneline -1)"
+              echo "$changed"
+              mkdir -p .deploy
+              if echo "$changed" | grep -qE '^(configuration|recorder)\.yaml$'; then echo "$changed" > ".deploy/herstart-$short"; fi
+              if echo "$changed" | grep -q '^themes/'; then echo "$changed" > ".deploy/themes-$short"; fi
+              find .deploy -type f -mmin +1440 -delete 2>/dev/null || true
+              SCRIPT

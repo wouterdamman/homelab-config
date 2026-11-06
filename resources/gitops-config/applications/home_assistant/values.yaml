@@ -86,7 +86,7 @@ addons:
     - --primary-interface
     - ens18
     - --log-level-sdk
-    - progress
+    - detail
   codeserver:
     enabled: true
     image:

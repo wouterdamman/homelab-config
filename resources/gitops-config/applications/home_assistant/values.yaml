@@ -79,6 +79,10 @@ addons:
     image:
       repository: ghcr.io/matter-js/python-matter-server
       tag: 8.1.2
+    # Tijdelijk: SDK-logging om te zien waarom de ontdekking van de Brel-04 faalt. Daarna weghalen.
+    args:
+    - --log-level-sdk
+    - progress
   codeserver:
     enabled: true
     image:

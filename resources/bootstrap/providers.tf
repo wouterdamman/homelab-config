@@ -18,11 +18,11 @@ terraform {
     }
     proxmox = {
       source  = "bpg/proxmox"
-      version = "0.119.0"
+      version = "0.120.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "3.4.0"
+      version = "3.5.0"
     }
     random = {
       source  = "hashicorp/random"

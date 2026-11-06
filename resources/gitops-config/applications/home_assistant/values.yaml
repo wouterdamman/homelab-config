@@ -77,7 +77,7 @@ addons:
   matterServer:
     enabled: true
     image:
-      repository: ghcr.io/home-assistant-libs/python-matter-server
+      repository: ghcr.io/matter-js/python-matter-server
       tag: 8.1.2
   codeserver:
     enabled: true

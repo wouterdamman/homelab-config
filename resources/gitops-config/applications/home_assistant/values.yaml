@@ -72,6 +72,13 @@ readinessProbe:
   failureThreshold: 6
 
 addons:
+  # Matter Server voor de Matter-integratie (Brel-04 zonwering). HA Container heeft geen add-ons;
+  # de pod draait hostNetwork, dus de integratie gebruikt ws://localhost:5580/ws.
+  matterServer:
+    enabled: true
+    image:
+      repository: ghcr.io/home-assistant-libs/python-matter-server
+      tag: 8.1.2
   codeserver:
     enabled: true
     image:

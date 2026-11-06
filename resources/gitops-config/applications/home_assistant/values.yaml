@@ -81,12 +81,9 @@ addons:
       tag: 8.1.2
     # Hostnetwork op een Talos-node met Cilium: ~25 interfaces met IPv6 link-local. Zonder primary-interface
     # faalt de mDNS-socket van de CHIP-stack ("Cannot assign requested address") en vindt koppelen niets.
-    # SDK-logging tijdelijk, weghalen als koppelen werkt.
     args:
     - --primary-interface
     - ens18
-    - --log-level-sdk
-    - detail
   codeserver:
     enabled: true
     image:

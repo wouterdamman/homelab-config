@@ -79,6 +79,11 @@ addons:
     image:
       repository: ghcr.io/matter-js/python-matter-server
       tag: 8.1.2
+    # Draait als dezelfde gebruiker als Home Assistant (PUID/PGID 1000). Als root maakte de sidecar
+    # 0600-bestanden in /config/matter-server die HA niet kan lezen; de automatische backup faalde (2026-11-07).
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
     # Hostnetwork op een Talos-node met Cilium: ~25 interfaces met IPv6 link-local. Zonder primary-interface
     # faalt de mDNS-socket van de CHIP-stack ("Cannot assign requested address") en vindt koppelen niets.
     args:

@@ -62,16 +62,20 @@ deschedulerPolicy:
         # The DaemonSets alone put a worker at about 30% CPU requests, so a
         # freshly rebooted worker sat at 40% and never counted as
         # underutilized with cpu: 35 (2026-10-30, 14/42/39 pods for hours).
+        # Pod count is set high on purpose so it never decides: pods with a PVC
+        # and the excluded namespaces keep counts uneven, and with pods: 30
+        # (33 of 110) neither quiet worker qualified at 35 and 37 pods while
+        # the busiest one sat at 68% CPU (2026-11-14, 0 evictions for hours).
         - name: LowNodeUtilization
           args:
             thresholds:
               cpu: 50
               memory: 35
-              pods: 30
+              pods: 50
             targetThresholds:
               cpu: 60
               memory: 45
-              pods: 35
+              pods: 55
             evictableNamespaces: *excluded
       plugins:
         balance:

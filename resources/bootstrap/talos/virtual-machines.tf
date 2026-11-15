@@ -10,6 +10,14 @@ resource "proxmox_virtual_environment_vm" "this" {
   on_boot     = true
   vm_id       = each.value.vm_id
 
+  # Start order after the LXCs (order=1): control planes first, then workers.
+  # Shutdown runs in reverse, so workers stop before the control planes.
+  startup {
+    order      = each.value.machine_type == "controlplane" ? 2 : 3
+    up_delay   = each.value.machine_type == "controlplane" ? 60 : 0
+    down_delay = 0
+  }
+
   machine       = "q35"
   scsi_hardware = "virtio-scsi-single"
   bios          = "seabios"

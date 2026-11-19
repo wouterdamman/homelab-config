@@ -1078,7 +1078,7 @@
                 "value": [
                   {
                     "title": "Show packages and fixed versions for this image",
-                    "url": "/d/trivy-deep-dive/trivy-deep-dive?${__url_time_range}&var-namespace=${namespace:queryparam}&var-severity=${severity:queryparam}&var-image=${__data.fields.Image}&var-cve=${cve}"
+                    "url": "/d/trivy-deep-dive/trivy-deep-dive?${__url_time_range}&${namespace:queryparam}&${severity:queryparam}&var-image=${__data.fields.Image}&${cve:queryparam}"
                   }
                 ]
               }
@@ -1170,7 +1170,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1388,7 +1388,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1924,7 +1924,7 @@
           ],
           "fieldConfig": {
             "defaults": {
-              "noValue": "0",
+              "noValue": "-",
               "custom": {
                 "filterable": true,
                 "align": "auto"
@@ -2370,7 +2370,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2538,7 +2538,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2738,7 +2738,7 @@
           ],
           "fieldConfig": {
             "defaults": {
-              "noValue": "0",
+              "noValue": "-",
               "custom": {
                 "filterable": true,
                 "align": "auto"
@@ -2957,7 +2957,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -3156,7 +3156,7 @@
           ],
           "fieldConfig": {
             "defaults": {
-              "noValue": "0",
+              "noValue": "-",
               "custom": {
                 "filterable": true,
                 "align": "auto"
@@ -3378,7 +3378,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -3914,7 +3914,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
+          "noValue": "-",
           "custom": {
             "filterable": true,
             "align": "auto"

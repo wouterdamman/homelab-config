@@ -1,6 +1,8 @@
-# Trivy Operator dashboard (grafana.com id 17813, revision 1), picked up by the
-# Grafana dashboard sidecar. Read with .Files so Helm does not parse the
-# legend formats (double curly braces) in the JSON.
+# Trivy dashboards, picked up by the Grafana dashboard sidecar:
+# - trivy-operator.json: grafana.com id 17813, revision 1
+# - trivy-deep-dive.json: own dashboard on the per-finding info metrics
+# Read with .Files so Helm does not parse the legend formats (double curly
+# braces) in the JSON.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,5 +11,7 @@ metadata:
   labels:
     grafana_dashboard: "1"
 data:
-  trivy-operator.json: |-
-{{ .Files.Get "dashboards/trivy-operator.json" | replace "${DS_PROMETHEUS}" "prometheus" | indent 4 }}
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | replace "${DS_PROMETHEUS}" "prometheus" | indent 4 }}
+{{- end }}

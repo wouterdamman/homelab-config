@@ -2514,7 +2514,7 @@
     },
     {
       "type": "row",
-      "title": "Infra assessment (nodes and control plane)",
+      "title": "Images",
       "id": 27,
       "collapsed": false,
       "gridPos": {
@@ -2526,362 +2526,9 @@
       "panels": []
     },
     {
-      "type": "table",
-      "title": "Failed infra checks",
-      "id": 28,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "Not filtered by namespace. On Talos some node checks come back empty (no systemd, different paths).",
-      "gridPos": {
-        "h": 9,
-        "w": 14,
-        "x": 0,
-        "y": 81
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "trivy_infraassessments_info{severity=~\"$severity\",infra_assessment_success=\"false\"}",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "container": true,
-              "endpoint": true,
-              "instance": true,
-              "pod": true,
-              "service": true,
-              "name": true,
-              "Value": true,
-              "infra_assessment_success": true,
-              "infra_assessment_category": true
-            },
-            "renameByName": {
-              "infra_assessment_id": "Check",
-              "infra_assessment_title": "Title",
-              "infra_assessment_description": "Description",
-              "resource_kind": "Kind",
-              "resource_name": "Resource"
-            },
-            "indexByName": {}
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "severity",
-                "desc": true
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "filterable": true,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "severity"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        }
-      }
-    },
-    {
-      "type": "table",
-      "title": "Control plane pods with findings",
-      "id": 29,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "",
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 14,
-        "y": 81
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (namespace, resource_name, severity) (trivy_resource_infraassessments{severity=~\"$severity\"}) > 0",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "container": true,
-              "endpoint": true,
-              "instance": true,
-              "pod": true,
-              "service": true,
-              "name": true
-            },
-            "renameByName": {
-              "Value": "Count",
-              "resource_name": "Pod"
-            },
-            "indexByName": {}
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "Count",
-                "desc": true
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "filterable": true,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "severity"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
-        }
-      }
-    },
-    {
-      "type": "row",
-      "title": "Images",
-      "id": 30,
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 90
-      },
-      "panels": []
-    },
-    {
       "type": "piechart",
       "title": "OS family",
-      "id": 31,
+      "id": 28,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2890,7 +2537,7 @@
         "h": 10,
         "w": 8,
         "x": 0,
-        "y": 91
+        "y": 81
       },
       "targets": [
         {
@@ -3005,7 +2652,7 @@
     {
       "type": "table",
       "title": "Scanned images",
-      "id": 32,
+      "id": 29,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3015,7 +2662,7 @@
         "h": 10,
         "w": 16,
         "x": 8,
-        "y": 91
+        "y": 81
       },
       "targets": [
         {

@@ -18,16 +18,14 @@ operator:
   # The SBOM and compliance reports are large and nothing reads them.
   sbomGenerationEnabled: false
   clusterComplianceEnabled: false
-  # Node-collector jobs (infra assessment) need hostPID and hostPath mounts,
-  # so trivy-system is privileged. Talos has no systemd and different paths,
-  # so some node checks will come back empty.
-  infraAssessmentScannerEnabled: true
+  # Off: the node-collector mounts /etc/systemd as hostPath, which fails on
+  # Talos (read-only root, no systemd), so its job never starts.
+  infraAssessmentScannerEnabled: false
   # Per-finding info metrics for the deep-dive dashboard (CVE id, check id,
   # title, fixed version). Watch the series count in Prometheus.
   metricsVulnIdEnabled: true
   metricsConfigAuditInfo: true
   metricsRbacAssessmentInfo: true
-  metricsInfraAssessmentInfo: true
   metricsExposedSecretInfo: true
   metricsImageInfo: true
 
@@ -46,13 +44,6 @@ resources:
 podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
-
-# Control planes are tainted; without this the node-collector skips them.
-nodeCollector:
-  tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: NoSchedule
 
 trivy:
   # LOW and UNKNOWN are not actionable here and inflate reports and series.

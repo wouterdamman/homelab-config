@@ -10,7 +10,7 @@
   "editable": true,
   "timezone": "Europe/Amsterdam",
   "time": {
-    "from": "now-7d",
+    "from": "now-24h",
     "to": "now"
   },
   "refresh": "5m",
@@ -121,13 +121,13 @@
     },
     {
       "type": "stat",
-      "title": "Critical CVEs",
+      "title": "Critical",
       "id": 2,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Critical vulnerabilities, summed over all scanned images",
+      "description": "Critical CVEs, summed over all scanned images",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -182,13 +182,13 @@
     },
     {
       "type": "stat",
-      "title": "High CVEs",
+      "title": "High",
       "id": 3,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "",
+      "description": "High CVEs",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -243,13 +243,13 @@
     },
     {
       "type": "stat",
-      "title": "Medium CVEs",
+      "title": "Medium",
       "id": 4,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "",
+      "description": "Medium CVEs",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -304,13 +304,13 @@
     },
     {
       "type": "stat",
-      "title": "Images with CVEs",
+      "title": "Images",
       "id": 5,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Distinct image:tag combinations with at least one finding",
+      "description": "Images with CVEs: distinct image:tag combinations with at least one finding",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -365,13 +365,13 @@
     },
     {
       "type": "stat",
-      "title": "Config audit findings",
+      "title": "Config",
       "id": 6,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "",
+      "description": "Config audit findings (workload misconfiguration)",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -426,13 +426,13 @@
     },
     {
       "type": "stat",
-      "title": "RBAC findings",
+      "title": "RBAC",
       "id": 7,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "",
+      "description": "RBAC assessment findings",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -487,13 +487,13 @@
     },
     {
       "type": "stat",
-      "title": "Exposed secrets",
+      "title": "Secrets",
       "id": 8,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "",
+      "description": "Exposed secrets found inside images",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -548,13 +548,13 @@
     },
     {
       "type": "stat",
-      "title": "Scanned images",
+      "title": "Scanned",
       "id": 9,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Distinct image:tag combinations with an image report",
+      "description": "Scanned images: distinct image:tag combinations with an image report",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -965,11 +965,19 @@
               "name": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "Value": "Count",
               "image_repository": "Image",
               "image_tag": "Tag"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "image_repository": 1,
+              "image_tag": 2,
+              "severity": 3,
+              "Value": 4
+            }
           }
         },
         {
@@ -995,7 +1003,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -1039,44 +1047,48 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Image"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tag"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -1133,12 +1145,20 @@
               "name": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "Value": "Workloads",
               "vuln_id": "CVE",
               "vuln_title": "Title",
               "fixed_version": "Fixed in"
             },
-            "indexByName": {}
+            "indexByName": {
+              "vuln_id": 0,
+              "severity": 1,
+              "Value": 2,
+              "fixed_version": 3,
+              "vuln_title": 4
+            }
           }
         },
         {
@@ -1164,7 +1184,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -1208,44 +1228,60 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CVE"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fixed in"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -1306,6 +1342,8 @@
               "resource_kind": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "vuln_id": "CVE",
               "vuln_title": "Title",
               "resource": "Package",
@@ -1316,7 +1354,19 @@
               "container_name": "Container",
               "resource_name": "Workload"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "resource_name": 1,
+              "container_name": 2,
+              "image_repository": 3,
+              "image_tag": 4,
+              "resource": 5,
+              "installed_version": 6,
+              "fixed_version": 7,
+              "vuln_id": 8,
+              "severity": 9,
+              "vuln_title": 10
+            }
           }
         },
         {
@@ -1324,8 +1374,8 @@
           "options": {
             "sort": [
               {
-                "field": "severity",
-                "desc": true
+                "field": "Severity",
+                "desc": false
               }
             ]
           }
@@ -1342,7 +1392,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -1386,44 +1436,120 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CVE"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Image"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fixed in"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Package"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Installed"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Workload"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tag"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -1671,11 +1797,18 @@
               "name": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "Value": "Resources",
               "config_audit_id": "Check",
               "config_audit_title": "Title"
             },
-            "indexByName": {}
+            "indexByName": {
+              "config_audit_id": 0,
+              "severity": 1,
+              "Value": 2,
+              "config_audit_title": 3
+            }
           }
         },
         {
@@ -1701,7 +1834,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -1745,44 +1878,48 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Check"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -1842,13 +1979,23 @@
               "config_audit_category": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "config_audit_id": "Check",
               "config_audit_title": "Title",
               "config_audit_description": "Description",
               "resource_kind": "Kind",
               "resource_name": "Resource"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "resource_kind": 1,
+              "resource_name": 2,
+              "config_audit_id": 3,
+              "severity": 4,
+              "config_audit_title": 5,
+              "config_audit_description": 6
+            }
           }
         },
         {
@@ -1856,8 +2003,8 @@
           "options": {
             "sort": [
               {
-                "field": "severity",
-                "desc": true
+                "field": "Severity",
+                "desc": false
               }
             ]
           }
@@ -1874,7 +2021,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -1918,44 +2065,72 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Description"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 420
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Resource"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Check"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -2025,11 +2200,18 @@
               "name": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "Value": "Roles",
               "rbac_assessment_id": "Check",
               "rbac_assessment_title": "Title"
             },
-            "indexByName": {}
+            "indexByName": {
+              "rbac_assessment_id": 0,
+              "severity": 1,
+              "Value": 2,
+              "rbac_assessment_title": 3
+            }
           }
         },
         {
@@ -2055,7 +2237,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -2099,44 +2281,48 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Check"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -2190,18 +2376,28 @@
               "instance": true,
               "pod": true,
               "service": true,
-              "name": true,
               "Value": true,
               "rbac_assessment_success": true,
               "rbac_assessment_category": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "name": "Role",
               "rbac_assessment_id": "Check",
               "rbac_assessment_title": "Title",
               "rbac_assessment_description": "Description",
               "resource_kind": "Kind"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "resource_kind": 1,
+              "name": 2,
+              "rbac_assessment_id": 3,
+              "severity": 4,
+              "rbac_assessment_title": 5,
+              "rbac_assessment_description": 6
+            }
           }
         },
         {
@@ -2209,8 +2405,8 @@
           "options": {
             "sort": [
               {
-                "field": "severity",
-                "desc": true
+                "field": "Severity",
+                "desc": false
               }
             ]
           }
@@ -2227,7 +2423,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -2271,44 +2467,60 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Description"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 420
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Check"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -2382,6 +2594,8 @@
               "resource_kind": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "secret_rule_id": "Rule",
               "secret_title": "Title",
               "secret_category": "Category",
@@ -2391,7 +2605,18 @@
               "container_name": "Container",
               "resource_name": "Workload"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "resource_name": 1,
+              "container_name": 2,
+              "image_repository": 3,
+              "image_tag": 4,
+              "secret_rule_id": 5,
+              "severity": 6,
+              "secret_title": 7,
+              "secret_target": 8,
+              "secret_category": 9
+            }
           }
         },
         {
@@ -2399,8 +2624,8 @@
           "options": {
             "sort": [
               {
-                "field": "severity",
-                "desc": true
+                "field": "Severity",
+                "desc": false
               }
             ]
           }
@@ -2417,7 +2642,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -2461,44 +2686,84 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Title"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 320
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Image"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Workload"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "File"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 260
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tag"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }
@@ -2692,13 +2957,22 @@
               "name": true
             },
             "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
               "Value": "Workloads",
               "image_repository": "Image",
               "image_tag": "Tag",
               "image_os_family": "OS",
               "image_os_name": "OS version"
             },
-            "indexByName": {}
+            "indexByName": {
+              "namespace": 0,
+              "image_repository": 1,
+              "image_tag": 2,
+              "image_os_family": 3,
+              "image_os_name": 4,
+              "Value": 5
+            }
           }
         },
         {
@@ -2706,8 +2980,8 @@
           "options": {
             "sort": [
               {
-                "field": "image_repository",
-                "desc": true
+                "field": "Image",
+                "desc": false
               }
             ]
           }
@@ -2724,7 +2998,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "severity"
+              "options": "Severity"
             },
             "properties": [
               {
@@ -2768,44 +3042,48 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Severity"
+              "options": "Image"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
-                      }
-                    }
-                  }
-                ]
-              },
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tag"
+            },
+            "properties": [
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
               }
             ]
           }

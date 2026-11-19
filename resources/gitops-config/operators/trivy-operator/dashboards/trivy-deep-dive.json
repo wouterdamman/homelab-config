@@ -365,13 +365,13 @@
     },
     {
       "type": "stat",
-      "title": "Config",
+      "title": "New 24h",
       "id": 6,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Config audit findings (workload misconfiguration)",
+      "description": "CVEs (Medium and up) that were not there 24h ago: a new CVE in a known image or a newly deployed image. Shows n/a until there is 24h of history.",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -385,14 +385,14 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(trivy_resource_configaudits{namespace=~\"$namespace\"})",
+          "expr": "count(trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\"} unless trivy_vulnerability_id offset 1d) and on() (count(trivy_vulnerability_id offset 1d) > 0)",
           "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "noValue": "0",
+          "noValue": "n/a",
           "color": {
             "mode": "thresholds"
           },
@@ -404,7 +404,7 @@
                 "value": null
               },
               {
-                "color": "orange",
+                "color": "red",
                 "value": 1
               }
             ]
@@ -426,13 +426,13 @@
     },
     {
       "type": "stat",
-      "title": "RBAC",
+      "title": "Resolved 24h",
       "id": 7,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "RBAC assessment findings",
+      "description": "CVEs (Medium and up) that were there 24h ago and are gone now: image updated or workload removed. Shows n/a until there is 24h of history.",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -446,14 +446,14 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(trivy_role_rbacassessments{namespace=~\"$namespace\"})",
+          "expr": "count(trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\"} offset 1d unless trivy_vulnerability_id) and on() (count(trivy_vulnerability_id offset 1d) > 0)",
           "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "none",
-          "noValue": "0",
+          "noValue": "n/a",
           "color": {
             "mode": "thresholds"
           },
@@ -465,7 +465,7 @@
                 "value": null
               },
               {
-                "color": "orange",
+                "color": "green",
                 "value": 1
               }
             ]
@@ -608,32 +608,20 @@
       }
     },
     {
-      "type": "row",
-      "title": "Vulnerabilities",
+      "type": "table",
+      "title": "Posture per namespace",
       "id": 10,
-      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "One row per namespace: where the findings are. Config High+ and RBAC Medium+ count only the serious ones.",
       "gridPos": {
-        "h": 1,
+        "h": 9,
         "w": 24,
         "x": 0,
         "y": 5
       },
-      "panels": []
-    },
-    {
-      "type": "timeseries",
-      "title": "Vulnerabilities over time",
-      "id": 11,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 6
-      },
       "targets": [
         {
           "refId": "A",
@@ -641,315 +629,66 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (severity) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=~\"$severity\"})",
-          "legendFormat": "{{severity}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "stacking": {
-              "mode": "normal"
-            },
-            "lineWidth": 1
-          },
-          "unit": "none"
+          "expr": "sum by (namespace) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"Critical\"})",
+          "instant": true,
+          "format": "table"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Critical"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "red"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "High"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "orange"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Medium"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "yellow"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Low"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "blue"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Unknown"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "gray"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
-      "type": "piechart",
-      "title": "By severity",
-      "id": 12,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 12,
-        "y": 6
-      },
-      "targets": [
         {
-          "refId": "A",
+          "refId": "B",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (severity) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=~\"$severity\"})",
-          "legendFormat": "{{severity}}",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Critical"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "red"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "High"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "orange"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Medium"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "yellow"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Low"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "blue"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Unknown"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed",
-                  "fixedColor": "gray"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": [
-            "value"
-          ]
+          "expr": "sum by (namespace) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"High\"})",
+          "instant": true,
+          "format": "table"
         },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      }
-    },
-    {
-      "type": "bargauge",
-      "title": "Critical + High per namespace",
-      "id": 13,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 18,
-        "y": 6
-      },
-      "targets": [
         {
-          "refId": "A",
+          "refId": "C",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sort_desc(sum by (namespace) (trivy_image_vulnerabilities{severity=~\"Critical|High\",namespace=~\"$namespace\"}))",
-          "legendFormat": "{{namespace}}",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "noValue": "0"
+          "expr": "sum by (namespace) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"Medium\"})",
+          "instant": true,
+          "format": "table"
         },
-        "overrides": []
-      },
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "horizontal",
-        "showUnfilled": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      }
-    },
-    {
-      "type": "table",
-      "title": "Images to update (worst first)",
-      "id": 14,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "Findings per image and severity. With ignoreUnfixed on, every finding has a fixed version.",
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 14
-      },
-      "targets": [
         {
-          "refId": "A",
+          "refId": "D",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (namespace, image_repository, image_tag, severity) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=~\"$severity\"}) > 0",
+          "expr": "sum by (namespace) (trivy_resource_configaudits{namespace=~\"$namespace\",severity=~\"Critical|High\"})",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (namespace) (trivy_role_rbacassessments{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\"})",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (namespace) (trivy_image_exposedsecrets{namespace=~\"$namespace\"})",
           "instant": true,
           "format": "table"
         }
       ],
       "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
         {
           "id": "organize",
           "options": {
@@ -967,16 +706,21 @@
             "renameByName": {
               "severity": "Severity",
               "namespace": "Namespace",
-              "Value": "Count",
-              "image_repository": "Image",
-              "image_tag": "Tag"
+              "Value #A": "Critical CVEs",
+              "Value #B": "High CVEs",
+              "Value #C": "Medium CVEs",
+              "Value #D": "Config High+",
+              "Value #E": "RBAC Medium+",
+              "Value #F": "Secrets"
             },
             "indexByName": {
               "namespace": 0,
-              "image_repository": 1,
-              "image_tag": 2,
-              "severity": 3,
-              "Value": 4
+              "Value #A": 1,
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #D": 4,
+              "Value #E": 5,
+              "Value #F": 6
             }
           }
         },
@@ -985,7 +729,15 @@
           "options": {
             "sort": [
               {
-                "field": "Count",
+                "field": "Critical",
+                "desc": true
+              },
+              {
+                "field": "High",
+                "desc": true
+              },
+              {
+                "field": "Medium",
                 "desc": true
               }
             ]
@@ -994,6 +746,212 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
+          "custom": {
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Critical": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "High": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "Medium": {
+                        "color": "yellow",
+                        "index": 2
+                      },
+                      "Low": {
+                        "color": "blue",
+                        "index": 3
+                      },
+                      "Unknown": {
+                        "color": "gray",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Where to start: what to update",
+      "id": 11,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Images to update (worst first)",
+      "id": 12,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "One row per image, with the CVE count per severity. Updating one image clears all of its rows at once.",
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (namespace, image_repository, image_tag) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"Critical\"})",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (namespace, image_repository, image_tag) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"High\"})",
+          "instant": true,
+          "format": "table"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (namespace, image_repository, image_tag) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=\"Medium\"})",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "pod": true,
+              "service": true,
+              "name": true
+            },
+            "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "image_repository": "Image",
+              "image_tag": "Tag",
+              "Value #A": "Critical",
+              "Value #B": "High",
+              "Value #C": "Medium"
+            },
+            "indexByName": {
+              "namespace": 0,
+              "image_repository": 1,
+              "image_tag": 2,
+              "Value #A": 3,
+              "Value #B": 4,
+              "Value #C": 5
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Critical",
+                "desc": true
+              },
+              {
+                "field": "High",
+                "desc": true
+              },
+              {
+                "field": "Medium",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1104,18 +1062,239 @@
     },
     {
       "type": "table",
+      "title": "Packages to upgrade (most CVEs fixed first)",
+      "id": 13,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Per package: how many CVEs the upgrade to the fixed version resolves. Medium and up only.",
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count by (image_repository, image_tag, resource, installed_version, fixed_version) (trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\",vuln_id=~\".*$cve.*\"})",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "pod": true,
+              "service": true,
+              "name": true
+            },
+            "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "Value": "CVEs fixed",
+              "image_repository": "Image",
+              "image_tag": "Tag",
+              "resource": "Package",
+              "installed_version": "Installed",
+              "fixed_version": "Fixed in"
+            },
+            "indexByName": {
+              "image_repository": 0,
+              "image_tag": 1,
+              "resource": 2,
+              "installed_version": 3,
+              "fixed_version": 4,
+              "Value": 5
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "CVEs fixed",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "custom": {
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Critical": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "High": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "Medium": {
+                        "color": "yellow",
+                        "index": 2
+                      },
+                      "Low": {
+                        "color": "blue",
+                        "index": 3
+                      },
+                      "Unknown": {
+                        "color": "gray",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Image"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Fixed in"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Package"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Installed"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tag"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "type": "table",
       "title": "Top CVEs (most workloads affected)",
-      "id": 15,
+      "id": 14,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "description": "Workload/container combinations per CVE. Use the CVE text box above to filter.",
       "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 14
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 27
       },
       "targets": [
         {
@@ -1175,6 +1354,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1296,9 +1476,324 @@
       }
     },
     {
+      "type": "row",
+      "title": "Vulnerabilities",
+      "id": 15,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Vulnerabilities over time",
+      "id": 16,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (severity) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=~\"$severity\"})",
+          "legendFormat": "{{severity}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "stacking": {
+              "mode": "normal"
+            },
+            "lineWidth": 1
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Critical"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "High"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "gray"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "By severity",
+      "id": 17,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (severity) (trivy_image_vulnerabilities{namespace=~\"$namespace\",severity=~\"$severity\"})",
+          "legendFormat": "{{severity}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Critical"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "High"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Unknown"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "gray"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "Critical + High per namespace",
+      "id": 18,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 38
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(sum by (namespace) (trivy_image_vulnerabilities{severity=~\"Critical|High\",namespace=~\"$namespace\"}))",
+          "legendFormat": "{{namespace}}",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
       "type": "table",
       "title": "CVE detail (workload, package, versions)",
-      "id": 16,
+      "id": 19,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1308,7 +1803,7 @@
         "h": 14,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 46
       },
       "targets": [
         {
@@ -1383,6 +1878,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1566,20 +2062,20 @@
     {
       "type": "row",
       "title": "Config audit (workload misconfiguration)",
-      "id": 17,
+      "id": 20,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 60
       },
       "panels": []
     },
     {
       "type": "timeseries",
       "title": "Findings over time",
-      "id": 18,
+      "id": 21,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1588,7 +2084,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 61
       },
       "targets": [
         {
@@ -1708,7 +2204,7 @@
     {
       "type": "bargauge",
       "title": "Findings per namespace",
-      "id": 19,
+      "id": 22,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1717,7 +2213,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 61
       },
       "targets": [
         {
@@ -1756,8 +2252,177 @@
     },
     {
       "type": "table",
+      "title": "Workloads with High/Critical misconfiguration",
+      "id": 23,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Privileged containers, host namespaces, dangerous capabilities and similar. Fix these before the Low findings.",
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 69
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count by (namespace, resource_kind, resource_name, severity) (trivy_configaudits_info{namespace=~\"$namespace\",severity=~\"Critical|High\",config_audit_success=\"false\"})",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "pod": true,
+              "service": true,
+              "name": true
+            },
+            "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "Value": "Checks",
+              "resource_kind": "Kind",
+              "resource_name": "Workload"
+            },
+            "indexByName": {
+              "namespace": 0,
+              "resource_kind": 1,
+              "resource_name": 2,
+              "severity": 3,
+              "Value": 4
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Checks",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "0",
+          "custom": {
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Critical": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "High": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "Medium": {
+                        "color": "yellow",
+                        "index": 2
+                      },
+                      "Low": {
+                        "color": "blue",
+                        "index": 3
+                      },
+                      "Unknown": {
+                        "color": "gray",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Workload"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "type": "table",
       "title": "Failed checks (most common first)",
-      "id": 20,
+      "id": 24,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1766,8 +2431,8 @@
       "gridPos": {
         "h": 12,
         "w": 12,
-        "x": 0,
-        "y": 49
+        "x": 12,
+        "y": 69
       },
       "targets": [
         {
@@ -1825,6 +2490,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -1936,7 +2602,7 @@
     {
       "type": "table",
       "title": "Check detail per resource",
-      "id": 21,
+      "id": 25,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -1944,9 +2610,9 @@
       "description": "",
       "gridPos": {
         "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 49
+        "w": 24,
+        "x": 0,
+        "y": 81
       },
       "targets": [
         {
@@ -2012,6 +2678,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2147,20 +2814,20 @@
     {
       "type": "row",
       "title": "RBAC assessment",
-      "id": 22,
+      "id": 26,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 61
+        "y": 93
       },
       "panels": []
     },
     {
       "type": "table",
       "title": "Failed RBAC checks",
-      "id": 23,
+      "id": 27,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2170,7 +2837,7 @@
         "h": 10,
         "w": 10,
         "x": 0,
-        "y": 62
+        "y": 94
       },
       "targets": [
         {
@@ -2228,6 +2895,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2339,7 +3007,7 @@
     {
       "type": "table",
       "title": "RBAC detail per role",
-      "id": 24,
+      "id": 28,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2349,7 +3017,7 @@
         "h": 10,
         "w": 14,
         "x": 10,
-        "y": 62
+        "y": 94
       },
       "targets": [
         {
@@ -2414,6 +3082,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2537,20 +3206,20 @@
     {
       "type": "row",
       "title": "Exposed secrets",
-      "id": 25,
+      "id": 29,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 104
       },
       "panels": []
     },
     {
       "type": "table",
       "title": "Secrets found inside images",
-      "id": 26,
+      "id": 30,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2560,7 +3229,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 73
+        "y": 105
       },
       "targets": [
         {
@@ -2633,6 +3302,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -2780,29 +3450,29 @@
     {
       "type": "row",
       "title": "Images",
-      "id": 27,
+      "id": 31,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 112
       },
       "panels": []
     },
     {
       "type": "piechart",
       "title": "OS family",
-      "id": 28,
+      "id": 32,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
+        "w": 6,
         "x": 0,
-        "y": 81
+        "y": 113
       },
       "targets": [
         {
@@ -2916,8 +3586,187 @@
     },
     {
       "type": "table",
+      "title": "Images on the latest tag",
+      "id": 33,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "A moving tag makes a scan result hard to reproduce and an update invisible. Pin a version or digest.",
+      "gridPos": {
+        "h": 10,
+        "w": 6,
+        "x": 6,
+        "y": 113
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count by (namespace, image_repository, image_tag, resource_kind, resource_name) (trivy_image_info{namespace=~\"$namespace\",image_tag=~\"latest|\"})",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "container": true,
+              "endpoint": true,
+              "instance": true,
+              "pod": true,
+              "service": true,
+              "name": true,
+              "Value": true
+            },
+            "renameByName": {
+              "severity": "Severity",
+              "namespace": "Namespace",
+              "image_repository": "Image",
+              "resource_name": "Workload"
+            },
+            "indexByName": {
+              "namespace": 0,
+              "image_repository": 1,
+              "resource_name": 2
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Image",
+                "desc": false
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "No images on :latest",
+          "custom": {
+            "filterable": true,
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Severity"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "Critical": {
+                        "color": "red",
+                        "index": 0
+                      },
+                      "High": {
+                        "color": "orange",
+                        "index": 1
+                      },
+                      "Medium": {
+                        "color": "yellow",
+                        "index": 2
+                      },
+                      "Low": {
+                        "color": "blue",
+                        "index": 3
+                      },
+                      "Unknown": {
+                        "color": "gray",
+                        "index": 4
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Image"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 240
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Workload"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Namespace"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "type": "table",
       "title": "Scanned images",
-      "id": 29,
+      "id": 34,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2925,9 +3774,9 @@
       "description": "",
       "gridPos": {
         "h": 10,
-        "w": 16,
-        "x": 8,
-        "y": 81
+        "w": 12,
+        "x": 12,
+        "y": 113
       },
       "targets": [
         {
@@ -2989,6 +3838,7 @@
       ],
       "fieldConfig": {
         "defaults": {
+          "noValue": "0",
           "custom": {
             "filterable": true,
             "align": "auto"
@@ -3094,6 +3944,402 @@
         "cellHeight": "sm",
         "footer": {
           "show": false
+        }
+      }
+    },
+    {
+      "type": "row",
+      "title": "Scanner health",
+      "id": 35,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 123
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Operator",
+      "id": 36,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Prometheus can scrape the operator (alert TrivyOperatorDown)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(up{job=\"trivy-operator\",namespace=\"trivy-system\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Failed scan jobs",
+      "id": 37,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Scan jobs in failed state right now",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(kube_job_status_failed{namespace=\"trivy-system\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Running scans",
+      "id": 38,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Scan jobs running now (limit 1)",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(kube_job_status_active{namespace=\"trivy-system\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Reconcile errors 1h",
+      "id": 39,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(increase(controller_runtime_reconcile_errors_total{namespace=\"trivy-system\"}[1h]))",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Alerts",
+      "id": 40,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Pending or firing Trivy alerts. TrivyCriticalFixableCVE stays pending for 7 days before it fires.",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(ALERTS{alertname=~\"Trivy.*\",alertstate=~\"pending|firing\"})",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Reports",
+      "id": 41,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Image reports the operator holds right now",
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 124
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(trivy_image_info)",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "0",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         }
       }
     }

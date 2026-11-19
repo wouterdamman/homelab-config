@@ -9,11 +9,21 @@ operator:
   scanJobTimeout: 10m
   # Needed for the dashboard (severity counts per image/resource).
   metricsFindingsEnabled: true
-  # Keep cardinality low: no per-CVE-id series.
-  metricsVulnIdEnabled: false
-  # Not used by the dashboard, and the SBOM/compliance reports are large.
+  # The SBOM and compliance reports are large and nothing reads them.
   sbomGenerationEnabled: false
   clusterComplianceEnabled: false
+  # Node-collector jobs (infra assessment) need hostPID and hostPath mounts,
+  # so trivy-system is privileged. Talos has no systemd and different paths,
+  # so some node checks will come back empty.
+  infraAssessmentScannerEnabled: true
+  # Per-finding info metrics for the deep-dive dashboard (CVE id, check id,
+  # title, fixed version). Watch the series count in Prometheus.
+  metricsVulnIdEnabled: true
+  metricsConfigAuditInfo: true
+  metricsRbacAssessmentInfo: true
+  metricsInfraAssessmentInfo: true
+  metricsExposedSecretInfo: true
+  metricsImageInfo: true
 
 serviceMonitor:
   enabled: true

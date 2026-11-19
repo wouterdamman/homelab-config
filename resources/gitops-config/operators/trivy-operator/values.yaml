@@ -1,0 +1,43 @@
+# Trivy Operator: scans running workloads for CVEs, exposed secrets, config
+# issues and RBAC problems, and stores the results as *Report CRDs. Metrics
+# feed the Grafana dashboard (grafana.com id 17813).
+
+operator:
+  # Scan jobs run in this namespace (scanJobsInSameNamespace is false by
+  # default, so the operator namespace is used for the job pods).
+  scanJobsConcurrentLimit: 2
+  scanJobTimeout: 10m
+  # Needed for the dashboard (severity counts per image/resource).
+  metricsFindingsEnabled: true
+  # Keep cardinality low: no per-CVE-id series.
+  metricsVulnIdEnabled: false
+  # Not used by the dashboard, and the SBOM/compliance reports are large.
+  sbomGenerationEnabled: false
+  clusterComplianceEnabled: false
+
+serviceMonitor:
+  enabled: true
+  interval: 60s
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+# PSS restricted for the operator itself
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+trivy:
+  # Scan jobs: one at a time so a scan does not compete with Longhorn/etcd IO
+  # on the single host. Trivy memory peaks on big images.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi

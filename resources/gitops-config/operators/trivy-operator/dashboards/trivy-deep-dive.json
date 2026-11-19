@@ -84,6 +84,23 @@
         ]
       },
       {
+        "name": "image",
+        "label": "Image contains",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": [
+          {
+            "text": "",
+            "value": "",
+            "selected": true
+          }
+        ]
+      },
+      {
         "name": "cve",
         "label": "CVE contains",
         "type": "textbox",
@@ -852,7 +869,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "One row per image, with the CVE count per severity. Updating one image clears all of its rows at once.",
+      "description": "One row per image, with the CVE count per severity. Trivy reports fixed package versions, not image tags: click an image to see which packages need which version.",
       "gridPos": {
         "h": 10,
         "w": 24,
@@ -1049,6 +1066,23 @@
                 "value": 150
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Image"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Show packages and fixed versions for this image",
+                    "url": "/d/trivy-deep-dive/trivy-deep-dive?${__url_time_range}&var-namespace=${namespace:queryparam}&var-severity=${severity:queryparam}&var-image=${__data.fields.Image}&var-cve=${cve}"
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
@@ -1068,7 +1102,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Per package: how many CVEs the upgrade to the fixed version resolves. Medium and up only.",
+      "description": "Per package: installed version, the version that fixes it, and how many CVEs that resolves. The package lives inside the image, so the fix is a newer build of the image (or of its base image). Click an image in the table above to filter on it. Medium and up only.",
       "gridPos": {
         "h": 10,
         "w": 24,
@@ -1082,7 +1116,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count by (image_repository, image_tag, resource, installed_version, fixed_version) (trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\",vuln_id=~\".*$cve.*\"})",
+          "expr": "count by (image_repository, image_tag, resource, installed_version, fixed_version) (trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"Critical|High|Medium\",image_repository=~\".*$image.*\",vuln_id=~\".*$cve.*\"})",
           "instant": true,
           "format": "table"
         }
@@ -1303,7 +1337,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count by (vuln_id, severity, vuln_title, fixed_version) (trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",vuln_id=~\".*$cve.*\"})",
+          "expr": "count by (vuln_id, severity, vuln_title, fixed_version) (trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",image_repository=~\".*$image.*\",vuln_id=~\".*$cve.*\"})",
           "instant": true,
           "format": "table"
         }
@@ -1824,7 +1858,7 @@
                 "type": "prometheus",
                 "uid": "prometheus"
               },
-              "expr": "trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",vuln_id=~\".*$cve.*\"}",
+              "expr": "trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",image_repository=~\".*$image.*\",vuln_id=~\".*$cve.*\"}",
               "instant": true,
               "format": "table"
             }

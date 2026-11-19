@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: trivy-operator
+  namespace: trivy-system
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: trivy-operator
+      rules:
+
+        - alert: TrivyCriticalFixableCVE
+          # ignoreUnfixed is on, so every Critical here has a fix available.
+          # One alert for all images (not one per image) and only after 7d, so
+          # it signals images that were not updated, not every new CVE.
+          expr: |
+            count(sum by (image_repository, image_tag) (trivy_image_vulnerabilities{severity="Critical"}) > 0) > 0
+          for: 7d
+          labels:
+            severity: warning
+          annotations:
+            summary: "Images with a fixable Critical CVE for over 7 days"
+            description: "{{`{{`}} $value {{`}}`}} images have had a Critical CVE with a fix available for 7 days. See the Trivy Deep Dive dashboard."
+
+        - alert: TrivyOperatorDown
+          expr: |
+            up{job="trivy-operator", namespace="trivy-system"} == 0
+            or
+            absent(up{job="trivy-operator", namespace="trivy-system"})
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Trivy Operator is not being scraped"
+            description: "No successful scrape of trivy-operator for 15m. Check the pod in trivy-system and the CiliumNetworkPolicy."

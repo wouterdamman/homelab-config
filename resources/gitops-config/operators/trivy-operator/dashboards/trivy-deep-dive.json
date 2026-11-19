@@ -365,13 +365,13 @@
     },
     {
       "type": "stat",
-      "title": "New 24h",
+      "title": "New",
       "id": 6,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "CVEs (Medium and up) that were not there 24h ago: a new CVE in a known image or a newly deployed image. Shows n/a until there is 24h of history.",
+      "description": "New in 24h: CVEs (Medium and up) that were not there 24h ago: a new CVE in a known image or a newly deployed image. Shows n/a until there is 24h of history.",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -426,13 +426,13 @@
     },
     {
       "type": "stat",
-      "title": "Resolved 24h",
+      "title": "Resolved",
       "id": 7,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "CVEs (Medium and up) that were there 24h ago and are gone now: image updated or workload removed. Shows n/a until there is 24h of history.",
+      "description": "Resolved in 24h: CVEs (Medium and up) that were there 24h ago and are gone now: image updated or workload removed. Shows n/a until there is 24h of history.",
       "gridPos": {
         "h": 4,
         "w": 3,
@@ -729,15 +729,15 @@
           "options": {
             "sort": [
               {
-                "field": "Critical",
+                "field": "Critical CVEs",
                 "desc": true
               },
               {
-                "field": "High",
+                "field": "High CVEs",
                 "desc": true
               },
               {
-                "field": "Medium",
+                "field": "Medium CVEs",
                 "desc": true
               }
             ]
@@ -854,8 +854,8 @@
       },
       "description": "One row per image, with the CVE count per severity. Updating one image clears all of its rows at once.",
       "gridPos": {
-        "h": 12,
-        "w": 12,
+        "h": 10,
+        "w": 24,
         "x": 0,
         "y": 15
       },
@@ -1070,10 +1070,10 @@
       },
       "description": "Per package: how many CVEs the upgrade to the fixed version resolves. Medium and up only.",
       "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 15
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 25
       },
       "targets": [
         {
@@ -1294,7 +1294,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 35
       },
       "targets": [
         {
@@ -1484,7 +1484,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 45
       },
       "panels": []
     },
@@ -1500,7 +1500,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 38
+        "y": 46
       },
       "targets": [
         {
@@ -1629,7 +1629,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 38
+        "y": 46
       },
       "targets": [
         {
@@ -1753,7 +1753,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 38
+        "y": 46
       },
       "targets": [
         {
@@ -1791,291 +1791,305 @@
       }
     },
     {
-      "type": "table",
-      "title": "CVE detail (workload, package, versions)",
-      "id": 19,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "One row per CVE per container. Package is the affected library or OS package.",
+      "type": "row",
+      "title": "Detail: CVE per workload and package (loads when opened)",
+      "id": 20,
+      "collapsed": true,
       "gridPos": {
-        "h": 14,
+        "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 54
       },
-      "targets": [
+      "panels": [
         {
-          "refId": "A",
+          "type": "table",
+          "title": "CVE detail (workload, package, versions)",
+          "id": 19,
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",vuln_id=~\".*$cve.*\"}",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "container": true,
-              "endpoint": true,
-              "instance": true,
-              "pod": true,
-              "service": true,
-              "name": true,
-              "Value": true,
-              "image_digest": true,
-              "image_registry": true,
-              "resource_kind": true
-            },
-            "renameByName": {
-              "severity": "Severity",
-              "namespace": "Namespace",
-              "vuln_id": "CVE",
-              "vuln_title": "Title",
-              "resource": "Package",
-              "installed_version": "Installed",
-              "fixed_version": "Fixed in",
-              "image_repository": "Image",
-              "image_tag": "Tag",
-              "container_name": "Container",
-              "resource_name": "Workload"
-            },
-            "indexByName": {
-              "namespace": 0,
-              "resource_name": 1,
-              "container_name": 2,
-              "image_repository": 3,
-              "image_tag": 4,
-              "resource": 5,
-              "installed_version": 6,
-              "fixed_version": 7,
-              "vuln_id": 8,
-              "severity": 9,
-              "vuln_title": 10
+          "description": "One row per CVE per container. Package is the affected library or OS package.",
+          "gridPos": {
+            "h": 14,
+            "w": 24,
+            "x": 0,
+            "y": 55
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "trivy_vulnerability_id{namespace=~\"$namespace\",severity=~\"$severity\",vuln_id=~\".*$cve.*\"}",
+              "instant": true,
+              "format": "table"
             }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "Severity",
-                "desc": false
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "pod": true,
+                  "service": true,
+                  "name": true,
+                  "Value": true,
+                  "image_digest": true,
+                  "image_registry": true,
+                  "resource_kind": true
+                },
+                "renameByName": {
+                  "severity": "Severity",
+                  "namespace": "Namespace",
+                  "vuln_id": "CVE",
+                  "vuln_title": "Title",
+                  "resource": "Package",
+                  "installed_version": "Installed",
+                  "fixed_version": "Fixed in",
+                  "image_repository": "Image",
+                  "image_tag": "Tag",
+                  "container_name": "Container",
+                  "resource_name": "Workload"
+                },
+                "indexByName": {
+                  "namespace": 0,
+                  "resource_name": 1,
+                  "container_name": 2,
+                  "image_repository": 3,
+                  "image_tag": 4,
+                  "resource": 5,
+                  "installed_version": 6,
+                  "fixed_version": 7,
+                  "vuln_id": 8,
+                  "severity": 9,
+                  "vuln_title": 10
+                }
               }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {
-            "filterable": true,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
             },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
                   {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
+                    "field": "Severity",
+                    "desc": false
+                  }
+                ]
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "noValue": "0",
+              "custom": {
+                "filterable": true,
+                "align": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Severity"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "Critical": {
+                            "color": "red",
+                            "index": 0
+                          },
+                          "High": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "Medium": {
+                            "color": "yellow",
+                            "index": 2
+                          },
+                          "Low": {
+                            "color": "blue",
+                            "index": 3
+                          },
+                          "Unknown": {
+                            "color": "gray",
+                            "index": 4
+                          }
+                        }
                       }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
                     }
                   }
                 ]
               },
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "matcher": {
+                  "id": "byName",
+                  "options": "Title"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 320
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "CVE"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Image"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 240
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Fixed in"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 170
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Package"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 170
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Installed"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 170
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Workload"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 220
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Tag"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 130
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
               }
             ]
           },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Title"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 320
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "CVE"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Image"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 240
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Fixed in"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 170
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Package"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 170
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Installed"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 170
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Workload"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 220
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Tag"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 130
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            }
           }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
         }
-      }
+      ]
     },
     {
       "type": "row",
       "title": "Config audit (workload misconfiguration)",
-      "id": 20,
+      "id": 21,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 55
       },
       "panels": []
     },
     {
       "type": "timeseries",
       "title": "Findings over time",
-      "id": 21,
+      "id": 22,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2084,7 +2098,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 61
+        "y": 56
       },
       "targets": [
         {
@@ -2204,7 +2218,7 @@
     {
       "type": "bargauge",
       "title": "Findings per namespace",
-      "id": 22,
+      "id": 23,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2213,7 +2227,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 61
+        "y": 56
       },
       "targets": [
         {
@@ -2253,7 +2267,7 @@
     {
       "type": "table",
       "title": "Workloads with High/Critical misconfiguration",
-      "id": 23,
+      "id": 24,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2263,7 +2277,7 @@
         "h": 12,
         "w": 12,
         "x": 0,
-        "y": 69
+        "y": 64
       },
       "targets": [
         {
@@ -2422,7 +2436,7 @@
     {
       "type": "table",
       "title": "Failed checks (most common first)",
-      "id": 24,
+      "id": 25,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -2432,7 +2446,7 @@
         "h": 12,
         "w": 12,
         "x": 12,
-        "y": 69
+        "y": 64
       },
       "targets": [
         {
@@ -2600,244 +2614,258 @@
       }
     },
     {
-      "type": "table",
-      "title": "Check detail per resource",
-      "id": 25,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "",
+      "type": "row",
+      "title": "Detail: config audit check per resource (loads when opened)",
+      "id": 27,
+      "collapsed": true,
       "gridPos": {
-        "h": 12,
+        "h": 1,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 76
       },
-      "targets": [
+      "panels": [
         {
-          "refId": "A",
+          "type": "table",
+          "title": "Check detail per resource",
+          "id": 26,
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "trivy_configaudits_info{namespace=~\"$namespace\",severity=~\"$severity\",config_audit_success=\"false\"}",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "container": true,
-              "endpoint": true,
-              "instance": true,
-              "pod": true,
-              "service": true,
-              "name": true,
-              "Value": true,
-              "config_audit_success": true,
-              "config_audit_category": true
-            },
-            "renameByName": {
-              "severity": "Severity",
-              "namespace": "Namespace",
-              "config_audit_id": "Check",
-              "config_audit_title": "Title",
-              "config_audit_description": "Description",
-              "resource_kind": "Kind",
-              "resource_name": "Resource"
-            },
-            "indexByName": {
-              "namespace": 0,
-              "resource_kind": 1,
-              "resource_name": 2,
-              "config_audit_id": 3,
-              "severity": 4,
-              "config_audit_title": 5,
-              "config_audit_description": 6
+          "description": "",
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 77
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "trivy_configaudits_info{namespace=~\"$namespace\",severity=~\"$severity\",config_audit_success=\"false\"}",
+              "instant": true,
+              "format": "table"
             }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "Severity",
-                "desc": false
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "pod": true,
+                  "service": true,
+                  "name": true,
+                  "Value": true,
+                  "config_audit_success": true,
+                  "config_audit_category": true
+                },
+                "renameByName": {
+                  "severity": "Severity",
+                  "namespace": "Namespace",
+                  "config_audit_id": "Check",
+                  "config_audit_title": "Title",
+                  "config_audit_description": "Description",
+                  "resource_kind": "Kind",
+                  "resource_name": "Resource"
+                },
+                "indexByName": {
+                  "namespace": 0,
+                  "resource_kind": 1,
+                  "resource_name": 2,
+                  "config_audit_id": 3,
+                  "severity": 4,
+                  "config_audit_title": 5,
+                  "config_audit_description": 6
+                }
               }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {
-            "filterable": true,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
             },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
                   {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
+                    "field": "Severity",
+                    "desc": false
+                  }
+                ]
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "noValue": "0",
+              "custom": {
+                "filterable": true,
+                "align": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Severity"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "Critical": {
+                            "color": "red",
+                            "index": 0
+                          },
+                          "High": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "Medium": {
+                            "color": "yellow",
+                            "index": 2
+                          },
+                          "Low": {
+                            "color": "blue",
+                            "index": 3
+                          },
+                          "Unknown": {
+                            "color": "gray",
+                            "index": 4
+                          }
+                        }
                       }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
                     }
                   }
                 ]
               },
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "matcher": {
+                  "id": "byName",
+                  "options": "Title"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 320
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Description"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 420
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Resource"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 220
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Check"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
               }
             ]
           },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Title"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 320
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Description"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 420
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Resource"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 220
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Check"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 120
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            }
           }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
         }
-      }
+      ]
     },
     {
       "type": "row",
       "title": "RBAC assessment",
-      "id": 26,
+      "id": 28,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 93
+        "y": 77
       },
       "panels": []
     },
     {
       "type": "table",
       "title": "Failed RBAC checks",
-      "id": 27,
+      "id": 29,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "description": "",
       "gridPos": {
-        "h": 10,
-        "w": 10,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 94
+        "y": 78
       },
       "targets": [
         {
@@ -3005,221 +3033,235 @@
       }
     },
     {
-      "type": "table",
-      "title": "RBAC detail per role",
-      "id": 28,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "description": "",
+      "type": "row",
+      "title": "Detail: RBAC check per role (loads when opened)",
+      "id": 31,
+      "collapsed": true,
       "gridPos": {
-        "h": 10,
-        "w": 14,
-        "x": 10,
-        "y": 94
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 87
       },
-      "targets": [
+      "panels": [
         {
-          "refId": "A",
+          "type": "table",
+          "title": "RBAC detail per role",
+          "id": 30,
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "trivy_rbacassessments_info{namespace=~\"$namespace\",severity=~\"$severity\",rbac_assessment_success=\"false\"}",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "__name__": true,
-              "job": true,
-              "container": true,
-              "endpoint": true,
-              "instance": true,
-              "pod": true,
-              "service": true,
-              "Value": true,
-              "rbac_assessment_success": true,
-              "rbac_assessment_category": true
-            },
-            "renameByName": {
-              "severity": "Severity",
-              "namespace": "Namespace",
-              "name": "Role",
-              "rbac_assessment_id": "Check",
-              "rbac_assessment_title": "Title",
-              "rbac_assessment_description": "Description",
-              "resource_kind": "Kind"
-            },
-            "indexByName": {
-              "namespace": 0,
-              "resource_kind": 1,
-              "name": 2,
-              "rbac_assessment_id": 3,
-              "severity": 4,
-              "rbac_assessment_title": 5,
-              "rbac_assessment_description": 6
+          "description": "",
+          "gridPos": {
+            "h": 10,
+            "w": 24,
+            "x": 0,
+            "y": 88
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "trivy_rbacassessments_info{namespace=~\"$namespace\",severity=~\"$severity\",rbac_assessment_success=\"false\"}",
+              "instant": true,
+              "format": "table"
             }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "Severity",
-                "desc": false
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "__name__": true,
+                  "job": true,
+                  "container": true,
+                  "endpoint": true,
+                  "instance": true,
+                  "pod": true,
+                  "service": true,
+                  "Value": true,
+                  "rbac_assessment_success": true,
+                  "rbac_assessment_category": true
+                },
+                "renameByName": {
+                  "severity": "Severity",
+                  "namespace": "Namespace",
+                  "name": "Role",
+                  "rbac_assessment_id": "Check",
+                  "rbac_assessment_title": "Title",
+                  "rbac_assessment_description": "Description",
+                  "resource_kind": "Kind"
+                },
+                "indexByName": {
+                  "namespace": 0,
+                  "resource_kind": 1,
+                  "name": 2,
+                  "rbac_assessment_id": 3,
+                  "severity": 4,
+                  "rbac_assessment_title": 5,
+                  "rbac_assessment_description": 6
+                }
               }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {
-            "filterable": true,
-            "align": "auto"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Severity"
             },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
+            {
+              "id": "sortBy",
+              "options": {
+                "sort": [
                   {
-                    "type": "value",
-                    "options": {
-                      "Critical": {
-                        "color": "red",
-                        "index": 0
-                      },
-                      "High": {
-                        "color": "orange",
-                        "index": 1
-                      },
-                      "Medium": {
-                        "color": "yellow",
-                        "index": 2
-                      },
-                      "Low": {
-                        "color": "blue",
-                        "index": 3
-                      },
-                      "Unknown": {
-                        "color": "gray",
-                        "index": 4
+                    "field": "Severity",
+                    "desc": false
+                  }
+                ]
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "noValue": "0",
+              "custom": {
+                "filterable": true,
+                "align": "auto"
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Severity"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "type": "value",
+                        "options": {
+                          "Critical": {
+                            "color": "red",
+                            "index": 0
+                          },
+                          "High": {
+                            "color": "orange",
+                            "index": 1
+                          },
+                          "Medium": {
+                            "color": "yellow",
+                            "index": 2
+                          },
+                          "Low": {
+                            "color": "blue",
+                            "index": 3
+                          },
+                          "Unknown": {
+                            "color": "gray",
+                            "index": 4
+                          }
+                        }
                       }
+                    ]
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-text"
                     }
                   }
                 ]
               },
               {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "matcher": {
+                  "id": "byName",
+                  "options": "Title"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 320
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Description"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 420
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Check"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 120
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Namespace"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
               }
             ]
           },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Title"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 320
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Description"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 420
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Check"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 120
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Namespace"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm",
+            "footer": {
+              "show": false
+            }
           }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false
         }
-      }
+      ]
     },
     {
       "type": "row",
       "title": "Exposed secrets",
-      "id": 29,
+      "id": 32,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 104
+        "y": 88
       },
       "panels": []
     },
     {
       "type": "table",
       "title": "Secrets found inside images",
-      "id": 30,
+      "id": 33,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3229,7 +3271,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 105
+        "y": 89
       },
       "targets": [
         {
@@ -3450,20 +3492,20 @@
     {
       "type": "row",
       "title": "Images",
-      "id": 31,
+      "id": 34,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 112
+        "y": 96
       },
       "panels": []
     },
     {
       "type": "piechart",
       "title": "OS family",
-      "id": 32,
+      "id": 35,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3472,7 +3514,7 @@
         "h": 10,
         "w": 6,
         "x": 0,
-        "y": 113
+        "y": 97
       },
       "targets": [
         {
@@ -3481,7 +3523,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "count by (image_os_family) (trivy_image_info{namespace=~\"$namespace\"})",
+          "expr": "label_replace(count by (image_os_family) (trivy_image_info{namespace=~\"$namespace\"}), \"image_os_family\", \"unknown\", \"image_os_family\", \"\")",
           "legendFormat": "{{image_os_family}}",
           "instant": true
         }
@@ -3587,7 +3629,7 @@
     {
       "type": "table",
       "title": "Images on the latest tag",
-      "id": 33,
+      "id": 36,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3597,7 +3639,7 @@
         "h": 10,
         "w": 6,
         "x": 6,
-        "y": 113
+        "y": 97
       },
       "targets": [
         {
@@ -3766,7 +3808,7 @@
     {
       "type": "table",
       "title": "Scanned images",
-      "id": 34,
+      "id": 37,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3776,7 +3818,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 113
+        "y": 97
       },
       "targets": [
         {
@@ -3950,20 +3992,20 @@
     {
       "type": "row",
       "title": "Scanner health",
-      "id": 35,
+      "id": 38,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 123
+        "y": 107
       },
       "panels": []
     },
     {
       "type": "stat",
       "title": "Operator",
-      "id": 36,
+      "id": 39,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -3973,7 +4015,7 @@
         "h": 4,
         "w": 4,
         "x": 0,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {
@@ -4041,7 +4083,7 @@
     {
       "type": "stat",
       "title": "Failed scan jobs",
-      "id": 37,
+      "id": 40,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -4051,7 +4093,7 @@
         "h": 4,
         "w": 4,
         "x": 4,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {
@@ -4102,7 +4144,7 @@
     {
       "type": "stat",
       "title": "Running scans",
-      "id": 38,
+      "id": 41,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -4112,7 +4154,7 @@
         "h": 4,
         "w": 4,
         "x": 8,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {
@@ -4163,7 +4205,7 @@
     {
       "type": "stat",
       "title": "Reconcile errors 1h",
-      "id": 39,
+      "id": 42,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -4173,7 +4215,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {
@@ -4224,7 +4266,7 @@
     {
       "type": "stat",
       "title": "Alerts",
-      "id": 40,
+      "id": 43,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -4234,7 +4276,7 @@
         "h": 4,
         "w": 4,
         "x": 16,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {
@@ -4285,7 +4327,7 @@
     {
       "type": "stat",
       "title": "Reports",
-      "id": 41,
+      "id": 44,
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -4295,7 +4337,7 @@
         "h": 4,
         "w": 4,
         "x": 20,
-        "y": 124
+        "y": 108
       },
       "targets": [
         {

@@ -4,6 +4,8 @@
 # curly braces) in the JSON.
 #
 # Sources:
+# - overview/: own dashboard with the key highlights, the Grafana home dashboard
+#   (generated once, edit the JSON directly from here on)
 # - kubernetes/, nodes/: kubernetes-mixin dashboards as rendered by kube-prometheus-stack
 #   (only the ones in use), Europe/Amsterdam as timezone
 # - longhorn/: grafana.com id 16888 revision 35
@@ -16,7 +18,7 @@
 # - cilium/: the agent, operator and Hubble dashboards of the Cilium chart 1.20.4
 #   (rendered with dashboards.enabled=true; kept here because the agent dashboard is
 #   larger than the client-side apply limit of the Cilium app)
-{{- $folders := dict "kubernetes" "Kubernetes" "nodes" "Nodes" "longhorn" "Longhorn" "argocd" "Argo CD" "cilium" "Cilium" "postgresql" "PostgreSQL" }}
+{{- $folders := dict "overview" "Overview" "kubernetes" "Kubernetes" "nodes" "Nodes" "longhorn" "Longhorn" "argocd" "Argo CD" "cilium" "Cilium" "postgresql" "PostgreSQL" }}
 {{- range $path, $_ := .Files.Glob "dashboards/*/*.json" }}
 {{- $dir := base (dir $path) }}
 ---

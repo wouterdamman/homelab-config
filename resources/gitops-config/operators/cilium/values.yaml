@@ -33,7 +33,7 @@ operator:
   prometheus:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       labels:
         release: prometheus
 
@@ -150,7 +150,7 @@ hubble:
       - icmp
       - http
     serviceMonitor:
-      enabled: true
+      enabled: false
       labels:
         release: prometheus
 
@@ -158,7 +158,7 @@ hubble:
 prometheus:
   enabled: true
   serviceMonitor:
-    enabled: true
+    enabled: false
     labels:
       release: prometheus
 

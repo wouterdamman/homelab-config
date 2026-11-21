@@ -30,7 +30,7 @@ operator:
   metricsImageInfo: true
 
 serviceMonitor:
-  enabled: true
+  enabled: false
   interval: 60s
 
 resources:

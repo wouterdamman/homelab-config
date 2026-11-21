@@ -42,7 +42,7 @@ podDnsConfig:
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: true
+    enabled: false
     labels:
       release: prometheus
 

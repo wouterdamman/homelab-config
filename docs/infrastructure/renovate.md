@@ -60,12 +60,12 @@ All ArgoCD applications have a tier label (`homelab.damman.tech/tier`) that refl
 |------|-------------|-------|-------|-------|
 | Tier-0 | argo-cd, argocd-apps, cilium, longhorn | Own PR, manual merge | Own PR, manual merge | Own PR, manual merge |
 | Tier-1 | cert-manager, cloudnative-pg, external-dns, external-secrets, kubelet-csr-approver, onepassword-connect | Own PR, manual merge | Own PR, manual merge | Own PR, manual merge |
-| Tier-2+ | authentik, loki, kube-prometheus-stack, promtail, evcc, home-assistant, zigbee2mqtt | Grouped PR, **automerge 01:00–05:00 UTC** | Own PR, manual merge | Own PR, manual merge |
+| Tier-2+ | authentik, loki, victoria-metrics-k8s-stack, alertmanager, grafana, promtail, evcc, home-assistant, zigbee2mqtt | Grouped PR, **automerge 01:00–05:00 UTC** | Own PR, manual merge | Own PR, manual merge |
 | Terraform | All providers (proxmox, kubernetes, helm, …) | Grouped PR, manual merge | Grouped PR, manual merge | Grouped PR, manual merge |
 
-### kube-prometheus-stack exception
+### victoria-metrics-k8s-stack exception
 
-> ⚠️ `kube-prometheus-stack` releases patch versions very frequently (often daily). Patch updates are **disabled** for this chart — only **minor** and **major** updates will open a PR.
+> ⚠️ `victoria-metrics-k8s-stack` releases patch versions very frequently, and every release can change the bundled operator and its CRDs. Patch updates are **disabled** for this chart — only **minor** and **major** updates will open a PR.
 
 ### Ignored packages
 - `emqx/emqx` docker image — ignored entirely (managed manually)
@@ -129,7 +129,7 @@ All ArgoCD applications have a tier label (`homelab.damman.tech/tier`) that refl
         "argo-cd", "argocd-apps", "cilium", "longhorn",
         "cert-manager", "cloudnative-pg", "external-dns",
         "external-secrets", "kubelet-csr-approver", "connect",
-        "kube-prometheus-stack"
+        "victoria-metrics-k8s-stack"
       ],
       "groupName": "Helm charts (tier-2+) - patches",
       "commitMessagePrefix": "[Tier: 2+]",
@@ -152,8 +152,8 @@ All ArgoCD applications have a tier label (`homelab.damman.tech/tier`) that refl
       "enabled": false
     },
     {
-      "description": "Disable patch updates for kube-prometheus-stack",
-      "matchPackageNames": ["kube-prometheus-stack"],
+      "description": "Disable patch updates for victoria-metrics-k8s-stack",
+      "matchPackageNames": ["victoria-metrics-k8s-stack"],
       "matchUpdateTypes": ["patch"],
       "enabled": false
     },

@@ -80,7 +80,7 @@ The `input-files/` directory holds bootstrap-time secret YAML files (gitignored)
 - Wave -1: cluster-config (namespaces, PSS labels, shared config)
 - Wave 0: Longhorn, Cilium, ArgoCD (self-managed)
 - Wave 1: sync-app (self), 1Password Connect, External Secrets Operator, cert-manager, external-dns, kubelet-csr-approver, cloudnative-pg, cnpg-barman-cloud
-- Wave 2: kube-prometheus-stack (prometheus-community chart), Loki, Promtail, Authentik, prometheus-pve-exporter, descheduler, trivy-operator
+- Wave 2: victoria-metrics (victoria-metrics-k8s-stack: VMSingle, vmagent, vmalert, operator), Alertmanager, Grafana, Loki, Promtail, Authentik, prometheus-pve-exporter, descheduler, trivy-operator
 - Wave 3: proxmox (in-cluster infra manifests)
 - Wave 4: home-assistant, emqx, zigbee2mqtt
 - Wave 5: evcc, home-finance, homarr, netbox
@@ -109,7 +109,7 @@ Ingress uses `HTTPRoute` resources. No traditional Ingress objects.
 - fromEndpoints:
   - matchLabels:
       k8s:io.kubernetes.pod.namespace: monitoring   # required
-      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/name: vmagent
 ```
 
 **kube-apiserver webhook ingress: use `cluster`, not `kube-apiserver`.** In Talos, the API-server is a static pod in the host network. Cilium does not recognise it as the `kube-apiserver` entity for *ingress* traffic (admission webhooks). Use `fromEntities: cluster` for webhook ports. `toEntities: kube-apiserver` for *egress* works fine.
@@ -130,11 +130,11 @@ Ingress uses `HTTPRoute` resources. No traditional Ingress objects.
     - port: "53"
       protocol: TCP
 
-# Prometheus scraping ingress
+# vmagent scraping ingress
 - fromEndpoints:
   - matchLabels:
       k8s:io.kubernetes.pod.namespace: monitoring
-      app.kubernetes.io/name: prometheus
+      app.kubernetes.io/name: vmagent
   toPorts:
   - ports:
     - port: "<metrics-port>"
@@ -173,8 +173,8 @@ CloudNative-PG operator provides shared PostgreSQL. Apps connect to `cnpg-shared
 ### Dependency Updates
 Renovate runs Monday before 6am UTC and opens PRs against `resources/gitops-config/sync-app/templates/*.yaml` (Helm chart versions), `values.yaml` files (image tags), and `.tf` files (provider versions). Apps carry a `homelab.damman.tech/tier` label that drives PR behavior (see `renovate.json`, `docs/infrastructure/renovate.md`):
 - Tier 0 (`argo-cd`, `argocd-apps`, `cilium`, `longhorn`) and Tier 1 (`cert-manager`, `cloudnative-pg`, `external-dns`, `external-secrets`, `kubelet-csr-approver`, `onepassword-connect`): own PR, manual merge, any update type.
-- Tier 2+ (`authentik`, `descheduler`, `trivy-operator`, `loki`, `kube-prometheus-stack`, `promtail`, `evcc`, `home-assistant`, `home-finance`, `zigbee2mqtt`): patch updates grouped into one auto-merged PR; minor/major get their own PR, manual merge.
-- `kube-prometheus-stack` patch updates are disabled (releases too frequently); `emqx/emqx` image is ignored entirely (managed manually).
+- Tier 2+ (`authentik`, `descheduler`, `trivy-operator`, `loki`, `victoria-metrics-k8s-stack`, `alertmanager`, `grafana`, `promtail`, `evcc`, `home-assistant`, `home-finance`, `zigbee2mqtt`): patch updates grouped into one auto-merged PR; minor/major get their own PR, manual merge.
+- `victoria-metrics-k8s-stack` patch updates are disabled (releases too frequently); `emqx/emqx` image is ignored entirely (managed manually).
 
 ## Adding a New Application
 

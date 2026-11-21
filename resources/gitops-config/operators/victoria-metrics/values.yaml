@@ -1,0 +1,128 @@
+# victoria-metrics-k8s-stack values
+# Docs: https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/
+#
+# Runs next to kube-prometheus-stack while the two are compared. Alertmanager and
+# Grafana are their own apps (operators/alertmanager, operators/grafana); the
+# kube-state-metrics, node-exporter and the native scrapes of kube-prometheus-stack
+# are used for now, through the operator's ServiceMonitor converter.
+
+# Short resource names: vmsingle-vmks, vmagent-vmks, ...
+fullnameOverride: vmks
+
+grafana:
+  enabled: false
+alertmanager:
+  enabled: false
+defaultDashboards:
+  enabled: false
+
+# kube-prometheus-stack still provides these as ServiceMonitors / PrometheusRules, which the
+# operator converts. They move here when kube-prometheus-stack is removed.
+defaultRules:
+  enabled: false
+# Fetches dashboards and rules from upstream at deploy time; both are off for now
+# (dashboards live in operators/grafana, rules come through the converter)
+syncJob:
+  enabled: false
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+kubeApiServer:
+  enabled: false
+kubelet:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+coreDns:
+  enabled: false
+
+vmsingle:
+  enabled: true
+  spec:
+    # Same as Prometheus: 14 days
+    retentionPeriod: "14d"
+    storage:
+      storageClassName: longhorn-monitoring
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 40Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+vmagent:
+  enabled: true
+  spec:
+    scrapeInterval: 30s
+    # Same exclusion as the Prometheus ServiceMonitor selection
+    serviceScrapeNamespaceSelector:
+      matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: NotIn
+        values:
+        - kubelet-csr-approver
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+# Rules are evaluated but nothing is sent: Prometheus still alerts. The notifier
+# is switched to the standalone Alertmanager at the cutover.
+vmalert:
+  enabled: true
+  spec:
+    evaluationInterval: 30s
+    extraArgs:
+      notifier.blackhole: "true"
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+victoria-metrics-operator:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule

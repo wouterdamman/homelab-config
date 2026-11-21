@@ -15,6 +15,9 @@ spec:
     - ports:
       - port: "9090"
         protocol: TCP
+      # config-reloader sidecar metrics, scraped by vmagent
+      - port: "8080"
+        protocol: TCP
   egress:
   - toEndpoints:
     - matchLabels:

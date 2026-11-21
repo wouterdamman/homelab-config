@@ -72,6 +72,11 @@ vmagent:
   enabled: true
   spec:
     scrapeInterval: 30s
+    # The API server response is far above the 16MiB default (histogram buckets);
+    # the drop rule for the unused ones comes with the native scrape config
+    extraArgs:
+      promscrape.maxScrapeSize: 64MiB
+      promscrape.streamParse: "true"
     # Same exclusion as the Prometheus ServiceMonitor selection
     serviceScrapeNamespaceSelector:
       matchExpressions:

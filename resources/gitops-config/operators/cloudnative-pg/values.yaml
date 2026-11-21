@@ -21,7 +21,7 @@ resources:
 
 # Monitoring configuration
 monitoring:
-  podMonitorEnabled: true
+  podMonitorEnabled: false
   podMonitorAdditionalLabels:
     release: prometheus
 

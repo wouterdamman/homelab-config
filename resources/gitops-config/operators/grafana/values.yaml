@@ -44,7 +44,7 @@ tolerations:
   effect: NoSchedule
 
 serviceMonitor:
-  enabled: true
+  enabled: false
 
 # OIDC credentials injected as env vars; optional so Grafana starts before Authentik is configured
 envFromSecrets:

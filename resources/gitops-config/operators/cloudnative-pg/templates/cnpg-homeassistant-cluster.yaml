@@ -68,7 +68,7 @@ spec:
 
   # Monitoring
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
     podMonitorMetricRelabelings:
       - action: replace
         sourceLabels: [cluster]

@@ -79,8 +79,10 @@ httproutes:
     name: emqx-emqx-enterprise
     port: 18083
 
+# The chart would create a ServiceMonitor; the scrape is a native VMServiceScrape
+# (operators/victoria-metrics/scrapes), the endpoint itself stays
 metrics:
-  enabled: true
+  enabled: false
   type: prometheus
 
 serviceExternal:

@@ -1,0 +1,26 @@
+# Vector sits between Talos and VictoriaLogs; alert when it stops delivering or stops receiving.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: vector
+  namespace: monitoring
+spec:
+  groups:
+  - name: vector
+    rules:
+    - alert: VectorDeliveryErrors
+      expr: sum(increase(vector_component_errors_total{component_id="victorialogs"}[10m])) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Vector cannot deliver the Talos logs to VictoriaLogs"
+        description: "Errors on the victorialogs sink for 10 minutes: check `kubectl logs -n monitoring deploy/vector` and vlsingle."
+    - alert: TalosLogsMissing
+      expr: sum(rate(vector_component_received_events_total{component_id="talos"}[15m])) == 0
+      for: 30m
+      labels:
+        severity: warning
+      annotations:
+        summary: "No Talos logs received by Vector"
+        description: "Vector has not received a Talos log line for 30 minutes: the nodes cannot reach 10.0.10.242:5140 or machine.logging is off."

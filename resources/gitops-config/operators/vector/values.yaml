@@ -1,0 +1,83 @@
+# Vector values
+# Docs: https://vector.dev/docs/setup/installation/package-managers/helm/
+#
+# Talos can only ship its service and kernel logs as newline-separated JSON over a raw
+# TCP/UDP connection (machine.logging, KmsgLogConfig). VictoriaLogs takes JSON over HTTP,
+# so Vector receives the TCP stream and posts it to /insert/jsonline.
+
+role: Stateless-Aggregator
+replicas: 1
+
+# Reachable from the nodes (they are not in the pod network) on a fixed address
+service:
+  type: LoadBalancer
+  annotations:
+    io.cilium/lb-ipam-ips: 10.0.10.242
+  ports:
+  - name: talos-logs
+    port: 5140
+    protocol: TCP
+    targetPort: 5140
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 192Mi
+
+tolerations:
+- key: node-role.kubernetes.io/control-plane
+  operator: Equal
+  value: "true"
+  effect: NoSchedule
+
+# Own metrics, scraped by vmagent through templates/vmservicescrape.yaml
+podMonitor:
+  enabled: false
+
+customConfig:
+  data_dir: /vector-data-dir
+  api:
+    enabled: false
+  sources:
+    talos:
+      type: socket
+      mode: tcp
+      address: 0.0.0.0:5140
+      framing:
+        method: newline_delimited
+      decoding:
+        codec: json
+    internal_metrics:
+      type: internal_metrics
+  transforms:
+    # host is the node's address (socket source); keep the Talos fields as they are
+    talos_logs:
+      type: remap
+      inputs: [talos]
+      source: |
+        .host = string(.host) ?? "unknown"
+        if !exists(.msg) { .msg = string(.message) ?? "" }
+        del(.message)
+        del(.source_type)
+        del(.timestamp)
+  sinks:
+    victorialogs:
+      type: http
+      inputs: [talos_logs]
+      uri: http://vlsingle-vmks.monitoring.svc:9428/insert/jsonline?_stream_fields=host,talos-service&_msg_field=msg&_time_field=talos-time
+      method: post
+      encoding:
+        codec: json
+      framing:
+        method: newline_delimited
+      compression: gzip
+      request:
+        headers:
+          Content-Type: application/stream+json
+    prometheus_exporter:
+      type: prometheus_exporter
+      inputs: [internal_metrics]
+      address: 0.0.0.0:9598

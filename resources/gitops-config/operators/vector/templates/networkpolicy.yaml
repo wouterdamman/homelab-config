@@ -1,0 +1,45 @@
+# Vector — receives the Talos node logs over TCP and posts them to vlsingle
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: vector
+  namespace: monitoring
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: vector
+  ingress:
+  # The nodes (host and remote-node identities, not pods) send their logs to the LoadBalancer IP
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "5140"
+        protocol: TCP
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: vmagent
+    toPorts:
+    - ports:
+      - port: "9598"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: vlsingle
+    toPorts:
+    - ports:
+      - port: "9428"
+        protocol: TCP

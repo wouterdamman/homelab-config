@@ -1,4 +1,4 @@
-# Grafana — serves dashboard UI, reads from VictoriaMetrics + Loki
+# Grafana — serves dashboard UI, reads from VictoriaMetrics + VictoriaLogs
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -41,14 +41,6 @@ spec:
     toPorts:
     - ports:
       - port: "9428"
-        protocol: TCP
-  - toEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: loki
-    toPorts:
-    - ports:
-      - port: "3100"
         protocol: TCP
   # Authentik OIDC token + userinfo — server-side calls via internal service (LB IP is cluster-entity)
   - toEndpoints:

@@ -86,6 +86,8 @@ datasources:
     deleteDatasources:
     - name: Prometheus
       orgId: 1
+    - name: Loki
+      orgId: 1
     datasources:
     # VictoriaMetrics speaks the Prometheus API; the uid stays "prometheus" because the
     # dashboards in operators/grafana/dashboards refer to it
@@ -102,11 +104,6 @@ datasources:
       type: victoriametrics-logs-datasource
       uid: victorialogs
       url: http://vlsingle-vmks.monitoring.svc:9428
-      access: proxy
-      isDefault: false
-    - name: Loki
-      type: loki
-      url: http://loki.monitoring:3100
       access: proxy
       isDefault: false
 

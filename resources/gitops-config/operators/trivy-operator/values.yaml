@@ -8,7 +8,8 @@ operator:
   # One at a time: every scan job downloads and unpacks the Trivy DB on the
   # node disk, which is the NVMe that etcd shares (see the 2026-10-26 stall).
   scanJobsConcurrentLimit: 1
-  scanJobTimeout: 10m
+  # Must stay above trivy.timeout so the job fails on Trivy's own timeout, not the operator's.
+  scanJobTimeout: 25m
   # Built-in Trivy server (ClientServer mode). In Standalone mode the containers of one
   # scan job (one per image of the workload) share a single fs cache and lock each other
   # out ("cache may be in use by another process"), so workloads with several images
@@ -53,6 +54,9 @@ podSecurityContext:
 
 trivy:
   mode: ClientServer
+  # The home-assistant image (python site-packages with thousands of files) needs more than
+  # the 5m default at the 500m CPU limit: "semaphore acquire: context deadline exceeded".
+  timeout: 20m
   # The vulnerability DB is downloaded again when the volume is lost: 1 replica is enough
   storageClassName: longhorn-archive
   storageSize: 5Gi

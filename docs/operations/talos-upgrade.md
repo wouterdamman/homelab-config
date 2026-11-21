@@ -245,7 +245,7 @@ kubectl get --raw /metrics | grep apiserver_requested_deprecated_apis
 
 ## Talos 1.14 Notes
 
-- **etcd ports**: Talos 1.14 moves the etcd HTTP endpoints (`/metrics`, `/health`) from 2379 to 2383. We set `listen-metrics-urls: http://0.0.0.0:2381` explicitly in `control-plane.yaml.tftpl`, so the kube-prometheus-stack `kubeEtcd` scrape on 2381 is unaffected.
+- **etcd ports**: Talos 1.14 moves the etcd HTTP endpoints (`/metrics`, `/health`) from 2379 to 2383. We set `listen-metrics-urls: http://0.0.0.0:2381` explicitly in `control-plane.yaml.tftpl`, so the VictoriaMetrics `kubeEtcd` scrape on 2381 is unaffected.
 - **Filesystem trim**: clusters upgraded from older versions have no `FilesystemTrimConfig` document, so trim is off until added. Both machine-config templates carry a weekly `FilesystemTrimConfig`. VM disks have `discard = "on"`, so trimmed blocks return to Proxmox storage.
 - **Workload isolation** (`SecurityProfileConfig`, `workloadIsolation: true`): default for new clusters only; upgraded clusters stay non-isolated. `sandboxd` always runs, but the runtime only moves into it after a reboot ("applied without a reboot" is misleading). Enabled per node via `local.workload_isolation_nodes` in `talos/config.tf`; prd-w-01 since 2026-10-26, where Longhorn iSCSI attach/detach and replica rebuild were verified; all nodes since 2026-10-27. Check a node with `talosctl -n <ip> read /proc/<kubelet-pid>/status | grep NSpid`: two values means kubelet runs inside the sandbox.
 - **`apply-config --mode=reboot` removed**: use `talosctl reboot` explicitly.
@@ -275,7 +275,7 @@ Behaviour that changes with contract v1.14 on the control planes: anonymous apis
 
 How a worker's Longhorn disk moved from `machine.disks` on `/var/lib/longhorn` to the `UserVolumeConfig` `longhorn` on `/var/mnt/longhorn` (2026-10-27). The same steps apply when rebuilding a worker disk:
 
-1. Longhorn: on the node disk, set `allowScheduling: false` and `evictionRequested: true`. Wait until no replicas remain on the node. Lower 3-replica volumes to 2 first (only 3 workers, hard anti-affinity). Strict-local volumes (Loki, Prometheus) cannot move: cordon the node, delete their PVCs and pods, and they come back empty elsewhere.
+1. Longhorn: on the node disk, set `allowScheduling: false` and `evictionRequested: true`. Wait until no replicas remain on the node. Lower 3-replica volumes to 2 first (only 3 workers, hard anti-affinity). Strict-local volumes (vmsingle, vlsingle) cannot move: cordon the node, delete their PVCs and pods, and they come back empty elsewhere.
 2. Delete leftover "ghost" replica CRs (no node, disk or data directory) once the volume has enough running replicas. Longhorn 1.13 leaves them behind after evictions.
 3. Drain the node, add it to `local.longhorn_uservolume_nodes`, then plan and apply only that node.
 4. Reboot (the old mount stays active until then), then `talosctl -n <ip> wipe disk sdb --drop-partition`. Talos provisions and mounts `/var/mnt/longhorn`.

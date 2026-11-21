@@ -1,4 +1,4 @@
-# Grafana — serves dashboard UI, reads from Prometheus + Loki
+# Grafana — serves dashboard UI, reads from VictoriaMetrics + Loki
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
@@ -29,10 +29,10 @@ spec:
   - toEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/name: vmsingle
     toPorts:
     - ports:
-      - port: "9090"
+      - port: "8428"
         protocol: TCP
   - toEndpoints:
     - matchLabels:

@@ -1,0 +1,8 @@
+# Rules from the kubernetes-mixin set that kube-prometheus-stack used to deploy (recording
+# rules for the Kubernetes dashboards, kubernetes-*, node-exporter, etcd, kube-state-metrics
+# and apiserver alerts), as native VMRules, plus rules for the VictoriaMetrics components.
+# Included as-is, without Helm templating, because the annotations contain Go templates.
+{{- range $path, $_ := .Files.Glob "rules/*.yaml" }}
+---
+{{ $.Files.Get $path }}
+{{- end }}

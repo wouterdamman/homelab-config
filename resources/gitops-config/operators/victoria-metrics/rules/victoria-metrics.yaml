@@ -1,0 +1,33 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: victoria-metrics
+  namespace: monitoring
+spec:
+  groups:
+  - name: victoria-metrics
+    rules:
+    - alert: VMSingleDiskSpaceLow
+      expr: vm_free_disk_space_bytes{job="vmsingle-vmks"} < 3 * 1024 * 1024 * 1024
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "VictoriaMetrics storage volume is almost full"
+        description: "Less than 3 GiB free on the vmsingle volume ({{ $value | humanize1024 }}B left). Lower the retention or grow the PVC."
+    - alert: VMAgentRemoteWriteFailing
+      expr: sum(rate(vmagent_remotewrite_retries_count_total{job="vmagent-vmks"}[5m])) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "vmagent cannot write to vmsingle"
+        description: "vmagent has been retrying remote writes for 10 minutes; samples are queueing on its disk or memory."
+    - alert: VMAlertRuleErrors
+      expr: increase(vmalert_alerting_rules_errors_total{job="vmalert-vmks"}[5m]) > 0 or increase(vmalert_recording_rules_errors_total{job="vmalert-vmks"}[5m]) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "vmalert rules fail to evaluate"
+        description: "Rule evaluation errors in vmalert for 10 minutes: check the VMRule status and `kubectl logs deploy/vmalert-vmks`."

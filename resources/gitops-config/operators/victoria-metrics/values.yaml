@@ -1,10 +1,8 @@
 # victoria-metrics-k8s-stack values
 # Docs: https://docs.victoriametrics.com/helm/victoria-metrics-k8s-stack/
 #
-# Runs next to kube-prometheus-stack while the two are compared. Alertmanager and
-# Grafana are their own apps (operators/alertmanager, operators/grafana); the
-# kube-state-metrics, node-exporter and the native scrapes of kube-prometheus-stack
-# are used for now, through the operator's ServiceMonitor converter.
+# Alertmanager and Grafana are their own apps (operators/alertmanager, operators/grafana).
+# Logs are not part of this app yet.
 
 # Short resource names: vmsingle-vmks, vmagent-vmks, ...
 fullnameOverride: vmks
@@ -15,32 +13,104 @@ alertmanager:
   enabled: false
 defaultDashboards:
   enabled: false
-
-# kube-prometheus-stack still provides these as ServiceMonitors / PrometheusRules, which the
-# operator converts. They move here when kube-prometheus-stack is removed.
+# Dashboards live in operators/grafana/dashboards, the rules in templates/rules.yaml
+# (rules/*.yaml). The sync-job would fetch both from GitHub at deploy time.
 defaultRules:
   enabled: false
-# Fetches dashboards and rules from upstream at deploy time; both are off for now
-# (dashboards live in operators/grafana, rules come through the converter)
 syncJob:
   enabled: false
+
+# Metrics that kube-prometheus-stack used to scrape, now native
 kube-state-metrics:
-  enabled: false
+  enabled: true
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
 prometheus-node-exporter:
-  enabled: false
-kubeApiServer:
-  enabled: false
+  enabled: true
+  tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 500m
+      memory: 64Mi
+
 kubelet:
-  enabled: false
+  enabled: true
+  vmScrapes:
+    # kube-prometheus-stack had the probes endpoint off
+    probes:
+      enabled: false
+    cadvisor:
+      spec:
+        metricRelabelConfigs:
+        # Drop the high-cardinality id label
+        - action: labeldrop
+          regex: id
+        # Allowlist: keep only the essential metrics for alerting and debugging
+        - source_labels: [__name__]
+          regex: >-
+            container_(cpu_usage_seconds_total|cpu_cfs_periods_total|cpu_cfs_throttled_periods_total|cpu_cfs_throttled_seconds_total|memory_working_set_bytes|memory_usage_bytes|memory_rss|memory_cache|network_receive_bytes_total|network_transmit_bytes_total|network_receive_errors_total|network_transmit_errors_total|fs_usage_bytes|fs_limit_bytes|oom_events_total|start_time_seconds|scrape_error)
+          action: keep
+
+# About 60% of all series came from the API server, nearly all of it latency histograms.
+# The drop rule removes the nine biggest ones that no rule or dashboard reads. Helm
+# replaces lists, so the chart's endpoint is copied whole.
+kubeApiServer:
+  enabled: true
+  vmScrape:
+    spec:
+      endpoints:
+      - port: https
+        scheme: https
+        bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        tlsConfig:
+          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          serverName: kubernetes
+        metricRelabelConfigs:
+        - action: drop
+          source_labels: [__name__]
+          regex: (etcd_request_duration_seconds|apiserver_(watch_events_dispatch_duration_seconds|storage_list_duration_seconds|watch_list_duration_seconds|request_body_size_bytes|watch_cache_read_wait_seconds|watch_cache_initialization_duration_seconds|response_sizes|watch_events_sizes))_bucket
+
+# Talos exposes etcd metrics on plain HTTP port 2381 of the control plane nodes
+kubeEtcd:
+  enabled: true
+  endpoints:
+  - 10.0.10.130
+  - 10.0.10.131
+  - 10.0.10.132
+  service:
+    port: 2381
+    targetPort: 2381
+  vmScrape:
+    spec:
+      endpoints:
+      - port: http-metrics
+        scheme: http
+
+coreDns:
+  enabled: true
+
+# Not scraped, as before: not useful for the homelab / Cilium replaces kube-proxy
 kubeControllerManager:
   enabled: false
 kubeScheduler:
   enabled: false
-kubeEtcd:
-  enabled: false
 kubeProxy:
-  enabled: false
-coreDns:
   enabled: false
 
 vmsingle:
@@ -97,14 +167,12 @@ vmagent:
       value: "true"
       effect: NoSchedule
 
-# Rules are evaluated but nothing is sent: Prometheus still alerts. The notifier
-# is switched to the standalone Alertmanager at the cutover.
 vmalert:
   enabled: true
   spec:
     evaluationInterval: 30s
-    extraArgs:
-      notifier.blackhole: "true"
+    notifier:
+      url: http://alertmanager.monitoring.svc:9093
     resources:
       requests:
         cpu: 20m

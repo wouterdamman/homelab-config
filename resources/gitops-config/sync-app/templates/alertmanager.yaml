@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: observability-stack
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
+  name: alertmanager
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://prometheus-community.github.io/helm-charts
+    chart: alertmanager
+    targetRevision: 2.5.1
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/alertmanager/values.yaml
+  - repoURL: https://github.com/wouterdamman/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/alertmanager
+    ref: values
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

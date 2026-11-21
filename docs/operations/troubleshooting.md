@@ -436,7 +436,7 @@ cluster:
 
 ```bash
 # Check Alertmanager
-kubectl port-forward -n monitoring svc/prometheus-alertmanager 9093:9093
+kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 # Open http://localhost:9093
 
 # Check Pushover secret

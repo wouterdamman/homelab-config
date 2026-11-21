@@ -45,6 +45,14 @@ prometheus:
     scrapeInterval: "30s"
     evaluationInterval: "30s"
 
+    # Alertmanager runs as its own app (operators/alertmanager), not bundled in this chart
+    additionalAlertManagerConfigs:
+    - scheme: http
+      api_version: v2
+      static_configs:
+      - targets:
+        - alertmanager.monitoring.svc:9093
+
     # Override exporter timestamps to avoid out-of-order sample drops
     overrideHonorTimestamps: true
 
@@ -62,105 +70,14 @@ prometheus:
           values:
             - kubelet-serving-cert-approver
 
-# Alertmanager
+# Alertmanager is deployed separately (operators/alertmanager)
 alertmanager:
-  alertmanagerSpec:
-    storage:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: longhorn-standard
-          accessModes: [ "ReadWriteOnce" ]
-          resources:
-            requests:
-              storage: 2Gi
+  enabled: false
 
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
-
-    tolerations:
-    - key: node-role.kubernetes.io/control-plane
-      operator: Equal
-      value: "true"
-      effect: NoSchedule
-    # Mount secrets for Alertmanager receivers
-    secrets:
-    - alertmanager-pushover-secret
-    - alertmanager-healthchecks-secret
-
-  # Alertmanager config - Pushover integration
-  config:
-    global:
-      resolve_timeout: 5m
-
-    route:
-      group_by: [ 'alertname', 'namespace' ]
-      group_wait: 30s
-      group_interval: 5m
-      # 24h fallback for anything that matches no sub-route below
-      repeat_interval: 24h
-      receiver: 'pushover-warning'
-      routes:
-      # Watchdog pings healthchecks.io every 30m as dead man's switch
-      - receiver: 'healthchecks-watchdog'
-        repeat_interval: 30m
-        matchers:
-        - alertname = "Watchdog"
-      # InfoInhibitor goes to null
-      - receiver: 'null'
-        matchers:
-        - alertname = "InfoInhibitor"
-      # Critical alerts — keep re-paging every 4h, unlike warnings
-      - receiver: 'pushover-critical'
-        repeat_interval: 4h
-        matchers:
-        - severity = "critical"
-      # Warning alerts (default) — 24h reduces alert fatigue for sustained slow-burn issues
-      - receiver: 'pushover-warning'
-        repeat_interval: 24h
-        matchers:
-        - severity = "warning"
-
-    receivers:
-    # Dead man's switch — pings healthchecks.io every 30m; silence = monitoring down
-    - name: 'healthchecks-watchdog'
-      webhook_configs:
-      - url_file: /etc/alertmanager/secrets/alertmanager-healthchecks-secret/ping-url
-        send_resolved: false
-
-    # Null receiver for alerts we don't want to send
-    - name: 'null'
-
-    - name: 'pushover-critical'
-      pushover_configs:
-      - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
-        token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
-        priority: 1
-        title: '{{ template "pushover.title" . }}'
-        message: '{{ template "pushover.message" . }}'
-
-    - name: 'pushover-warning'
-      pushover_configs:
-      - user_key_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/user-key
-        token_file: /etc/alertmanager/secrets/alertmanager-pushover-secret/api-token
-        priority: 0
-        title: '{{ template "pushover.title" . }}'
-        message: '{{ template "pushover.message" . }}'
-
-    templates:
-    - '/etc/alertmanager/config/*.tmpl'
-
-  # Custom templates
-  templateFiles:
-    pushover.tmpl: |-
-      {{ define "pushover.title" }}[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}{{ end }}
-      {{ define "pushover.message" }}{{ range .Alerts }}{{ .Annotations.summary }}
-      {{ .Annotations.description }}
-      {{ end }}{{ end }}
+defaultRules:
+  rules:
+    # Selects job="prometheus-alertmanager"; replaced by the rules in operators/alertmanager
+    alertmanager: false
 
 # Grafana
 grafana:
@@ -245,6 +162,9 @@ grafana:
       searchNamespace: ALL
     datasources:
       enabled: true
+      # Would point at the removed prometheus-alertmanager service
+      alertmanager:
+        enabled: false
     # Applies to both the dashboards and datasources sidecar (~90Mi each).
     resources:
       requests:

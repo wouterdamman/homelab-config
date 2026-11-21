@@ -1,0 +1,55 @@
+# Replaces the alertmanager.rules group of kube-prometheus-stack: those rules select
+# job="prometheus-alertmanager", which no longer exists. This is a single instance,
+# so the cluster-membership alerts are left out.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: alertmanager
+      rules:
+
+        - alert: AlertmanagerFailedReload
+          expr: max_over_time(alertmanager_config_last_reload_successful{job="alertmanager",namespace="monitoring"}[5m]) == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Reloading the Alertmanager configuration has failed"
+            description: "Configuration has failed to load for {{`{{`}} $labels.namespace {{`}}`}}/{{`{{`}} $labels.pod {{`}}`}}."
+
+        - alert: AlertmanagerFailedToSendAlerts
+          expr: |
+            (
+              rate(alertmanager_notifications_failed_total{job="alertmanager",namespace="monitoring"}[15m])
+              /
+              ignoring (reason) group_left rate(alertmanager_notifications_total{job="alertmanager",namespace="monitoring"}[15m])
+            ) > 0.01
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Alertmanager failed to send notifications"
+            description: "Alertmanager {{`{{`}} $labels.namespace {{`}}`}}/{{`{{`}} $labels.pod {{`}}`}} failed to send {{`{{`}} $value | humanizePercentage {{`}}`}} of notifications to {{`{{`}} $labels.integration {{`}}`}}."
+
+        - alert: AlertmanagerDown
+          expr: up{job="alertmanager",namespace="monitoring"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Alertmanager cannot be scraped"
+            description: "Prometheus has not been able to scrape {{`{{`}} $labels.namespace {{`}}`}}/{{`{{`}} $labels.pod {{`}}`}} for 5 minutes."
+
+        - alert: AlertmanagerCrashlooping
+          expr: changes(process_start_time_seconds{job="alertmanager",namespace="monitoring"}[10m]) > 4
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Alertmanager is crashlooping"
+            description: "{{`{{`}} $labels.namespace {{`}}`}}/{{`{{`}} $labels.pod {{`}}`}} restarted more than 4 times in 10 minutes."

@@ -1,0 +1,45 @@
+# Alertmanager — receives alerts from Prometheus, sends to Pushover + healthchecks.io
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: prometheus
+    toPorts:
+    - ports:
+      - port: "9093"
+        protocol: TCP
+      - port: "8080"
+        protocol: TCP
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "9093"
+        protocol: TCP
+  egress:
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # Pushover (api.pushover.net) + healthchecks.io (hc-ping.com)
+  - toEntities:
+    - world
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

@@ -310,7 +310,7 @@ https://grafana.svc.damman.tech
 
 # Port forwarding for debugging
 kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
-kubectl port-forward -n monitoring svc/prometheus-alertmanager 9093:9093
+kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 kubectl port-forward -n monitoring svc/loki 3100:3100
 ```
 
@@ -320,9 +320,11 @@ kubectl port-forward -n monitoring svc/loki 3100:3100
 
 | Path | Description |
 |------|-------------|
-| `operators/prometheus-community/values.yaml` | Prometheus, Grafana, Alertmanager config |
+| `operators/prometheus-community/values.yaml` | Prometheus and Grafana config |
+| `operators/alertmanager/values.yaml` | Alertmanager config (routes, receivers, templates) |
 | `operators/prometheus-community/templates/grafana-admin-secret.yaml` | ExternalSecret for Grafana |
-| `operators/prometheus-community/templates/alertmanager-pushover-secret.yaml` | ExternalSecret for Pushover |
+| `operators/alertmanager/templates/externalsecret-pushover.yaml` | ExternalSecret for Pushover |
+| `operators/alertmanager/templates/externalsecret-healthchecks.yaml` | ExternalSecret for the healthchecks.io ping URL |
 | `operators/prometheus-community/templates/grafana-httproute.yaml` | Gateway API HTTPRoute |
 | `operators/loki/values.yaml` | Loki configuration |
 | `operators/promtail/values.yaml` | Promtail configuration |
@@ -337,14 +339,14 @@ kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
 # http://localhost:9090/targets
 
 # Check Alertmanager
-kubectl port-forward -n monitoring svc/prometheus-alertmanager 9093:9093
+kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 # http://localhost:9093/#/status
 
 # View Promtail logs
 kubectl logs -n monitoring -l app.kubernetes.io/name=promtail
 
 # Test Pushover notification
-kubectl exec -n monitoring -it deploy/prometheus-alertmanager -- \
+kubectl exec -n monitoring -it alertmanager-0 -c alertmanager -- \
   amtool alert add test severity=critical namespace=test
 ```
 

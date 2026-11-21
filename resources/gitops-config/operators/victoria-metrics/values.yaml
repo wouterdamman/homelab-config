@@ -83,7 +83,7 @@ vmagent:
       - key: kubernetes.io/metadata.name
         operator: NotIn
         values:
-        - kubelet-csr-approver
+        - kubelet-serving-cert-approver
     resources:
       requests:
         cpu: 50m

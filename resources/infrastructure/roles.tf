@@ -29,6 +29,11 @@ resource "proxmox_virtual_environment_role" "automation" {
     "VM.GuestAgent.Audit",
     "VM.PowerMgmt",
     "VM.Snapshot",
+    # Setting a VM's startup order (the startup block in
+    # resources/bootstrap/talos/virtual-machines.tf) needs Sys.Modify on /;
+    # without it the bpg provider gets a 403. Added by hand with pveum on
+    # 2026-11-21. Note that Sys.Modify also covers node network settings.
+    "Sys.Modify",
   ]
 }
 

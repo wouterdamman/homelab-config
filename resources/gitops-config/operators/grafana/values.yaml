@@ -1,0 +1,109 @@
+# Grafana values (grafana-community/grafana, split out of kube-prometheus-stack)
+# Docs: https://github.com/grafana-community/helm-charts/tree/main/charts/grafana
+
+# Service is grafana.monitoring:80, pod label app.kubernetes.io/name=grafana
+fullnameOverride: grafana
+
+# No helm-test pod
+testFramework:
+  enabled: false
+
+# Admin credentials from ExternalSecret
+admin:
+  existingSecret: grafana-admin
+  userKey: admin-user
+  passwordKey: admin-password
+
+# Persistence
+persistence:
+  enabled: true
+  storageClassName: longhorn-standard
+  size: 5Gi
+
+# RWO volume: a rolling update deadlocks (the new pod waits for the volume
+# the old pod still holds), so stop the old pod first.
+deploymentStrategy:
+  type: Recreate
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+tolerations:
+- key: node-role.kubernetes.io/control-plane
+  operator: Equal
+  value: "true"
+  effect: NoSchedule
+
+serviceMonitor:
+  enabled: true
+
+# OIDC credentials injected as env vars; optional so Grafana starts before Authentik is configured
+envFromSecrets:
+- name: grafana-oidc
+  optional: true
+
+grafana.ini:
+  server:
+    root_url: https://grafana.svc.damman.tech
+  auth:
+    disable_login_form: false
+  auth.anonymous:
+    enabled: false
+  auth.generic_oauth:
+    enabled: true
+    name: Authentik
+    allow_sign_up: true
+    use_pkce: true
+    scopes: openid email profile
+    auth_url: https://sso.svc.damman.tech/application/o/authorize/
+    # token_url + api_url use internal service: svc-gateway LB IP is cluster-entity, blocked by CNP
+    token_url: http://authentik-server.authentik.svc.cluster.local/application/o/token/
+    api_url: http://authentik-server.authentik.svc.cluster.local/application/o/userinfo/
+    signout_redirect_url: https://sso.svc.damman.tech/application/o/grafana/end-session/
+    client_id: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
+    client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+    role_attribute_path: "'Admin'"
+
+# Data sources are provisioned here; the sidecar only discovers dashboards
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      uid: prometheus
+      url: http://prometheus-prometheus.monitoring:9090/
+      access: proxy
+      isDefault: true
+      jsonData:
+        httpMethod: POST
+        timeInterval: 30s
+    - name: Loki
+      type: loki
+      url: http://loki.monitoring:3100
+      access: proxy
+      isDefault: false
+
+# Sidecar for dashboard discovery (ConfigMaps labelled grafana_dashboard=1 in any namespace)
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    searchNamespace: ALL
+    provider:
+      allowUiUpdates: false
+  datasources:
+    enabled: false
+  # Applies to the dashboards sidecar (~90Mi).
+  resources:
+    requests:
+      cpu: 10m
+      memory: 96Mi
+    limits:
+      memory: 192Mi

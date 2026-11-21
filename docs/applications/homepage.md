@@ -52,7 +52,7 @@ Server-side widget API calls (ArgoCD, Grafana, Authentik, EVCC, Home Assistant) 
 | Widget | Internal URL |
 |--------|---------------|
 | ArgoCD | `http://argo-cd-argocd-server.argocd.svc.cluster.local` |
-| Grafana | `http://prometheus-community-grafana.monitoring.svc.cluster.local` |
+| Grafana | `http://grafana.monitoring.svc.cluster.local` |
 | Authentik | `http://authentik-server.authentik.svc.cluster.local` |
 | EVCC | `http://evcc.evcc.svc.cluster.local:7070` |
 | Home Assistant | `http://home-assistant.home-assistant.svc.cluster.local:8123` |

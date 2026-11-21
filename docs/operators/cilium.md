@@ -116,7 +116,7 @@ kubectl port-forward -n kube-system svc/hubble-ui 8080:80
 
 ## Metrics Integration
 
-The agent, operator and Hubble metrics are scraped by native VMServiceScrapes (`cilium-agent-scrape`, `cilium-operator-scrape`, `hubble-scrape` in `operators/victoria-metrics/scrapes/`); the chart's ServiceMonitors are off. The Cilium dashboards live in `operators/grafana/dashboards/cilium/`.
+The agent, operator and Hubble metrics are scraped by native scrape objects (`VMPodScrape` `cilium-agent-scrape` and `cilium-operator-scrape`, because the chart only creates the metrics Services together with the ServiceMonitor; `VMServiceScrape` `hubble-scrape` in `operators/victoria-metrics/scrapes/`); the chart's ServiceMonitors are off. The Cilium dashboards live in `operators/grafana/dashboards/cilium/`.
 
 | Component | Port |
 |-----------|------|

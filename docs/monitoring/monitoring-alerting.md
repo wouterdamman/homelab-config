@@ -50,12 +50,12 @@ Metrics, logs and alerts with VictoriaMetrics, VictoriaLogs, Grafana and Pushove
 Retention: 14 days
 Storage: 40Gi PVC on longhorn-monitoring (vmsingle-vmks)
 Scrape interval: 30s (vmagent-vmks), rule evaluation 30s (vmalert-vmks)
-Series: about 280k live (the API server histograms were 60% of what Prometheus kept)
+Series: about 350k live after the migration (332k with Prometheus; the API server histogram drop rule is offset by the per-pod scrapes and the new log pipeline)
 ```
 
 - **Native scrapes** (`operators/victoria-metrics/values.yaml`): kubelet (the cAdvisor allowlist keeps only the container metrics that rules and dashboards need), API server (a drop rule removes nine unused histogram families), etcd (`10.0.10.130-132:2381`, plain HTTP on Talos), CoreDNS (job name `coredns`), kube-state-metrics and node-exporter. Controller manager, scheduler and kube-proxy are not scraped.
 - **App scrapes** (`operators/victoria-metrics/scrapes/*.yaml`, rendered by `templates/scrapes.yaml`): native `VMServiceScrape`/`VMPodScrape` objects for argo-cd, authentik, cert-manager, cilium (agent, operator, Hubble), cnpg, emqx, external-dns, external-secrets, longhorn, alertmanager, grafana and trivy. The charts' own `ServiceMonitor`/`PodMonitor` objects are switched off, and the operator's Prometheus converter is disabled (`disable_prometheus_converter`). Charts only create their metrics Service together with the ServiceMonitor, so Cilium and external-secrets are scraped per pod (`VMPodScrape`, old job labels kept). The Prometheus Operator CRDs are removed from the cluster.
-- **Resources**: the whole `monitoring` namespace uses about 1.8 GiB of memory (was 3.0 GiB with Prometheus, Loki and Promtail).
+- **Resources**: the whole `monitoring` namespace uses about 2.0 GiB of memory and 0.7 CPU cores, measured 2026-11-21 (was 3.0 GiB and 0.25 cores with Prometheus, Loki and Promtail).
 
 ### VictoriaLogs (logs)
 

@@ -534,7 +534,7 @@ kube-prometheus-stack bundled Prometheus, Alertmanager and Grafana in one Argo a
 - **Talos service and kernel logs** go to VictoriaLogs through Vector (Talos only emits `json_lines` over raw TCP/UDP).
 
 ### Why?
-- **Memory:** the whole namespace went from about 3.0 GiB to about 1.8 GiB; series from 332k to about 280k with a drop rule for unused API server histograms.
+- **Memory:** the whole namespace went from about 3.0 GiB to about 2.0 GiB (measured 2026-11-21 after the migration); active series stayed at about 350k (332k before).
 - **PromQL stays:** dashboards, rules and the kubernetes-mixin recording rules keep working unchanged.
 - **Separate lifecycles:** Alertmanager and Grafana can change without touching the metrics store.
 

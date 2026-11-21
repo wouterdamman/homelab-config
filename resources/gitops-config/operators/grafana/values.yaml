@@ -78,10 +78,12 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
-    - name: Prometheus
+    # VictoriaMetrics speaks the Prometheus API; the uid stays "prometheus" because the
+    # dashboards in operators/grafana/dashboards refer to it
+    - name: VictoriaMetrics
       type: prometheus
       uid: prometheus
-      url: http://prometheus-prometheus.monitoring:9090/
+      url: http://vmsingle-vmks.monitoring.svc:8428/
       access: proxy
       isDefault: true
       jsonData:

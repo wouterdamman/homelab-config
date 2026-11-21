@@ -6,6 +6,14 @@
 
 machine:
   type: controlplane
+  # Service and kernel logs to VictoriaLogs through Vector; node is the stream field there.
+  # Applies live, without a reboot. Tested on prd-w-03 first.
+  logging:
+    destinations:
+    - endpoint: "${log_endpoint}"
+      format: json_lines
+      extraTags:
+        node: ${hostname}
 
 cluster:
   etcd:

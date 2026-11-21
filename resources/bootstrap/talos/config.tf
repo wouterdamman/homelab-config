@@ -43,6 +43,7 @@ data "talos_machine_configuration" "this" {
       ip                  = each.value.ip
       cidr                = 25
       workload_isolation  = contains(local.workload_isolation_nodes, each.key)
+      log_endpoint        = local.talos_log_endpoint
     })
     ] : concat([
       templatefile("${path.module}/machine-config/worker.yaml.tftpl", {
@@ -52,6 +53,7 @@ data "talos_machine_configuration" "this" {
         gateway      = var.cluster.gateway
         ip           = each.value.ip
         cidr         = 25
+        log_endpoint = local.talos_log_endpoint
       })
     ],
     # Talos 1.14 workload isolation (CRI, kubelet and pods in the sandboxd
@@ -77,6 +79,11 @@ locals {
   }
 
   kubernetes_version = "1.37.0"
+
+  # Talos ships its service and kernel logs as newline-separated JSON over TCP to Vector
+  # (operators/vector in the gitops config), which posts them to VictoriaLogs. The address
+  # is the fixed LoadBalancer IP of the vector Service (io.cilium/lb-ipam-ips).
+  talos_log_endpoint = "tcp://10.0.10.242:5140/"
 
   # Workload isolation per node; takes effect after a reboot. Validated on
   # prd-w-01 on 2026-10-26 (Longhorn iSCSI attach/detach and replica rebuild),

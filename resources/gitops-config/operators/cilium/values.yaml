@@ -24,8 +24,10 @@ ipam:
 operator:
   rollOutPods: true
   resources:
+    # 1.20.4 needs ~0.7 core while starting; at 300m it was throttled 90% and lost
+    # the leader election (CrashLoopBackOff)
     limits:
-      cpu: 300m
+      cpu: 1000m
       memory: 128Mi
     requests:
       cpu: 10m

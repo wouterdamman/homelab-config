@@ -28,7 +28,7 @@ CP_IPS="10.0.10.130,10.0.10.131,10.0.10.132"
 CALM_MINUTES="${CALM_MINUTES:-5}"
 CALM_TIMEOUT_MIN=30
 HEALTHY_TIMEOUT_MIN=30
-AM_POD="alertmanager-prometheus-alertmanager-0"
+AM_POD="alertmanager-0"
 # Cluster-wide symptoms of one node being down. Alerts that carry the node
 # name or IP are silenced by separate matchers; Watchdog stays untouched.
 SILENCED_ALERTS="TargetDown|KubePodNotReady|KubeDeploymentReplicasMismatch|KubeStatefulSetReplicasMismatch|KubeDaemonSetRolloutStuck|KubeDaemonSetMisScheduled|etcdMembersDown|etcdInsufficientMembers|etcdHighNumberOfLeaderChanges"

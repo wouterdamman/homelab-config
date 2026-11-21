@@ -20,6 +20,10 @@ persistence:
   storageClassName: longhorn-standard
   size: 5Gi
 
+# fsGroup already makes the volume writable; skip the root init container
+initChownData:
+  enabled: false
+
 # RWO volume: a rolling update deadlocks (the new pod waits for the volume
 # the old pod still holds), so stop the old pod first.
 deploymentStrategy:

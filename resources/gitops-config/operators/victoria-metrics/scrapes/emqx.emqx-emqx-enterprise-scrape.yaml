@@ -1,0 +1,32 @@
+# Native version of the ServiceMonitor emqx-emqx-enterprise that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: emqx-emqx-enterprise-scrape
+  namespace: emqx
+spec:
+  endpoints:
+    - attach_metadata: {}
+      basicAuth:
+        password:
+          key: "password"
+          name: "emqx-emqx-enterprise-basic-auth"
+        username:
+          key: "username"
+          name: "emqx-emqx-enterprise-basic-auth"
+      interval: "10s"
+      params:
+        type:
+          - "prometheus"
+      path: "/api/v5/prometheus/stats"
+      port: "dashboard"
+      scheme: "http"
+  jobLabel: "emqx-scraping"
+  namespaceSelector:
+    matchNames:
+      - "emqx"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "emqx-enterprise"

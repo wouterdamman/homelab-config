@@ -1,0 +1,17 @@
+# Native version of the PodMonitor cloudnative-pg that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: cloudnative-pg-scrape
+  namespace: cnpg-system
+spec:
+  namespaceSelector: {}
+  podMetricsEndpoints:
+    - attach_metadata: {}
+      port: "metrics"
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "cloudnative-pg"
+      app.kubernetes.io/name: "cloudnative-pg"

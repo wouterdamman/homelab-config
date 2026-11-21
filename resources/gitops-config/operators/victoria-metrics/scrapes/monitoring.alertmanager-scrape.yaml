@@ -1,0 +1,20 @@
+# Native version of the ServiceMonitor alertmanager that the app's chart used to render; the spec is what
+# the operator's converter made of it. If a chart upgrade changes labels or ports, this has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: alertmanager-scrape
+  namespace: monitoring
+spec:
+  attach_metadata: {}
+  endpoints:
+    - attach_metadata: {}
+      path: "/metrics"
+      port: "http"
+  namespaceSelector:
+    matchNames:
+      - "monitoring"
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "alertmanager"
+      app.kubernetes.io/name: "alertmanager"

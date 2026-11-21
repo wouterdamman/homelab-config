@@ -1,0 +1,35 @@
+# Native version of the ServiceMonitor cert-manager that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: cert-manager-scrape
+  namespace: cert-manager
+spec:
+  endpoints:
+    - attach_metadata: {}
+      interval: "60s"
+      path: "/metrics"
+      scrapeTimeout: "30s"
+      targetPort: "http-metrics"
+  jobLabel: "app.kubernetes.io/name"
+  namespaceSelector: {}
+  selector:
+    matchExpressions:
+      - key: "app.kubernetes.io/name"
+        operator: "In"
+        values:
+          - "cainjector"
+          - "cert-manager"
+          - "webhook"
+      - key: "app.kubernetes.io/instance"
+        operator: "In"
+        values:
+          - "cert-manager"
+      - key: "app.kubernetes.io/component"
+        operator: "In"
+        values:
+          - "cainjector"
+          - "controller"
+          - "webhook"

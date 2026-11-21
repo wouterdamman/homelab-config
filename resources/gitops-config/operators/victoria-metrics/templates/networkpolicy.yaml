@@ -9,13 +9,14 @@ spec:
     matchLabels:
       app.kubernetes.io/name: vmagent
   ingress:
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: vmagent
+  # Own metrics, the config-reloader sidecar (8435) and UI access through the API server proxy
+  - fromEntities:
+    - cluster
     toPorts:
     - ports:
       - port: "8429"
+        protocol: TCP
+      - port: "8435"
         protocol: TCP
   egress:
   - toEndpoints:
@@ -57,16 +58,9 @@ spec:
     matchLabels:
       app.kubernetes.io/name: vmsingle
   ingress:
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: vmagent
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: vmalert
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: grafana
+  # vmagent, vmalert, Grafana and the API server proxy (like the Prometheus policy)
+  - fromEntities:
+    - cluster
     toPorts:
     - ports:
       - port: "8428"
@@ -103,16 +97,14 @@ spec:
     matchLabels:
       app.kubernetes.io/name: vmalert
   ingress:
-  - fromEndpoints:
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: vmagent
-    - matchLabels:
-        k8s:io.kubernetes.pod.namespace: monitoring
-        app.kubernetes.io/name: vmsingle
+  # Own metrics, the config-reloader sidecar (8435), vmsingle's proxy and UI access
+  - fromEntities:
+    - cluster
     toPorts:
     - ports:
       - port: "8080"
+        protocol: TCP
+      - port: "8435"
         protocol: TCP
   egress:
   - toEndpoints:

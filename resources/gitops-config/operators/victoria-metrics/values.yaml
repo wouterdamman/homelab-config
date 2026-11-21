@@ -68,7 +68,7 @@ kubelet:
           action: keep
 
 # About 60% of all series came from the API server, nearly all of it latency histograms.
-# The drop rule removes the nine biggest ones that no rule or dashboard reads. Helm
+# The drop rule removes the ten biggest ones that no rule or dashboard reads (the SLI histogram stays, the rules need it). Helm
 # replaces lists, so the chart's endpoint is copied whole.
 kubeApiServer:
   enabled: true
@@ -84,7 +84,7 @@ kubeApiServer:
         metricRelabelConfigs:
         - action: drop
           source_labels: [__name__]
-          regex: (etcd_request_duration_seconds|apiserver_(watch_events_dispatch_duration_seconds|storage_list_duration_seconds|watch_list_duration_seconds|request_body_size_bytes|watch_cache_read_wait_seconds|watch_cache_initialization_duration_seconds|response_sizes|watch_events_sizes))_bucket
+          regex: (etcd_request_duration_seconds|apiserver_(request_duration_seconds|watch_events_dispatch_duration_seconds|storage_list_duration_seconds|watch_list_duration_seconds|request_body_size_bytes|watch_cache_read_wait_seconds|watch_cache_initialization_duration_seconds|response_sizes|watch_events_sizes))_bucket
 
 # Talos exposes etcd metrics on plain HTTP port 2381 of the control plane nodes
 kubeEtcd:

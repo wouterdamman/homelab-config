@@ -109,7 +109,7 @@ config:
             icon: grafana.png
             widget:
               type: grafana
-              url: http://prometheus-community-grafana.monitoring.svc.cluster.local
+              url: http://grafana.monitoring.svc.cluster.local
               username: "{{HOMEPAGE_VAR_GRAFANA_USER}}"
               password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
               fields: ["dashboards", "alertstriggered"]

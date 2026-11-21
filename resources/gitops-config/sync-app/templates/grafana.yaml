@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: observability-stack
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
+  name: grafana
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://grafana-community.github.io/helm-charts
+    chart: grafana
+    targetRevision: 14.5.0
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/grafana/values.yaml
+  - repoURL: https://github.com/wouterdamman/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/grafana
+    ref: values
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      # Dashboard ConfigMaps exceed the client-side apply annotation limit
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true

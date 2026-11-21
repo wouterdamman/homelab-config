@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   parentRefs:
-    - group: gateway.networking.k8s.io	
+    - group: gateway.networking.k8s.io
       kind: Gateway
       name: svc-gateway
       namespace: kube-system
@@ -18,8 +18,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - group: ''	
+        - group: ''
           kind: Service
-          name: prometheus-community-grafana
+          name: grafana
           port: 80
           weight: 1

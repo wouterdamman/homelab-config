@@ -79,99 +79,10 @@ defaultRules:
     # Selects job="prometheus-alertmanager"; replaced by the rules in operators/alertmanager
     alertmanager: false
 
-# Grafana
+# Grafana runs as its own app (operators/grafana), which also owns the dashboards
 grafana:
-  enabled: true
-
-  # Admin credentials from ExternalSecret
-  admin:
-    existingSecret: grafana-admin-secret
-    userKey: admin-user
-    passwordKey: admin-password
-
-  # Persistence
-  persistence:
-    enabled: true
-    storageClassName: longhorn-standard
-    size: 5Gi
-
-  # RWO volume: a rolling update deadlocks (the new pod waits for the volume
-  # the old pod still holds), so stop the old pod first.
-  deploymentStrategy:
-    type: Recreate
-
-  # Resources
-  resources:
-    requests:
-      cpu: 50m
-      memory: 256Mi
-    limits:
-      cpu: 1000m
-      memory: 1024Mi
-
-  # Tolerations
-  tolerations:
-  - key: node-role.kubernetes.io/control-plane
-    operator: Equal
-    value: "true"
-    effect: NoSchedule
-
-  # OIDC credentials injected as env vars; optional so Grafana starts before Authentik is configured
-  envFromSecrets:
-  - name: grafana-oidc-secret
-    optional: true
-
-  # Grafana.ini settings
-  grafana.ini:
-    server:
-      root_url: https://grafana.svc.damman.tech
-    auth:
-      disable_login_form: false
-    auth.anonymous:
-      enabled: false
-    auth.generic_oauth:
-      enabled: true
-      name: Authentik
-      allow_sign_up: true
-      use_pkce: true
-      scopes: openid email profile
-      auth_url: https://sso.svc.damman.tech/application/o/authorize/
-      # token_url + api_url use internal service: svc-gateway LB IP is cluster-entity, blocked by CNP
-      token_url: http://authentik-server.authentik.svc.cluster.local/application/o/token/
-      api_url: http://authentik-server.authentik.svc.cluster.local/application/o/userinfo/
-      signout_redirect_url: https://sso.svc.damman.tech/application/o/grafana/end-session/
-      client_id: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_ID}
-      client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
-      role_attribute_path: "'Admin'"
-
-  # Default dashboards
-  defaultDashboardsEnabled: true
-  defaultDashboardsTimezone: Europe/Amsterdam
-
-  # Additional data sources (Loki)
-  additionalDataSources:
-  - name: Loki
-    type: loki
-    url: http://loki.monitoring:3100
-    access: proxy
-    isDefault: false
-  # Sidecar for dashboard discovery
-  sidecar:
-    dashboards:
-      enabled: true
-      searchNamespace: ALL
-    datasources:
-      enabled: true
-      # Would point at the removed prometheus-alertmanager service
-      alertmanager:
-        enabled: false
-    # Applies to both the dashboards and datasources sidecar (~90Mi each).
-    resources:
-      requests:
-        cpu: 10m
-        memory: 96Mi
-      limits:
-        memory: 192Mi
+  enabled: false
+  defaultDashboardsEnabled: false
 
 # Kubelet - disable probes endpoint, allowlist alleen essentiële cadvisor metrics
 # Reduceert series van ~275k naar geschatte ~60-80k

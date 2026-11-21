@@ -8,10 +8,15 @@
 #   (only the ones in use), Europe/Amsterdam as timezone
 # - longhorn/: grafana.com id 16888 revision 35
 # - argocd/: grafana.com id 14584 revision 1
+# - postgresql/: the CloudNativePG dashboard of the cloudnative-pg chart 0.29.1 (monitoring.grafanaDashboard,
+#   rendered with create=true; kept here because it is larger than the client-side apply limit)
+# - postgresql/: the CloudNativePG dashboard of the cloudnative-pg chart 0.29.1
+#   (monitoring.grafanaDashboard rendered with create=true; it is larger than the
+#   client-side apply limit of that app)
 # - cilium/: the agent, operator and Hubble dashboards of the Cilium chart 1.20.4
 #   (rendered with dashboards.enabled=true; kept here because the agent dashboard is
 #   larger than the client-side apply limit of the Cilium app)
-{{- $folders := dict "kubernetes" "Kubernetes" "nodes" "Nodes" "longhorn" "Longhorn" "argocd" "Argo CD" "cilium" "Cilium" }}
+{{- $folders := dict "kubernetes" "Kubernetes" "nodes" "Nodes" "longhorn" "Longhorn" "argocd" "Argo CD" "cilium" "Cilium" "postgresql" "PostgreSQL" }}
 {{- range $path, $_ := .Files.Glob "dashboards/*/*.json" }}
 {{- $dir := base (dir $path) }}
 ---
@@ -26,5 +31,5 @@ metadata:
     grafana_folder: {{ get $folders $dir | default $dir | quote }}
 data:
   {{ base $path }}: |-
-{{ $.Files.Get $path | replace "${DS_PROMETHEUS}" "prometheus" | indent 4 }}
+{{ $.Files.Get $path | replace "${DS_PROMETHEUS}" "prometheus" | replace "${DS_EXPRESSION}" "__expr__" | indent 4 }}
 {{- end }}

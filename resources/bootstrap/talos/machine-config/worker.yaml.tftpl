@@ -5,6 +5,14 @@
 # configs. Workload isolation is set per node in config.tf.
 machine:
   type: worker
+  # Service and kernel logs to VictoriaLogs through Vector; node is the stream field there.
+  # Applies live, without a reboot. Tested on prd-w-03 first.
+  logging:
+    destinations:
+    - endpoint: "${log_endpoint}"
+      format: json_lines
+      extraTags:
+        node: ${hostname}
 ---
 apiVersion: v1alpha1
 kind: KubeletConfig

@@ -1,5 +1,4 @@
-# Trivy dashboards, picked up by the Grafana dashboard sidecar:
-# - trivy-operator.json: grafana.com id 17813, revision 1
+# Trivy dashboard, picked up by the Grafana dashboard sidecar (folder Trivy):
 # - trivy-deep-dive.json: own dashboard on the per-finding info metrics
 # Read with .Files so Helm does not parse the legend formats (double curly
 # braces) in the JSON.
@@ -10,6 +9,8 @@ metadata:
   namespace: trivy-system
   labels:
     grafana_dashboard: "1"
+  annotations:
+    grafana_folder: Trivy
 data:
 {{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
   {{ base $path }}: |-

@@ -9,6 +9,12 @@ operator:
   # node disk, which is the NVMe that etcd shares (see the 2026-10-26 stall).
   scanJobsConcurrentLimit: 1
   scanJobTimeout: 10m
+  # Built-in Trivy server (ClientServer mode). In Standalone mode the containers of one
+  # scan job (one per image of the workload) share a single fs cache and lock each other
+  # out ("cache may be in use by another process"), so workloads with several images
+  # (home-assistant, cilium, cnpg) never got a report. The server also downloads the
+  # vulnerability DB once instead of once per scan job.
+  builtInTrivyServer: true
   # Rescan existing images every 3 days instead of daily. New or changed
   # images are still scanned at once; the cost is that a new CVE in an
   # unchanged image shows up to 3 days late.
@@ -46,6 +52,18 @@ podSecurityContext:
     type: RuntimeDefault
 
 trivy:
+  mode: ClientServer
+  # The vulnerability DB is downloaded again when the volume is lost: 1 replica is enough
+  storageClassName: longhorn-archive
+  storageSize: 5Gi
+  server:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
   # LOW and UNKNOWN are not actionable here and inflate reports and series.
   severity: MEDIUM,HIGH,CRITICAL
   # A CVE without a fix cannot be resolved, so only report fixable ones. The

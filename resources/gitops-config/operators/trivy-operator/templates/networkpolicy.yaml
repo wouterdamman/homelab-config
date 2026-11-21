@@ -18,6 +18,15 @@ spec:
       - port: "8080"
         protocol: TCP
 
+  # Scan jobs and the operator talk to the Trivy server (container port)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: trivy-system
+    toPorts:
+    - ports:
+      - port: "4954"
+        protocol: TCP
+
   egress:
   # DNS
   - toEndpoints:
@@ -39,8 +48,18 @@ spec:
       - port: "6443"
         protocol: TCP
 
-  # Scan jobs pull the vulnerability DB (mirror.gcr.io, ghcr.io) and the
-  # images to scan from registries on the internet
+  # Trivy server
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: trivy-system
+        app.kubernetes.io/name: trivy-server
+    toPorts:
+    - ports:
+      - port: "4954"
+        protocol: TCP
+
+  # The Trivy server pulls the vulnerability DB (mirror.gcr.io, ghcr.io) and the scan
+  # jobs pull the images to scan from registries on the internet
   - toEntities:
     - world
     toPorts:

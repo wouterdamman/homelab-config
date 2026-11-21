@@ -52,6 +52,9 @@ envFromSecrets:
   optional: true
 
 grafana.ini:
+  # Home page: the overview dashboard written by the sidecar (folder Overview)
+  dashboards:
+    default_home_dashboard_path: /tmp/dashboards/Overview/overview.json
   server:
     root_url: https://grafana.svc.damman.tech
   auth:

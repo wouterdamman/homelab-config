@@ -440,8 +440,8 @@ kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 # Open http://localhost:9093
 
 # Check Pushover secret
-kubectl get secret -n monitoring alertmanager-pushover-secret
-kubectl get externalsecret -n monitoring alertmanager-pushover-credentials
+kubectl get secret -n monitoring alertmanager-pushover
+kubectl get externalsecret -n monitoring alertmanager-pushover
 ```
 
 ### Proxmox VE Exporter Issues

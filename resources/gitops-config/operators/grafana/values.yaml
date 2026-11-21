@@ -73,6 +73,10 @@ grafana.ini:
     client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
     role_attribute_path: "'Admin'"
 
+# Data source plugin for VictoriaLogs (downloaded at startup, egress to grafana.com is allowed)
+plugins:
+- victoriametrics-logs-datasource
+
 # Data sources are provisioned here; the sidecar only discovers dashboards
 datasources:
   datasources.yaml:
@@ -94,6 +98,12 @@ datasources:
       jsonData:
         httpMethod: POST
         timeInterval: 30s
+    - name: VictoriaLogs
+      type: victoriametrics-logs-datasource
+      uid: victorialogs
+      url: http://vlsingle-vmks.monitoring.svc:9428
+      access: proxy
+      isDefault: false
     - name: Loki
       type: loki
       url: http://loki.monitoring:3100

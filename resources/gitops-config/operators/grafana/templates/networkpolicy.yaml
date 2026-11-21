@@ -37,6 +37,14 @@ spec:
   - toEndpoints:
     - matchLabels:
         k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: vlsingle
+    toPorts:
+    - ports:
+      - port: "9428"
+        protocol: TCP
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
         app.kubernetes.io/name: loki
     toPorts:
     - ports:

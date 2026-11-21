@@ -35,7 +35,7 @@ deschedulerPolicy:
             # Only evict a pod when another node can actually take it.
             nodeFit: true
             # Pods with a PVC (Home Assistant, CNPG, emqx, zigbee2mqtt,
-            # lucidvault, Grafana, Loki, Prometheus) stay put.
+            # lucidvault, Grafana, VictoriaMetrics, VictoriaLogs) stay put.
             podProtections:
               # emptyDir is scratch space (tmp dirs for read-only root
               # filesystems); losing it on a move is fine.

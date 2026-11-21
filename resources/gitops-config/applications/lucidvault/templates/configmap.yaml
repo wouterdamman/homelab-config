@@ -29,7 +29,7 @@ data:
     - GitOps: ArgoCD
     - Storage: Longhorn
     - IaC: OpenTofu
-    - Observability: Prometheus, Grafana, Loki
+    - Observability: VictoriaMetrics, VictoriaLogs, Grafana
 
     ## How to enrich
 

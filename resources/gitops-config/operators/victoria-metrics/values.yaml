@@ -148,6 +148,53 @@ vmsingle:
       value: "true"
       effect: NoSchedule
 
+# Logs: VLSingle stores them, vlagent tails every container log (a DaemonSet that reads
+# /var/log/pods, hence the privileged namespace) and ships them to VLSingle
+vlsingle:
+  enabled: true
+  spec:
+    # Same as Loki: 14 days
+    retentionPeriod: "14d"
+    extraArgs:
+      # Hard cap so a full volume cannot wipe the logs, like the Loki PVC did once
+      retention.maxDiskSpaceUsageBytes: 8GiB
+    storage:
+      storageClassName: longhorn-monitoring
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+vlagent:
+  enabled: true
+  spec:
+    k8sCollector:
+      enabled: true
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    # Run on all nodes including the control plane
+    tolerations:
+    - effect: NoSchedule
+      operator: Exists
+
 vmagent:
   enabled: true
   spec:

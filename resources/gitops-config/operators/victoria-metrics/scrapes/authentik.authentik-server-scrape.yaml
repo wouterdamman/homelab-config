@@ -1,0 +1,23 @@
+# Native version of the ServiceMonitor authentik-server that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: authentik-server-scrape
+  namespace: authentik
+spec:
+  endpoints:
+    - attach_metadata: {}
+      interval: "30s"
+      path: "/metrics"
+      port: "metrics"
+      scrapeTimeout: "3s"
+  namespaceSelector:
+    matchNames:
+      - "authentik"
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "server-metrics"
+      app.kubernetes.io/instance: "authentik"
+      app.kubernetes.io/name: "authentik"

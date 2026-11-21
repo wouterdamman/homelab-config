@@ -1,0 +1,22 @@
+# Native version of the ServiceMonitor argo-cd-argocd-application-controller that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: argo-cd-argocd-application-controller-scrape
+  namespace: argocd
+spec:
+  endpoints:
+    - attach_metadata: {}
+      interval: "30s"
+      path: "/metrics"
+      port: "http-metrics"
+  namespaceSelector:
+    matchNames:
+      - "argocd"
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: "application-controller"
+      app.kubernetes.io/instance: "argo-cd"
+      app.kubernetes.io/name: "argocd-metrics"

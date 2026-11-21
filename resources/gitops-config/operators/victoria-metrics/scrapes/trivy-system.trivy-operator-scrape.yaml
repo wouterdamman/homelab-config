@@ -1,0 +1,20 @@
+# Native version of the ServiceMonitor trivy-operator that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: trivy-operator-scrape
+  namespace: trivy-system
+spec:
+  endpoints:
+    - attach_metadata: {}
+      honorLabels: true
+      interval: "60s"
+      port: "metrics"
+      scheme: "http"
+  namespaceSelector: {}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "trivy-operator"
+      app.kubernetes.io/name: "trivy-operator"

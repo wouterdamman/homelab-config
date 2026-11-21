@@ -1,0 +1,29 @@
+# Native version of the ServiceMonitor cilium-agent that the app's chart used to
+# render; the spec is what the operator's converter made of it (and what has been scraping).
+# If a chart upgrade changes the service labels or port names, this object has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: cilium-agent-scrape
+  namespace: kube-system
+spec:
+  endpoints:
+    - attach_metadata: {}
+      honorLabels: true
+      interval: "10s"
+      path: "/metrics"
+      port: "metrics"
+      relabelConfigs:
+        - action: "replace"
+          replacement: "${1}"
+          sourceLabels:
+            - "__meta_kubernetes_pod_node_name"
+          targetLabel: "node"
+  namespaceSelector:
+    matchNames:
+      - "kube-system"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "cilium-agent"
+  targetLabels:
+    - "k8s-app"

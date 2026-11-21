@@ -1,10 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
-  name: prometheus-pve-exporter
+  name: prometheus-pve-exporter-rules
   namespace: monitoring
-  labels:
-    release: prometheus
 spec:
   groups:
     - name: proxmox

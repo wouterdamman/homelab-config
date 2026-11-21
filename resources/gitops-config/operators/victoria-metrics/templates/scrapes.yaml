@@ -1,0 +1,7 @@
+# VMServiceScrapes and VMPodScrapes for the apps whose charts used to render ServiceMonitors and
+# PodMonitors (Argo CD, authentik, cert-manager, CloudNativePG, Cilium and Hubble, EMQX,
+# external-dns, external-secrets, Longhorn, Trivy). Included as-is, without Helm templating.
+{{- range $path, $_ := .Files.Glob "scrapes/*.yaml" }}
+---
+{{ $.Files.Get $path }}
+{{- end }}

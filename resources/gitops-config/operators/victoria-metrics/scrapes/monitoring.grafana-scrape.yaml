@@ -1,0 +1,23 @@
+# Native version of the ServiceMonitor grafana that the app's chart used to render; the spec is what
+# the operator's converter made of it. If a chart upgrade changes labels or ports, this has to follow.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: grafana-scrape
+  namespace: monitoring
+spec:
+  attach_metadata: {}
+  endpoints:
+    - attach_metadata: {}
+      honorLabels: true
+      path: "/metrics"
+      port: "service"
+      scheme: "http"
+  jobLabel: "grafana"
+  namespaceSelector:
+    matchNames:
+      - "monitoring"
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "grafana"
+      app.kubernetes.io/name: "grafana"

@@ -1,10 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
-  name: longhorn-backups
+  name: longhorn-backups-rules
   namespace: longhorn-system
-  labels:
-    release: prometheus
 spec:
   groups:
     - name: longhorn-backups

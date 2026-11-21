@@ -1,10 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
-  name: descheduler
+  name: descheduler-rules
   namespace: descheduler
-  labels:
-    release: prometheus
 spec:
   groups:
     - name: pod-distribution

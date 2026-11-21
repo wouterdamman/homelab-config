@@ -1,10 +1,8 @@
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
 metadata:
-  name: prometheus-pve-exporter
+  name: prometheus-pve-exporter-scrape
   namespace: monitoring
-  labels:
-    release: prometheus
 spec:
   endpoints:
     # 10.0.10.201 removed: confirmed dead (ConnectTimeout in exporter logs),
@@ -15,7 +13,7 @@ spec:
       params:
         target: ['10.0.10.200']
         module: ['default']
-      relabelings:
+      relabelConfigs:
         - action: replace
           sourceLabels:
             - __param_target

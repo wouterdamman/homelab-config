@@ -171,7 +171,7 @@ vlsingle:
         memory: 128Mi
       limits:
         cpu: 500m
-        memory: 512Mi
+        memory: 1Gi
     tolerations:
     - key: node-role.kubernetes.io/control-plane
       operator: Equal

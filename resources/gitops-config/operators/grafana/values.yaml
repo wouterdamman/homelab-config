@@ -57,6 +57,17 @@ grafana.ini:
     default_home_dashboard_path: /tmp/dashboards/Overview/overview.json
   server:
     root_url: https://grafana.svc.damman.tech
+  # Alerting runs in vmalert + Alertmanager; Grafana's own engine has no rules and only
+  # costs memory and CPU for its scheduler.
+  unified_alerting:
+    enabled: false
+  alerting:
+    enabled: false
+  analytics:
+    check_for_updates: false
+    reporting_enabled: false
+  news:
+    news_feed_enabled: false
   auth:
     disable_login_form: false
   auth.anonymous:

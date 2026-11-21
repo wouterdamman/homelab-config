@@ -43,7 +43,7 @@ Kubelet CSR Approver automatically approves kubelet-serving Certificate Signing 
 | HA Deployment | 2 replicas | High availability with leader election |
 | IP Validation | 10.0.10.0/24 | Only approves CSRs from known node IPs |
 | Hostname Validation | Regex | Validates node names match pattern |
-| Prometheus Metrics | Enabled | ServiceMonitor for observability |
+| Metrics | Exposed | Not scraped: the namespace is excluded from the vmagent scrapes on purpose |
 
 ---
 
@@ -73,9 +73,9 @@ Only CSRs from known nodes (`prd-cp-01`, `prd-w-01`, etc.) are approved.
 
 ---
 
-## Prometheus Integration
+## Metrics
 
-ServiceMonitor enabled with `release: prometheus` label.
+The chart's ServiceMonitor is off and the `kubelet-serving-cert-approver` namespace is excluded from the vmagent scrape namespaces (`operators/victoria-metrics/values.yaml`), as it was for Prometheus.
 
 **Key metrics:**
 - `kubelet_csr_approver_approved_total` — Total approved CSRs

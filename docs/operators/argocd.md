@@ -6,7 +6,7 @@
 
 ## Overview
 
-ArgoCD is the GitOps continuous deployment tool managing all Kubernetes resources via the App-of-Apps pattern. Configured with GitHub SSO, Prometheus monitoring, and prepared for Slack notifications.
+ArgoCD is the GitOps continuous deployment tool managing all Kubernetes resources via the App-of-Apps pattern. Configured with GitHub SSO, VictoriaMetrics monitoring, and prepared for Slack notifications.
 
 ---
 
@@ -17,7 +17,7 @@ sync-app (Root Application) — App-of-Apps Pattern
 ├── Wave 0 (tier-0): ArgoCD, Cilium, Longhorn
 ├── Wave 1 (tier-0/1): sync-app, 1Password, External Secrets, cert-manager,
 │                      external-dns, kubelet-csr-approver, cloudnative-pg
-├── Wave 2 (tier-2): Prometheus, Grafana, Loki, Promtail, Authentik, PVE Exporter
+├── Wave 2 (tier-2): VictoriaMetrics, Alertmanager, Grafana, Vector, Authentik, PVE Exporter
 ├── Wave 3 (tier-2): Proxmox Gateway API
 └── Wave 4 (tier-3): Applications (EMQX, Zigbee2MQTT, Home Assistant, etc.)
 ```
@@ -95,7 +95,7 @@ All components run on control-plane nodes.
 
 ## Monitoring
 
-ServiceMonitors enabled for all ArgoCD components (label: `release: prometheus`).
+All ArgoCD components expose metrics; they are scraped by native VMServiceScrapes in `operators/victoria-metrics/scrapes/` (the chart's own ServiceMonitors are off).
 
 **Key metrics:**
 - `argocd_app_info` — Application status and health

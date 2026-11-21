@@ -99,7 +99,7 @@ ArgoCD deploys operators in wave order:
 
 1. **Wave 0**: Longhorn, Cilium, ArgoCD
 2. **Wave 1**: 1Password Connect, External Secrets, cert-manager, external-dns, kubelet-csr-approver, cloudnative-pg
-3. **Wave 2**: Prometheus stack, Loki, Promtail, Authentik
+3. **Wave 2**: VictoriaMetrics (with VictoriaLogs), Alertmanager, Grafana, Vector, Authentik
 4. **Wave 3**: Proxmox
 5. **Wave 4**: Home Assistant, EMQX, Zigbee2MQTT
 6. **Wave 5**: EVCC
@@ -142,9 +142,9 @@ In Longhorn UI → Backup tab → for each critical volume:
 
 | Volume | Namespace | Priority |
 |--------|-----------|----------|
-| prometheus-db | monitoring | Medium |
-| loki-storage | monitoring | Medium |
-| grafana | monitoring | Low |
+| vmsingle-vmks (metrics) | monitoring | Low (regenerates) |
+| vlsingle-vmks (logs) | monitoring | Low (regenerates) |
+| grafana, storage-alertmanager-0 | monitoring | Low (dashboards are in git) |
 
 ### Verify Restored Volumes
 

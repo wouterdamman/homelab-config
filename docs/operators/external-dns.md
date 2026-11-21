@@ -79,9 +79,7 @@ Field: api-key
 
 ```yaml
 serviceMonitor:
-  enabled: true
-  additionalLabels:
-    release: prometheus
+  enabled: false   # scraped by a native VMServiceScrape, see operators/victoria-metrics/scrapes/
 ```
 
 **Key metrics:**

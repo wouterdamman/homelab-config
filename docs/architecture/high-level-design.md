@@ -90,7 +90,7 @@ Longhorn distributed storage with automated S3 backups to Hetzner Object Storage
 | **IaC** | OpenTofu | Infrastructure provisioning |
 | **Backup** | Hetzner Object Storage | Off-site backup storage |
 | **Database** | CloudNative-PG | PostgreSQL operator with HA |
-| **Monitoring** | Prometheus + Loki | Metrics and logs aggregation |
+| **Monitoring** | VictoriaMetrics + VictoriaLogs | Metrics and logs aggregation |
 | **Authentication** | Authentik | SSO and identity provider |
 | **Home Automation** | HA + EMQX + Z2M | Smart home platform |
 
@@ -142,27 +142,26 @@ Gateway Annotation → cert-manager → Let's Encrypt ACME → Cloudflare DNS-01
 ### Monitoring Flow
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          OBSERVABILITY STACK                                 │
-│                                                                              │
-│   METRICS                    LOGS                      ALERTING             │
-│   ┌─────────────┐           ┌─────────────┐           ┌─────────────┐      │
-│   │ Prometheus  │◄──────────│   Promtail  │           │Alertmanager │      │
-│   │   (TSDB)    │  scrape   │ (DaemonSet) │           │  (route)    │      │
-│   └──────┬──────┘           └──────┬──────┘           └──────┬──────┘      │
-│          │                         │                         │             │
-│          │ scrape                  │ push                    ▼             │
-│          │                         ▼                  ┌─────────────┐      │
-│   ┌──────┴──────┐           ┌─────────────┐          │  Pushover   │      │
-│   │  PVE        │           │   Loki      │          │  (mobile)   │      │
-│   │  Exporter   │           │  (store)    │          └─────────────┘      │
-│   └─────────────┘           └──────┬──────┘                                │
-│                                    │                                       │
-│          ┌─────────────────────────┘                                       │
-│          ▼                                                                  │
-│   ┌─────────────┐                                                          │
-│   │   Grafana   │ ◄─── HTTPS via Gateway API                               │
-│   │ (dashboards)│     grafana.svc.damman.tech                              │
-│   └─────────────┘                                                          │
+│                          OBSERVABILITY STACK                                │
+│                                                                             │
+│  METRICS                    LOGS                        ALERTING            │
+│  ┌─────────────┐           ┌─────────────┐            ┌─────────────┐      │
+│  │   vmagent   │──scrape──►│   vlagent   │            │ Alertmanager│      │
+│  │ (pull, 30s) │           │ (DaemonSet) │            │   (route)   │      │
+│  └──────┬──────┘           └──────┬──────┘            └──────┬──────┘      │
+│         │ write                   │ push      Vector ◄─ Talos│logs         │
+│         ▼                         ▼           (TCP)           ▼             │
+│  ┌─────────────┐           ┌─────────────┐   ┌─────────┐ ┌─────────────┐  │
+│  │  VMSingle   │           │  VLSingle   │   │ vmalert │►│  Pushover   │  │
+│  │   (TSDB)    │           │ (log store) │   │ (rules) │ │  (mobile)   │  │
+│  └──────┬──────┘           └──────┬──────┘   └─────────┘ └─────────────┘  │
+│         └────────────┬────────────┘                                        │
+│                      ▼                                                      │
+│               ┌─────────────┐                                               │
+│               │   Grafana   │ ◄─── HTTPS via Gateway API                    │
+│               │ (dashboards │     grafana.svc.damman.tech                   │
+│               │  from git)  │                                               │
+│               └─────────────┘                                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

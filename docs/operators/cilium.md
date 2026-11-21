@@ -114,9 +114,9 @@ kubectl port-forward -n kube-system svc/hubble-ui 8080:80
 
 ---
 
-## Prometheus Integration
+## Metrics Integration
 
-ServiceMonitors enabled for all Cilium components (label: `release: prometheus`).
+The agent, operator and Hubble metrics are scraped by native VMServiceScrapes (`cilium-agent-scrape`, `cilium-operator-scrape`, `hubble-scrape` in `operators/victoria-metrics/scrapes/`); the chart's ServiceMonitors are off. The Cilium dashboards live in `operators/grafana/dashboards/cilium/`.
 
 | Component | Port |
 |-----------|------|

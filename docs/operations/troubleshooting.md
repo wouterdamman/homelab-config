@@ -396,19 +396,19 @@ kubectl logs -n kube-system -l k8s-app=kube-dns
 
 ## 7. Monitoring Issues
 
-### Prometheus targets down
+### Scrape targets down
 
 ```bash
-# Port-forward Prometheus UI
-kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
-# Open http://localhost:9090/targets
+# Port-forward the vmagent UI
+kubectl port-forward -n monitoring svc/vmagent-vmks 8429:8429
+# Open http://localhost:8429/targets
 ```
 
 | Issue | Cause | Solution |
 |-------|-------|---------|
 | Target down | Pod not running | Check pod status, fix deployment |
-| Scrape error | Wrong port/path | Check ServiceMonitor spec |
-| No targets found | Label mismatch | Check selector labels on ServiceMonitor |
+| Scrape error | Wrong port/path | Check the VMServiceScrape (`operators/victoria-metrics/scrapes/`) |
+| No targets found | Label mismatch | Check the selector labels of the VMServiceScrape against the Service; check the namespace's CiliumNetworkPolicy allows `vmagent` |
 | kube-controller-manager/scheduler down | Metrics bind on 127.0.0.1 (Talos default) | Add `bind-address: 0.0.0.0` to Talos machine config |
 
 **Talos control plane metrics configuration:**
@@ -424,13 +424,19 @@ cluster:
       bind-address: "0.0.0.0"
 ```
 
-### Promtail not ready
+### No logs in VictoriaLogs
+
+```bash
+# vlagent runs on every node
+kubectl get pods -n monitoring -l app.kubernetes.io/name=vlagent -o wide
+kubectl logs -n monitoring -l app.kubernetes.io/name=vlagent --tail=30
+```
 
 | Issue | Cause | Solution |
 |-------|-------|---------|
-| 0/1 Ready, 500 errors | Missing `__path__` in config | Use default scrapeConfigs, don't override snippets.common |
-| "no path for target" | Scrape config missing path relabeling | Check values.yaml, use chart defaults |
-| Connection refused to Loki | Loki not running | Check Loki pod status first |
+| No logs of one node | vlagent pod not running there | Check the DaemonSet and the taint toleration |
+| `couldn't send a block` warnings | vlsingle not reachable | Check the vlsingle pod and the CiliumNetworkPolicies |
+| No Talos logs | Vector or `machine.logging` | `kubectl logs -n monitoring deploy/vector`; the nodes must reach 10.0.10.242:5140 |
 
 ### Alerts not firing/receiving
 
@@ -463,7 +469,7 @@ curl http://localhost:9221/pve?target=10.0.10.200
 | Target DOWN | Exporter pod crashed | Check logs, restart deployment |
 | 401 Unauthorized | Credentials incorrect/expired | Check 1Password item "Proxmox - Monitoring Account" |
 | SecretSyncedError | ExternalSecret can't sync | Check ClusterSecretStore, 1Password Connect |
-| No metrics visible | ServiceMonitor not discovered | Check labels: `release=prometheus` |
+| No metrics visible | Scrape not found | Check the VMServiceScrape `prometheus-pve-exporter-scrape` |
 
 ---
 

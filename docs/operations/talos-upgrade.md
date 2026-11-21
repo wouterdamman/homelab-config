@@ -292,7 +292,7 @@ How a worker's Longhorn disk moved from `machine.disks` on `/var/lib/longhorn` t
   ```bash
   talosctl -n <leader-ip> etcd forfeit-leadership
   ```
-- **Strict-local volumes** (`longhorn-monitoring`) cannot move. Loki and Prometheus are down while their node reboots.
+- **Strict-local volumes** (`longhorn-monitoring`) cannot move. VictoriaMetrics (`vmsingle`) and VictoriaLogs (`vlsingle`) are down while their node reboots.
 - **Use the VIP.** The kubeconfig now points at `10.0.10.140`; with `10.0.10.130` kubectl fails while prd-cp-01 reboots.
 
 ## Hardware Changes (RAM, iothread, devices)

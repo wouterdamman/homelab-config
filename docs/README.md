@@ -10,7 +10,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 |----------|-------------|
 | [High-Level Design](architecture/high-level-design.md) | System overview, component map, design principles |
 | [Low-Level Design](architecture/low-level-design.md) | VLANs, compute specs, storage tiers, GitOps waves |
-| [Architecture Decision Records](architecture/adr.md) | ADR-001 through ADR-017 |
+| [Architecture Decision Records](architecture/adr.md) | ADR-001 through ADR-017, ADR-028 |
 
 ---
 
@@ -76,7 +76,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 
 | Document | Description |
 |----------|-------------|
-| [Monitoring & Alerting](monitoring/monitoring-alerting.md) | Prometheus, Loki, Grafana, Alertmanager, Pushover, Proxmox PVE exporter |
+| [Monitoring & Alerting](monitoring/monitoring-alerting.md) | VictoriaMetrics, VictoriaLogs, Vector, Grafana, Alertmanager, Pushover, Proxmox PVE exporter |
 
 ---
 

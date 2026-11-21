@@ -77,6 +77,11 @@ grafana.ini:
 datasources:
   datasources.yaml:
     apiVersion: 1
+    # The data source was called Prometheus before; provisioning refuses a rename that
+    # keeps the uid ("data source with the same uid already exists")
+    deleteDatasources:
+    - name: Prometheus
+      orgId: 1
     datasources:
     # VictoriaMetrics speaks the Prometheus API; the uid stays "prometheus" because the
     # dashboards in operators/grafana/dashboards refer to it

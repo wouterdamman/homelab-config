@@ -244,6 +244,9 @@ vmalert:
       effect: NoSchedule
 
 victoria-metrics-operator:
+  operator:
+    # Everything is native VM* objects now; no Prometheus Operator CRDs to convert
+    disable_prometheus_converter: true
   resources:
     requests:
       cpu: 20m

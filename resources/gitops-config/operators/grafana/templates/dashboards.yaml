@@ -1,0 +1,30 @@
+# One ConfigMap per dashboard, picked up by the Grafana dashboard sidecar
+# (label grafana_dashboard=1). The sub-directory under dashboards/ is the Grafana
+# folder. Read with .Files so Helm does not parse the legend formats (double
+# curly braces) in the JSON.
+#
+# Sources:
+# - kubernetes/, nodes/: kubernetes-mixin dashboards as rendered by kube-prometheus-stack
+#   (only the ones in use), Europe/Amsterdam as timezone
+# - longhorn/: grafana.com id 16888 revision 35
+# - argocd/: grafana.com id 14584 revision 1
+# - cilium/: the agent, operator and Hubble dashboards of the Cilium chart 1.20.4
+#   (rendered with dashboards.enabled=true; kept here because the agent dashboard is
+#   larger than the client-side apply limit of the Cilium app)
+{{- $folders := dict "kubernetes" "Kubernetes" "nodes" "Nodes" "longhorn" "Longhorn" "argocd" "Argo CD" "cilium" "Cilium" }}
+{{- range $path, $_ := .Files.Glob "dashboards/*/*.json" }}
+{{- $dir := base (dir $path) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-{{ base $path | trimSuffix ".json" }}
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: {{ get $folders $dir | default $dir | quote }}
+data:
+  {{ base $path }}: |-
+{{ $.Files.Get $path | replace "${DS_PROMETHEUS}" "prometheus" | indent 4 }}
+{{- end }}

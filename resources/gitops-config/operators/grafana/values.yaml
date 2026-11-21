@@ -96,8 +96,11 @@ sidecar:
     label: grafana_dashboard
     labelValue: "1"
     searchNamespace: ALL
+    # Folder comes from the grafana_folder annotation of the ConfigMap
+    folderAnnotation: grafana_folder
     provider:
       allowUiUpdates: false
+      foldersFromFilesStructure: true
   datasources:
     enabled: false
   # Applies to the dashboards sidecar (~90Mi).

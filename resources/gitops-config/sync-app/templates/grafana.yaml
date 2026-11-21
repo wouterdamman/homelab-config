@@ -33,6 +33,8 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      # Dashboard ConfigMaps exceed the client-side apply annotation limit
+      - ServerSideApply=true
     automated:
       prune: true
       selfHeal: true

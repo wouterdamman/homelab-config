@@ -79,13 +79,10 @@ defaultRules:
     # Selects job="prometheus-alertmanager"; replaced by the rules in operators/alertmanager
     alertmanager: false
 
-# Grafana runs as its own app (operators/grafana). This chart only keeps deploying the
-# default dashboards as ConfigMaps (grafana_dashboard=1), which the new Grafana's sidecar picks up.
+# Grafana runs as its own app (operators/grafana), which also owns the dashboards
 grafana:
   enabled: false
-  forceDeployDashboards: true
-  defaultDashboardsEnabled: true
-  defaultDashboardsTimezone: Europe/Amsterdam
+  defaultDashboardsEnabled: false
 
 # Kubelet - disable probes endpoint, allowlist alleen essentiële cadvisor metrics
 # Reduceert series van ~275k naar geschatte ~60-80k

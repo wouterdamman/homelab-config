@@ -16,7 +16,8 @@ prometheus-pve-exporter:
       cpu: 150m
       memory: 128Mi
     limits:
-      cpu: 500m
+      # Average use is ~13m, but a scrape (1.6s) bursts to about one core; at 500m it was throttled in 24% of the periods.
+      cpu: "1"
       memory: 256Mi
 
   service:

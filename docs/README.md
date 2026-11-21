@@ -86,6 +86,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 |----------|-------------|
 | [Talos Upgrade](operations/talos-upgrade.md) | Rolling upgrade procedure for Talos and Kubernetes |
 | [Disaster Recovery](operations/disaster-recovery.md) | Full cluster recovery checklist from scratch |
+| [Power Outage Recovery](operations/power-outage-recovery.md) | UPS layout, shutdown order, cold boot and forcing quorum |
 | [Troubleshooting](operations/troubleshooting.md) | Common issues and diagnostic commands |
 
 ---

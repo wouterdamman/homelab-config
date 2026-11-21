@@ -1,6 +1,6 @@
 # Monitoring & Alerting
 
-Complete monitoring and alerting setup using Prometheus, Loki, Grafana, and Pushover.
+Metrics, logs and alerts with VictoriaMetrics, VictoriaLogs, Grafana and Pushover. Alertmanager and Grafana are their own Argo apps; everything lives in the `monitoring` namespace.
 
 ---
 
@@ -10,116 +10,117 @@ Complete monitoring and alerting setup using Prometheus, Loki, Grafana, and Push
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           MONITORING ARCHITECTURE                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
+│  COLLECTION                                                                 │
+│  vmagent (pull, 30s)  ◄── kubelet, API server, etcd, CoreDNS, node-exporter,│
+│                           kube-state-metrics, all app endpoints             │
+│  vlagent (DaemonSet)  ◄── /var/log/pods of every node (container logs)     │
+│  Vector               ◄── Talos service + kernel logs (TCP, 10.0.10.242)    │
 │                                                                             │
-│  DATA COLLECTION                                                            │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                   │
-│  │ Prometheus  │     │  Promtail   │     │    Node     │                   │
-│  │  Scraping   │     │  DaemonSet  │     │  Exporter   │                   │
-│  │  (pull)     │     │  (push)     │     │  (metrics)  │                   │
-│  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘                   │
-│         │                   │                   │                           │
-│  DATA STORAGE               │                   │                           │
-│  ┌─────────────┐     ┌─────────────┐            │                           │
-│  │ Prometheus  │     │    Loki     │◄───────────┘                           │
-│  │   TSDB      │     │  Log Store  │                                        │
-│  │  (40Gi)     │     │   (30Gi)    │                                        │
-│  └──────┬──────┘     └──────┬──────┘                                        │
-│         │                   │                                               │
-│  VISUALIZATION              │                                               │
-│         └──────────┬─────────┘                                              │
-│                    ▼                                                         │
-│             ┌─────────────┐                                                 │
-│             │   Grafana   │ ◄─── HTTPS via Gateway API                      │
-│             │ (dashboards)│     grafana.svc.damman.tech                     │
-│             └─────────────┘                                                 │
+│  STORAGE                                                                    │
+│  vmsingle (metrics, 40Gi)         vlsingle (logs, 10Gi)                     │
 │                                                                             │
-│  ALERTING                                                                   │
-│  Prometheus → AlertRules → Alertmanager → Pushover → Mobile                │
+│  RULES AND ALERTS                                                           │
+│  vmalert ──► Alertmanager ──► Pushover (critical / warning)                 │
+│                          └──► healthchecks.io (Watchdog, dead man's switch) │
+│                                                                             │
+│  VISUALIZATION                                                              │
+│  Grafana  ◄── vmsingle + vlsingle      https://grafana.svc.damman.tech      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Data flow:**
-1. **Metrics**: Prometheus scrapes endpoints → TSDB → Grafana/Alertmanager
-2. **Logs**: Container stdout/stderr → Promtail → Loki → Grafana
-3. **Alerts**: Prometheus evaluates rules → Alertmanager → Pushover
+**Data flow**
+1. **Metrics**: vmagent scrapes the targets and remote-writes to vmsingle. Grafana and vmalert query vmsingle (through the internal `vmauth`, which also routes to vlsingle).
+2. **Logs**: vlagent tails the container logs of its node and ships them to vlsingle. Talos sends its own service and kernel logs to Vector, which posts them to vlsingle.
+3. **Alerts**: vmalert evaluates the rules and notifies Alertmanager, which sends Pushover messages. The always-firing `Watchdog` alert pings healthchecks.io; if the pings stop, healthchecks.io messages you.
 
 ---
 
-## Components
+## Apps
 
-### Prometheus
+| Argo app | Chart | What |
+|----------|-------|------|
+| `victoria-metrics` | `victoria-metrics-k8s-stack` | VMSingle, vmagent, vmalert, the operator, VLSingle, vlagent, kube-state-metrics, node-exporter, native scrapes and the kubernetes-mixin rules |
+| `alertmanager` | `prometheus-community/alertmanager` | Routing, Pushover, Watchdog |
+| `grafana` | `grafana-community/grafana` | UI, Authentik OIDC, data sources, dashboards from the repo |
+| `vector` | `vector/vector` | Receiver for the Talos node logs |
+
+### VictoriaMetrics (metrics)
 
 ```yaml
 Retention: 14 days
-Retention Size: 60GB (stops earlier if limit reached)
-Storage: 80Gi PVC on longhorn-monitoring
-Scrape Interval: 30s
-Evaluation Interval: 30s
+Storage: 40Gi PVC on longhorn-monitoring (vmsingle-vmks)
+Scrape interval: 30s (vmagent-vmks), rule evaluation 30s (vmalert-vmks)
+Series: about 280k live (the API server histograms were 60% of what Prometheus kept)
 ```
 
-> **Trade-off:** Was 60s/30GB/40Gi until 2026-06-21; lowered to 30s to catch sub-minute spikes, with retentionSize/storage doubled in lockstep to keep the full 14d retention window.
+- **Native scrapes** (`operators/victoria-metrics/values.yaml`): kubelet (the cAdvisor allowlist keeps only the container metrics that rules and dashboards need), API server (a drop rule removes nine unused histogram families), etcd (`10.0.10.130-132:2381`, plain HTTP on Talos), CoreDNS (job name `coredns`), kube-state-metrics and node-exporter. Controller manager, scheduler and kube-proxy are not scraped.
+- **App scrapes** (`operators/victoria-metrics/scrapes/*.yaml`, rendered by `templates/scrapes.yaml`): native `VMServiceScrape`/`VMPodScrape` objects for argo-cd, authentik, cert-manager, cilium (agent, operator, Hubble), cnpg, emqx, external-dns, external-secrets, longhorn, alertmanager, grafana and trivy. The charts' own `ServiceMonitor`/`PodMonitor` objects are switched off, and the operator's Prometheus converter is disabled (`disable_prometheus_converter`). Charts only create their metrics Service together with the ServiceMonitor, so Cilium and external-secrets are scraped per pod (`VMPodScrape`, old job labels kept). The Prometheus Operator CRDs are removed from the cluster.
+- **Resources**: the whole `monitoring` namespace uses about 1.8 GiB of memory (was 3.0 GiB with Prometheus, Loki and Promtail).
 
-**Prometheus scrapes:**
-- `kube-state-metrics` — Kubernetes object states
-- `node-exporter` — Hardware/OS metrics
-- `kubelet` — Container metrics via cAdvisor
-- API server, etcd, scheduler, controller-manager — Control plane
-- `ServiceMonitors` — App metrics (Longhorn, Cilium, ArgoCD)
-
-### Loki
+### VictoriaLogs (logs)
 
 ```yaml
-Deployment Mode: SingleBinary (all in one pod)
-Retention: 14 days (336h)
-Storage: 30Gi PVC on longhorn-monitoring
-Schema: v13 with TSDB store
-Auth: Disabled (single-tenant)
+Retention: 14 days
+Storage: 10Gi PVC on longhorn-monitoring, hard cap retention.maxDiskSpaceUsageBytes=8GiB
+Container logs: vlagent DaemonSet (all nodes, reads /var/log/pods)
+Talos logs: Vector (tcp://10.0.10.242:5140) -> /insert/jsonline
 ```
 
-### Promtail
+Stream fields: container logs `kubernetes.pod_namespace`, `kubernetes.pod_name`, `kubernetes.container_name`; Talos logs `node` and `talos-service` (machined, kubelet, etcd, cri, apid, kernel, ...).
 
-```yaml
-Deployment: DaemonSet (runs on every node)
-Log Path: /var/log/pods/*/*.log
-Format: CRI (Container Runtime Interface)
-Labels: namespace, pod, container, node_name, app
-```
+### Talos node logs
+
+Talos can only send `json_lines` over raw TCP or UDP (`machine.logging` in `resources/bootstrap/talos/machine-config/*.tftpl`). VictoriaLogs takes JSON over HTTP, so Vector sits in between: a LoadBalancer Service with the fixed IP `10.0.10.242` (Cilium LB-IPAM, announced on L2), TCP 5140, an `http` sink to vlsingle. The node name is added with `extraTags` (`node: <hostname>`). Applying `machine.logging` needs no reboot. Talos replays the kernel ring buffer once when it starts to log (about 5k lines per node).
+
+If the nodes cannot reach `10.0.10.242:5140`, the `TalosLogsMissing` alert fires after 30 minutes; delivery errors raise `VectorDeliveryErrors`.
 
 ### Alertmanager
 
-**Routing:**
 ```yaml
 route:
   group_by: ['alertname', 'namespace']
   group_wait: 30s
   group_interval: 5m
-  repeat_interval: 4h
+  repeat_interval: 24h          # fallback
   receiver: 'pushover-warning'
   routes:
-    - receiver: 'null'
-      matchers: [alertname = "Watchdog"]
-    - receiver: 'null'
-      matchers: [alertname = "InfoInhibitor"]
-    - receiver: 'pushover-critical'
-      matchers: [severity = "critical"]
-    - receiver: 'pushover-warning'
-      matchers: [severity = "warning"]
+    - Watchdog        -> healthchecks-watchdog (every 30m, dead man's switch)
+    - InfoInhibitor   -> null
+    - severity=critical -> pushover-critical (priority 1, repeat 4h)
+    - severity=warning  -> pushover-warning  (priority 0, repeat 24h)
 ```
 
-**Pushover integration:**
-- **Critical** (priority 1): Bypass Do Not Disturb, repeats until acknowledged
-- **Warning** (priority 0): Normal notification
+Pushover **critical** (priority 1) bypasses Do Not Disturb; **warning** (priority 0) is a normal notification. The service is `alertmanager.monitoring:9093`, the pod `alertmanager-0` (2Gi on `longhorn-standard`). Secrets (`alertmanager-pushover`, `alertmanager-healthchecks`) come from 1Password through External Secrets.
 
 ### Grafana
 
 ```yaml
-URL: https://grafana.svc.damman.tech
-Auth: Admin credentials in 1Password (grafana-admin)
-Storage: 5Gi (dashboards, settings)
-Data Sources:
-  - Prometheus (default): http://prometheus-prometheus:9090
-  - Loki: http://loki.monitoring:3100
+URL: https://grafana.svc.damman.tech (Authentik OIDC, admin credentials in 1Password: grafana-admin)
+Storage: 5Gi on longhorn-standard (fresh database; users come back through OIDC)
+Data sources (provisioned from the values):
+  - VictoriaMetrics (default, uid "prometheus"): http://vmsingle-vmks.monitoring.svc:8428
+  - VictoriaLogs (uid "victorialogs"): http://vlsingle-vmks.monitoring.svc:9428
 ```
+
+The uid of the metrics data source stays `prometheus` because the dashboards refer to it.
+
+---
+
+## Dashboards (GitOps)
+
+Dashboards are not created by hand: one ConfigMap per dashboard, rendered from JSON files in `operators/grafana/dashboards/<folder>/` and picked up by the Grafana sidecar (label `grafana_dashboard=1`, folder from the `grafana_folder` annotation).
+
+| Folder | Dashboards |
+|--------|-----------|
+| Kubernetes | Compute resources (cluster, namespace pods/workloads, node, nodes overview, pod, workload), API server, Kubelet, etcd, CoreDNS, Persistent Volumes |
+| Nodes | Node Exporter Nodes, USE method cluster and node |
+| Longhorn | grafana.com 16888 |
+| Argo CD | grafana.com 14584 |
+| Cilium | agent, operator, Hubble (metrics, DNS, L7 HTTP, network overview) from the Cilium 1.20.4 chart |
+| PostgreSQL | CloudNativePG (cloudnative-pg chart 0.29.1) |
+| (root) | Trivy, from `operators/trivy-operator/dashboards` |
+
+To add a dashboard: put the JSON in the right folder under `operators/grafana/dashboards/` and merge (the template maps `${DS_PROMETHEUS}` to the `prometheus` data source uid). Dashboards edited in the UI are not saved (`allowUiUpdates: false`).
 
 ---
 
@@ -127,15 +128,12 @@ Data Sources:
 
 | Component | Storage | Retention | StorageClass | Replicas |
 |-----------|---------|-----------|--------------|----------|
-| Prometheus | 40Gi | 14 days (30GB limit) | longhorn-monitoring | 1 (ephemeral) |
-| Loki | 30Gi | 14 days (336h) | longhorn-monitoring | 1 (ephemeral) |
-| Grafana | 5Gi | — | longhorn-standard | 1 |
+| vmsingle | 40Gi | 14 days | longhorn-monitoring | 1 (strict-local) |
+| vlsingle | 10Gi (8GiB cap) | 14 days | longhorn-monitoring | 1 (strict-local) |
+| Grafana | 5Gi | — | longhorn-standard | 2 |
 | Alertmanager | 2Gi | — | longhorn-standard | 2 |
-| **Total** | **77Gi** | | | |
 
-**`longhorn-monitoring` StorageClass**: 1 replica, strict-local data locality, no backups. Prometheus/Loki metrics are regenerated continuously — historical data loss is acceptable. Significantly reduces disk I/O and saturation.
-
-**`longhorn-standard`** for Grafana/Alertmanager: dashboards and alert silences are not easily regenerated.
+**`longhorn-monitoring`**: 1 replica, strict-local data locality, no backups. Metrics and logs are regenerated continuously, so losing history is acceptable. The volumes are unavailable while their node reboots.
 
 ---
 
@@ -143,26 +141,22 @@ Data Sources:
 
 ```yaml
 # 1Password items
-grafana-admin:
-  vault: KubernetesSecrets
-  fields: password
-
-pushover-credentials:
-  vault: KubernetesSecrets
-  fields: username (user-key), password (api-token)
+grafana-admin:        # vault KubernetesSecrets, field password
+grafana-oidc:         # client_id, client_secret
+pushover-credentials: # username (user-key), password (api-token)
+alertmanager-healthchecks: # ping-url
 ```
 
 ---
 
 ## Proxmox VE Monitoring
 
-**Status:** Operational (deployed 2026-01-12)  
-**Chart:** christianhuth/prometheus-pve-exporter v2.7.1 (app v3.8.0)  
-**Authentication:** Password-based (`monitoring@pve` user with PVEAuditor role)  
+**Status:** Operational (deployed 2026-01-12)
+**Chart:** christianhuth/prometheus-pve-exporter v2.7.1 (app v3.8.0)
+**Authentication:** Password-based (`monitoring@pve` user with PVEAuditor role)
 
-**Prometheus Targets:**
+**Targets:**
 - 10.0.10.200 (dmn-sk-pve-01) — UP
-- 10.0.10.201 (dmn-sk-pve-02) — UP
 - Scrape interval: 60s (Proxmox API performance consideration)
 
 **Key metrics (45+ `pve_*` available):**
@@ -170,16 +164,6 @@ pushover-credentials:
 - `pve_cpu_usage_ratio` — CPU usage (0.0–1.0)
 - `pve_memory_usage_bytes` / `pve_memory_size_bytes`
 - `pve_cluster_quorate` — Cluster quorum status
-
-**Grafana query pattern** (eliminates duplicate metrics during pod rollouts):
-
-```promql
-# Memory usage percentage
-max by (id, instance) (
-  pve_memory_usage_bytes / pve_memory_size_bytes * 100
-  and on(id) pve_node_info
-)
-```
 
 **Alert rules:**
 - **ProxmoxNodeDown** (critical): Node offline >5min
@@ -190,23 +174,7 @@ max by (id, instance) (
 - **ProxmoxStorageFull** (warning): Storage >85% for >10min
 - **ProxmoxVMDown** (warning): VM stopped/crashed >5min (was running in last 4h)
 
-**Configuration:**
-- `resources/gitops-config/infrastructure/prometheus-pve-exporter/`
-
-**Troubleshooting:**
-
-```bash
-kubectl get pods -n monitoring -l app.kubernetes.io/name=prometheus-pve-exporter
-kubectl logs -n monitoring -l app.kubernetes.io/name=prometheus-pve-exporter
-
-# Verify targets
-kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
-# http://localhost:9090/targets (search "pve")
-
-# Test metrics endpoint
-kubectl port-forward -n monitoring svc/prometheus-pve-exporter 9221:80
-curl http://localhost:9221/pve?target=10.0.10.200
-```
+**Configuration:** `resources/gitops-config/infrastructure/prometheus-pve-exporter/`
 
 ---
 
@@ -214,43 +182,29 @@ curl http://localhost:9221/pve?target=10.0.10.200
 
 | Level | Priority | Behavior | Examples |
 |-------|----------|----------|---------|
-| **critical** | 1 | Bypass DND, repeat until ack | Node down, etcd unhealthy, PVC full |
-| **warning** | 0 | Normal notification | High CPU, cert expiring, sync failed |
-| **info** | -1 | Silent (log only) | Scheduled maintenance |
+| **critical** | 1 | Bypass DND, repeat every 4h | Node down, etcd unhealthy, PVC full |
+| **warning** | 0 | Normal notification, repeat every 24h | High CPU, cert expiring, sync failed |
+| **info** | — | No notification (InfoInhibitor) | Informational alerts |
 
-### Key Pre-configured Rules (kube-prometheus-stack)
+### Rules
 
-**Infrastructure:**
-- `NodeNotReady` — Node is not Ready
-- `NodeMemoryHighUtilization` — Memory >90%
-- `NodeFilesystemSpaceFillingUp` — Disk filling within 24h
+| Where | What |
+|-------|------|
+| `operators/victoria-metrics/rules/*.yaml` (VMRules, rendered by `templates/rules.yaml`) | The kubernetes-mixin set that kube-prometheus-stack used to deploy: recording rules for the dashboards and the `kubernetes-*`, `node-exporter`, `etcd`, `kube-state-metrics`, API server alerts, plus `victoria-metrics.yaml` (disk space, remote write, rule errors) |
+| `operators/alertmanager/templates/vmrule.yaml` | Alertmanager reload, notification failures, down, crashloop |
+| `operators/vector/templates/vmrule.yaml` | Vector delivery errors, no Talos logs for 30 minutes |
+| `operators/longhorn/templates/vmrule.yaml` | `LonghornVolumeBackupTooOld`: a `longhorn-fast`/`longhorn-standard` volume has no backup younger than 36h (also when it never had one), for 1h |
+| `operators/descheduler/templates/vmrule.yaml` | `WorkerPodDistributionSkewed`: the busiest worker has more than 1.4x the Running CPU requests of the quietest one, for 2h |
+| `operators/trivy-operator/templates/vmrule.yaml` | Trivy findings |
+| `infrastructure/prometheus-pve-exporter/templates/vmrule.yaml` | `Proxmox*`, `KubeNodeHighMemory` |
 
-**Kubernetes:**
-- `KubePodCrashLooping` — Pod restart loop
-- `KubePodNotReady` — Pod not Ready >15min
-- `KubeDeploymentReplicasMismatch` — Desired != Available
-- `KubePersistentVolumeFillingUp` — PVC nearly full
-
-**Control Plane:**
-- `etcdMembersDown` — etcd member offline
-- `etcdHighNumberOfLeaderChanges` — Unstable cluster
-- `KubeAPIErrorBudgetBurn` — API server errors
-
-### Custom Rules
-
-| Alert | Rule file | Fires when |
-|-------|-----------|------------|
-| `LonghornVolumeBackupTooOld` | `operators/longhorn/templates/prometheusrule.yaml` | A `longhorn-fast`/`longhorn-standard` volume has no backup younger than 36h (also when it never had one), for 1h |
-| `WorkerPodDistributionSkewed` | `operators/descheduler/templates/prometheusrule.yaml` | The busiest worker has more than 1.4x the Running CPU requests of the quietest one, for 2h |
-| `Proxmox*`, `KubeNodeHighMemory` | `infrastructure/prometheus-pve-exporter/templates/prometheusrule.yaml` | See Proxmox VE Monitoring |
-
-A failed Longhorn backup job is covered by the default `KubeJobFailed`.
+A failed Longhorn backup job is covered by `KubeJobFailed`. All rules are native VMRules.
 
 ---
 
 ## Querying
 
-### PromQL Examples
+VictoriaMetrics speaks PromQL (with MetricsQL extensions). Grafana data source `VictoriaMetrics` is the default.
 
 ```promql
 # CPU usage per node (percentage)
@@ -266,52 +220,41 @@ increase(kube_pod_container_status_restarts_total[1h])
 topk(5, sum(container_memory_working_set_bytes) by (pod, namespace))
 ```
 
-### LogQL Examples
+### LogsQL examples (data source `VictoriaLogs`)
 
-```logql
-# All logs from namespace
-{namespace="home-assistant"}
+```logsql
+# All logs from a namespace
+_stream:{kubernetes.pod_namespace="home-assistant"}
 
-# Error logs only
-{namespace="argocd"} |= "error" != "errors=0"
+# Errors in a namespace
+_stream:{kubernetes.pod_namespace="argocd"} error
 
-# Rate of errors per minute
-rate({namespace="monitoring"} |= "error" [1m])
+# Errors per namespace
+level:error | stats by (kubernetes.pod_namespace) count() errors | sort by (errors desc)
 
-# Top namespaces by log volume
-topk(10, sum(rate({job="monitoring/promtail"}[5m])) by (namespace))
+# Talos logs of one node, kubelet only
+_stream:{node="prd-w-01",talos-service="kubelet"}
+
+# Everything one node logged about an error, per container
+kubernetes.pod_node_name:prd-w-01 AND (error OR fail*) | stats by (kubernetes.container_name) count() hits | sort by (hits desc)
 ```
 
----
-
-## Grafana Dashboards
-
-### Pre-configured (kube-prometheus-stack)
-- Kubernetes / Compute Resources / Cluster
-- Node Exporter / Nodes
-- CoreDNS, etcd, API Server, Kubelet
-
-### Recommended Imports (Grafana.com)
-
-| Dashboard | ID | Description |
-|-----------|----|-------------|
-| Longhorn | 16888 | Volume health, replica status |
-| Cilium | 16611 | Network policies, flows |
-| ArgoCD | 14584 | Sync status, health |
-| Loki Dashboard | 13639 | Log volume, errors |
+Longhorn writes logfmt, so its level is not a field: `... | unpack_logfmt fields (level) | filter level:warning`.
 
 ---
 
 ## Access
 
 ```bash
-# Grafana (external)
+# Grafana
 https://grafana.svc.damman.tech
 
 # Port forwarding for debugging
-kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
+kubectl port-forward -n monitoring svc/vmsingle-vmks 8428:8428      # metrics UI, /vmui
+kubectl port-forward -n monitoring svc/vmagent-vmks 8429:8429       # /targets
+kubectl port-forward -n monitoring svc/vmalert-vmks 8080:8080       # rules and alerts
+kubectl port-forward -n monitoring svc/vlsingle-vmks 9428:9428      # logs UI, /select/vmui
 kubectl port-forward -n monitoring svc/alertmanager 9093:9093
-kubectl port-forward -n monitoring svc/loki 3100:3100
 ```
 
 ---
@@ -320,66 +263,57 @@ kubectl port-forward -n monitoring svc/loki 3100:3100
 
 | Path | Description |
 |------|-------------|
-| `operators/prometheus-community/values.yaml` | Prometheus config (plus the default dashboards as ConfigMaps) |
-| `operators/grafana/values.yaml` | Grafana config (OIDC, data sources, sidecar) |
+| `operators/victoria-metrics/values.yaml` | VMSingle, vmagent, vmalert, VLSingle, vlagent, native scrapes |
+| `operators/victoria-metrics/templates/` | CiliumNetworkPolicies, the rules and the scrapes templates |
+| `operators/victoria-metrics/rules/` | The kubernetes-mixin VMRules |
+| `operators/victoria-metrics/scrapes/` | Native VMServiceScrape/VMPodScrape objects for the apps |
 | `operators/alertmanager/values.yaml` | Alertmanager config (routes, receivers, templates) |
-| `operators/grafana/templates/externalsecret-admin.yaml` | ExternalSecret for the Grafana admin login |
-| `operators/grafana/templates/externalsecret-oidc.yaml` | ExternalSecret for the Authentik OIDC client |
-| `operators/alertmanager/templates/externalsecret-pushover.yaml` | ExternalSecret for Pushover |
-| `operators/alertmanager/templates/externalsecret-healthchecks.yaml` | ExternalSecret for the healthchecks.io ping URL |
-| `operators/grafana/templates/httproute.yaml` | Gateway API HTTPRoute |
-| `operators/loki/values.yaml` | Loki configuration |
-| `operators/promtail/values.yaml` | Promtail configuration |
+| `operators/alertmanager/templates/externalsecret-*.yaml` | Pushover and healthchecks.io secrets |
+| `operators/grafana/values.yaml` | Grafana config (OIDC, data sources, sidecar) |
+| `operators/grafana/dashboards/` | The dashboards |
+| `operators/grafana/templates/` | ExternalSecrets, HTTPRoute, CiliumNetworkPolicy, dashboard ConfigMaps |
+| `operators/vector/` | Vector, receiver for the Talos logs |
+| `resources/bootstrap/talos/machine-config/*.tftpl` | `machine.logging` of the nodes |
 
 ---
 
 ## Troubleshooting
 
 ```bash
-# Check Prometheus targets
-kubectl port-forward -n monitoring svc/prometheus-prometheus 9090:9090
-# http://localhost:9090/targets
+# Targets (all should be up)
+kubectl port-forward -n monitoring svc/vmagent-vmks 8429:8429     # http://localhost:8429/targets
 
-# Check Alertmanager
-kubectl port-forward -n monitoring svc/alertmanager 9093:9093
-# http://localhost:9093/#/status
+# Rules that fail to evaluate
+kubectl port-forward -n monitoring svc/vmalert-vmks 8080:8080     # the vmalert UI on http://localhost:8080
+kubectl logs -n monitoring deploy/vmalert-vmks -c vmalert --tail=50
 
-# View Promtail logs
-kubectl logs -n monitoring -l app.kubernetes.io/name=promtail
+# Alertmanager
+kubectl port-forward -n monitoring svc/alertmanager 9093:9093     # http://localhost:9093/#/status
 
-# Test Pushover notification
+# Test notification
 kubectl exec -n monitoring -it alertmanager-0 -c alertmanager -- \
-  amtool alert add test severity=critical namespace=test
+  amtool alert add test severity=critical namespace=test --alertmanager.url=http://localhost:9093
 ```
 
 | Issue | Symptom | Solution |
 |-------|---------|---------|
-| Promtail not ready | 0/1 Running | Check scrape config has `__path__` |
-| No logs in Loki | Empty queries | Check Promtail → Loki connectivity |
-| Alerts not firing | No notifications | Check Alertmanager config, secrets |
-| High cardinality | Slow queries | Reduce label values, add aggregation |
+| Watchdog pings stop | healthchecks.io "dead man's switch is DOWN" | vmalert cannot evaluate: check `kubectl logs deploy/vmalert-vmks`, its CiliumNetworkPolicy (it queries `vmauth-vmks-internal:8427`) and Alertmanager |
+| Target down after a chart bump | `up == 0` / `TargetDown` | Service labels or port names changed: compare with the VMServiceScrape; check the CiliumNetworkPolicy of that namespace allows `vmagent` |
+| No logs of a pod | Empty `_stream` query | Check the vlagent pod on that node and its policy (egress to vlsingle 9428 and the API server) |
+| No Talos logs | `TalosLogsMissing` | Check `machine.logging` on the node and that `10.0.10.242:5140` is reachable; `kubectl logs deploy/vector` |
+| Grafana pod crash-loops | `data source with the same uid already exists` | Renaming a data source while keeping its uid needs `deleteDatasources` for the old name |
+| Missing dashboard | Not in the folder | Check the ConfigMap `grafana-dashboard-<name>` and the sidecar log (`grafana-sc-dashboard`) |
 
 ---
 
 ## Changelog
 
+### 2026-11-21
+- **Migration**: kube-prometheus-stack, Loki and Promtail replaced by VictoriaMetrics and VictoriaLogs; Alertmanager and Grafana are their own apps; dashboards are provisioned from the repo; Talos node logs go to VictoriaLogs through Vector. The `monitoring` namespace went from about 3.0 GiB to about 1.8 GiB of memory.
+
 ### 2026-01-27
 - **Storage Optimization**: Introduced `longhorn-monitoring` StorageClass for ephemeral monitoring data (1 replica, strict-local, no backups). Significantly reduces disk I/O.
-- Prometheus and Loki migrated from `longhorn-standard` to `longhorn-monitoring`
-
-### 2026-01-26
-- **Resource Limit Increases**: Fixed CPU/memory throttling
-  - Grafana: CPU 500m→1000m, Memory 512Mi→1024Mi (was hitting 78% memory)
-  - Promtail: CPU 100m→200m, Memory 128Mi→512Mi (was hitting 80-94% across pods)
-
-### 2026-01-15
-- Prometheus PVE Exporter: CPU limit 500m→300m (utilization was only 5%)
 
 ### 2026-01-12
 - Added prometheus-pve-exporter for Proxmox VE hypervisor monitoring
 - 7 new Proxmox alert rules (3 critical, 4 warning)
-
-### 2026-01-02
-- Watchdog and InfoInhibitor alerts routed to null receiver (no Pushover notifications)
-- `bind-address: 0.0.0.0` added for kube-controller-manager and kube-scheduler
-- ServiceMonitors: HTTPS with insecureSkipVerify for control plane components

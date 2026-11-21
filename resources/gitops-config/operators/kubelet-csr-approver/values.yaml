@@ -31,7 +31,7 @@ resources:
 metrics:
   enable: true
   serviceMonitor:
-    enabled: true
+    enabled: false
     additionalLabels:
       release: prometheus
 

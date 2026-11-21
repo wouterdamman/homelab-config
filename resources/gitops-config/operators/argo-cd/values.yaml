@@ -46,7 +46,7 @@ global:
   monitoring:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       labels:
         release: prometheus
 
@@ -79,7 +79,7 @@ controller:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: prometheus
 
@@ -108,7 +108,7 @@ applicationSet:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: prometheus
 
@@ -142,7 +142,7 @@ repoServer:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: prometheus
 
@@ -175,7 +175,7 @@ server:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: prometheus
 
@@ -234,7 +234,7 @@ notificationsController:
   metrics:
     enabled: true
     serviceMonitor:
-      enabled: true
+      enabled: false
       additionalLabels:
         release: prometheus
 

@@ -1,13 +1,11 @@
 # Replaces the alertmanager.rules group of kube-prometheus-stack: those rules select
 # job="prometheus-alertmanager", which no longer exists. This is a single instance,
 # so the cluster-membership alerts are left out.
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
 metadata:
-  name: alertmanager
+  name: alertmanager-rules
   namespace: monitoring
-  labels:
-    release: prometheus
 spec:
   groups:
     - name: alertmanager

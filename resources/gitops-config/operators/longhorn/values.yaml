@@ -53,6 +53,6 @@ longhornGlobalManager:
 # Prometheus metrics
 metrics:
   serviceMonitor:
-    enabled: true
+    enabled: false
     additionalLabels:
       release: prometheus

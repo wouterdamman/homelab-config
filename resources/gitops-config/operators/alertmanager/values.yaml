@@ -34,7 +34,7 @@ tolerations:
   effect: NoSchedule
 
 serviceMonitor:
-  enabled: true
+  enabled: false
 
 # Secrets are mounted outside /etc/alertmanager, which is a read-only ConfigMap mount
 extraSecretMounts:

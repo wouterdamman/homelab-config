@@ -170,7 +170,7 @@ Documentation of important architecture decisions for the homelab infrastructure
 
 ## ADR-007: Prometheus Stack for Monitoring
 
-**Status:** Accepted
+**Status:** Superseded by ADR-028 (2026-11-21)
 **Date:** 2025-12-26
 
 ### Decision
@@ -514,3 +514,38 @@ Homarr was never actually deployed (its ArgoCD Application stayed commented out 
 - Status: Accepted → Superseded → Deprecated
 - Add superseded-by link when decision changes
 - Don't delete old ADRs, mark as superseded
+
+---
+
+## ADR-028: VictoriaMetrics and VictoriaLogs instead of Prometheus and Loki
+
+**Status:** Accepted
+**Date:** 2026-11-21
+**Supersedes:** ADR-007
+
+### Context
+kube-prometheus-stack bundled Prometheus, Alertmanager and Grafana in one Argo app, with Loki and Promtail next to it. The `monitoring` namespace used about 3.0 GiB of memory on a single host that is already at about 80% memory, and the API server alone produced 62% of Prometheus' 332k series (latency histogram buckets).
+
+### Decision
+- **VictoriaMetrics** (`victoria-metrics-k8s-stack`: VMSingle, vmagent, vmalert, operator) for metrics and **VictoriaLogs** (VLSingle, vlagent) for logs.
+- **Alertmanager** and **Grafana** are their own Argo apps, so they no longer depend on the metrics engine.
+- **Dashboards are provisioned from the repo** (one ConfigMap per dashboard, only the useful ones), never created by hand.
+- Scrapes and rules are **native VM objects** (VMServiceScrape, VMPodScrape, VMRule); the Prometheus converter and CRDs are removed once the last ServiceMonitor and PrometheusRule is gone.
+- **Talos service and kernel logs** go to VictoriaLogs through Vector (Talos only emits `json_lines` over raw TCP/UDP).
+
+### Why?
+- **Memory:** the whole namespace went from about 3.0 GiB to about 1.8 GiB; series from 332k to about 280k with a drop rule for unused API server histograms.
+- **PromQL stays:** dashboards, rules and the kubernetes-mixin recording rules keep working unchanged.
+- **Separate lifecycles:** Alertmanager and Grafana can change without touching the metrics store.
+
+### Alternatives
+- ❌ **Keep kube-prometheus-stack** — heavier and one big app.
+- ❌ **Grafana Mimir/Loki** — more components for a homelab.
+- ❌ **OpenTelemetry-based stacks** — more moving parts, no gain here.
+
+### Trade-offs
+- ✅ Lower memory, one binary per concern
+- ✅ Everything in git, including dashboards and rules
+- ❌ A chart bump of an app can change service labels or ports; the native scrapes in `operators/victoria-metrics/scrapes/` have to follow (the `TargetDown` alert catches it)
+- ❌ Vector is an extra component in the Talos log path
+- ❌ Metrics and logs live on strict-local volumes and are unavailable while their node reboots (as before)

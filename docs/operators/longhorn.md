@@ -61,7 +61,7 @@ Defined in `templates/storage-classes.yaml`:
 | `longhorn-standard` | 2 | Retain | General applications (default) |
 | `longhorn-archive` | 1 | Delete | Logs, temporary data |
 
-There is also `longhorn-monitoring` (1 replica, strict-local, no backups) used by Prometheus and Loki — see [Monitoring & Alerting](../monitoring/monitoring-alerting.md).
+There is also `longhorn-monitoring` (1 replica, strict-local, no backups) used by VictoriaMetrics and VictoriaLogs — see [Monitoring & Alerting](../monitoring/monitoring-alerting.md).
 
 ---
 
@@ -96,9 +96,7 @@ Runs on all nodes including control-plane (required for distributed storage).
 ```yaml
 metrics:
   serviceMonitor:
-    enabled: true
-    additionalLabels:
-      release: prometheus
+    enabled: false   # scraped by a native VMServiceScrape, see operators/victoria-metrics/scrapes/
 ```
 
 **Key metrics:**

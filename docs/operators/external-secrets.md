@@ -33,9 +33,7 @@ Kubernetes Secrets (per namespace)
 installCRDs: false  # CRDs managed separately
 
 serviceMonitor:
-  enabled: true
-  additionalLabels:
-    release: prometheus
+  enabled: false   # the metrics Service only exists with the ServiceMonitor, so the pods are scraped by native VMPodScrapes, see operators/victoria-metrics/scrapes/
 ```
 
 ### ClusterSecretStore

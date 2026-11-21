@@ -166,7 +166,7 @@ After successful bootstrap:
 1. **GitOps Setup**: Deploy ArgoCD for continuous deployment
 2. **Storage**: Configure Longhorn CSI for persistent volumes
 3. **Ingress**: Set up Gateway API and cert-manager for TLS
-4. **Monitoring**: Deploy observability stack (Prometheus, Grafana)
+4. **Monitoring**: Deploy observability stack (VictoriaMetrics, VictoriaLogs, Grafana, Alertmanager)
 5. **Applications**: Install homelab services via ArgoCD
 
 ## Key Files Reference

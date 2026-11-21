@@ -83,14 +83,14 @@ Complete overview of the homelab infrastructure stack.
 
 | Component | Role | URL |
 |-----------|------|-----|
-| **Prometheus** | Metrics (TSDB) | Internal only |
-| **Loki** | Log aggregation | Internal only |
-| **Promtail** | Log collection (DaemonSet) | — |
-| **Grafana** | Dashboards | grafana.svc.damman.tech |
+| **VictoriaMetrics** (vmsingle, vmagent, vmalert) | Metrics, scraping, rules | Internal only |
+| **VictoriaLogs** (vlsingle, vlagent) | Log aggregation and collection | Internal only |
+| **Vector** | Receiver for the Talos node logs (10.0.10.242:5140) | — |
+| **Grafana** | Dashboards (provisioned from the repo) | grafana.svc.damman.tech |
 | **Alertmanager** | Alert routing → Pushover | Internal only |
 
-**Storage:** ~77Gi total (Prometheus 40Gi, Loki 30Gi, Grafana 5Gi, Alertmanager 2Gi)
-**Retention:** Metrics 60 days, Logs 14 days
+**Storage:** ~57Gi total (vmsingle 40Gi, vlsingle 10Gi, Grafana 5Gi, Alertmanager 2Gi)
+**Retention:** Metrics 14 days, Logs 14 days
 
 ### Database Layer
 

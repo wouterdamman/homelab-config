@@ -87,9 +87,7 @@ Custom DNS servers ensure reliable DNS-01 challenge resolution.
 prometheus:
   enabled: true
   servicemonitor:
-    enabled: true
-    labels:
-      release: prometheus
+    enabled: false   # scraped by a native VMServiceScrape, see operators/victoria-metrics/scrapes/
 ```
 
 **Key metrics:**

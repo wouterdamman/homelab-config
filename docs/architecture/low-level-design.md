@@ -142,7 +142,7 @@ longhorn-monitoring:
   dataLocality: strict-local
   reclaimPolicy: Delete
   recurringJobs: disabled
-  useCase: Prometheus, Loki (monitoring data, no backups/snapshots)
+  useCase: VictoriaMetrics, VictoriaLogs (monitoring data, no backups/snapshots)
 ```
 
 ### Backup Strategy
@@ -179,9 +179,10 @@ sync-app (Root Application)
 │   ├── cloudnative-pg (PostgreSQL operator)
 │   └── cnpg-barman-cloud (Backup plugin)
 ├── Wave 2: Monitoring & Auth
-│   ├── kube-prometheus-stack (Metrics + Grafana)
-│   ├── loki (Log aggregation)
-│   ├── promtail (Log shipping)
+│   ├── victoria-metrics (VMSingle, vmagent, vmalert, VLSingle, vlagent)
+│   ├── alertmanager
+│   ├── grafana
+│   ├── vector (Talos node logs)
 │   ├── authentik (SSO/IdP)
 │   └── prometheus-pve-exporter (Proxmox metrics)
 ├── Wave 3: Infrastructure Apps
@@ -253,7 +254,7 @@ Phase 2: GitOps (OpenTofu)
 Phase 3: ArgoCD (GitOps)
   Wave 0: Longhorn, Cilium, ArgoCD (self-managed), argocd-apps
   Wave 1: 1Password Connect, ESO, cert-manager, external-dns, kubelet-csr-approver, cloudnative-pg, sync-app (self-managed)
-  Wave 2: kube-prometheus-stack, prometheus-pve-exporter, loki, promtail, authentik
+  Wave 2: victoria-metrics, alertmanager, grafana, vector, prometheus-pve-exporter, authentik
   Wave 3: proxmox (infrastructure)
   Wave 4: home-assistant, emqx, zigbee2mqtt
   Wave 5: evcc
@@ -282,24 +283,25 @@ See [Longhorn DR Runbook](../operators/longhorn-dr-runbook.md) and [Disaster Rec
 ### Components
 
 ```yaml
-kube-prometheus-stack:
-  - Prometheus: Time-series DB, metrics scraping
-  - Alertmanager: Alert routing (Pushover)
-  - Grafana: Dashboards (grafana.svc.damman.tech)
-  - node-exporter: Hardware/OS metrics (DaemonSet)
-  - kube-state-metrics: Kubernetes object states
+victoria-metrics (victoria-metrics-k8s-stack):
+  - VMSingle: Time-series DB (PromQL/MetricsQL), 14 days
+  - vmagent: Scraping (kubelet, API server, etcd, CoreDNS, kube-state-metrics, node-exporter, apps)
+  - vmalert: Rule evaluation, notifies Alertmanager
+  - VLSingle + vlagent: Log storage and collection (DaemonSet), 14 days
+  - operator: VM custom resources
 
-Loki Stack:
-  - Loki: Log aggregation (label-based indexing)
-  - Promtail: Log collection (DaemonSet)
+Standalone apps:
+  - Alertmanager: Alert routing (Pushover, healthchecks.io Watchdog)
+  - Grafana: Dashboards from the repo (grafana.svc.damman.tech)
+  - Vector: Receiver for the Talos service and kernel logs (10.0.10.242:5140)
 ```
 
 ### Storage
 
 | Component | Storage | Retention |
 |-----------|---------|-----------|
-| Prometheus | 40Gi | 30 days |
-| Loki | 30Gi | 14 days |
+| vmsingle | 40Gi | 14 days |
+| vlsingle | 10Gi | 14 days |
 | Grafana | 5Gi | — |
 | Alertmanager | 2Gi | — |
 

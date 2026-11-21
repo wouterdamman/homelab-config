@@ -134,6 +134,16 @@ spec:
     - ports:
       - port: "9093"
         protocol: TCP
+  # With VictoriaLogs enabled the chart points vmalert's datasource at the internal vmauth
+  # (vmauth-vmks-internal:8427), which routes to vmsingle and vlsingle
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: monitoring
+        app.kubernetes.io/name: vmauth
+    toPorts:
+    - ports:
+      - port: "8427"
+        protocol: TCP
 ---
 # VictoriaMetrics operator — manages the VM custom resources and converts ServiceMonitors
 apiVersion: cilium.io/v2

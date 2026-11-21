@@ -54,7 +54,7 @@ Series: about 280k live (the API server histograms were 60% of what Prometheus k
 ```
 
 - **Native scrapes** (`operators/victoria-metrics/values.yaml`): kubelet (the cAdvisor allowlist keeps only the container metrics that rules and dashboards need), API server (a drop rule removes nine unused histogram families), etcd (`10.0.10.130-132:2381`, plain HTTP on Talos), CoreDNS (job name `coredns`), kube-state-metrics and node-exporter. Controller manager, scheduler and kube-proxy are not scraped.
-- **Converter**: the operator turns the `ServiceMonitor`, `PodMonitor` and `PrometheusRule` objects of the other apps (argo-cd, cilium, longhorn, cnpg, cert-manager, ...) into VM objects. The Prometheus Operator CRDs therefore stay installed; they are annotated `argocd.argoproj.io/sync-options: Prune=false,Delete=false` because no Argo app owns them any more.
+- **App scrapes** (`operators/victoria-metrics/scrapes/*.yaml`, rendered by `templates/scrapes.yaml`): native `VMServiceScrape`/`VMPodScrape` objects for argo-cd, authentik, cert-manager, cilium (agent, operator, Hubble), cnpg, emqx, external-dns, external-secrets, longhorn, alertmanager, grafana and trivy. The charts' own `ServiceMonitor`/`PodMonitor` objects are switched off, and the operator's Prometheus converter is disabled (`disable_prometheus_converter`). Charts only create their metrics Service together with the ServiceMonitor, so Cilium and external-secrets are scraped per pod (`VMPodScrape`, old job labels kept). The Prometheus Operator CRDs are removed from the cluster.
 - **Resources**: the whole `monitoring` namespace uses about 1.8 GiB of memory (was 3.0 GiB with Prometheus, Loki and Promtail).
 
 ### VictoriaLogs (logs)
@@ -191,14 +191,14 @@ alertmanager-healthchecks: # ping-url
 | Where | What |
 |-------|------|
 | `operators/victoria-metrics/rules/*.yaml` (VMRules, rendered by `templates/rules.yaml`) | The kubernetes-mixin set that kube-prometheus-stack used to deploy: recording rules for the dashboards and the `kubernetes-*`, `node-exporter`, `etcd`, `kube-state-metrics`, API server alerts, plus `victoria-metrics.yaml` (disk space, remote write, rule errors) |
-| `operators/alertmanager/templates/prometheusrule.yaml` | Alertmanager reload, notification failures, down, crashloop |
+| `operators/alertmanager/templates/vmrule.yaml` | Alertmanager reload, notification failures, down, crashloop |
 | `operators/vector/templates/vmrule.yaml` | Vector delivery errors, no Talos logs for 30 minutes |
-| `operators/longhorn/templates/prometheusrule.yaml` | `LonghornVolumeBackupTooOld`: a `longhorn-fast`/`longhorn-standard` volume has no backup younger than 36h (also when it never had one), for 1h |
-| `operators/descheduler/templates/prometheusrule.yaml` | `WorkerPodDistributionSkewed`: the busiest worker has more than 1.4x the Running CPU requests of the quietest one, for 2h |
-| `operators/trivy-operator/templates/prometheusrule.yaml` | Trivy findings |
-| `infrastructure/prometheus-pve-exporter/templates/prometheusrule.yaml` | `Proxmox*`, `KubeNodeHighMemory` |
+| `operators/longhorn/templates/vmrule.yaml` | `LonghornVolumeBackupTooOld`: a `longhorn-fast`/`longhorn-standard` volume has no backup younger than 36h (also when it never had one), for 1h |
+| `operators/descheduler/templates/vmrule.yaml` | `WorkerPodDistributionSkewed`: the busiest worker has more than 1.4x the Running CPU requests of the quietest one, for 2h |
+| `operators/trivy-operator/templates/vmrule.yaml` | Trivy findings |
+| `infrastructure/prometheus-pve-exporter/templates/vmrule.yaml` | `Proxmox*`, `KubeNodeHighMemory` |
 
-A failed Longhorn backup job is covered by `KubeJobFailed`. The `PrometheusRule` files are converted to VMRules by the operator.
+A failed Longhorn backup job is covered by `KubeJobFailed`. All rules are native VMRules.
 
 ---
 
@@ -264,8 +264,9 @@ kubectl port-forward -n monitoring svc/alertmanager 9093:9093
 | Path | Description |
 |------|-------------|
 | `operators/victoria-metrics/values.yaml` | VMSingle, vmagent, vmalert, VLSingle, vlagent, native scrapes |
-| `operators/victoria-metrics/templates/` | CiliumNetworkPolicies and the rules template |
+| `operators/victoria-metrics/templates/` | CiliumNetworkPolicies, the rules and the scrapes templates |
 | `operators/victoria-metrics/rules/` | The kubernetes-mixin VMRules |
+| `operators/victoria-metrics/scrapes/` | Native VMServiceScrape/VMPodScrape objects for the apps |
 | `operators/alertmanager/values.yaml` | Alertmanager config (routes, receivers, templates) |
 | `operators/alertmanager/templates/externalsecret-*.yaml` | Pushover and healthchecks.io secrets |
 | `operators/grafana/values.yaml` | Grafana config (OIDC, data sources, sidecar) |

@@ -1,6 +1,6 @@
-# Native version of the ServiceMonitor emqx-emqx-enterprise that the app's chart used to
-# render; the spec is what the operator's converter made of it (and what has been scraping).
-# If a chart upgrade changes the service labels or port names, this object has to follow.
+# Native version of the ServiceMonitor that the emqx chart used to render. The chart's own
+# basic-auth Secret went away with metrics.enabled=false, so the dashboard credentials are used.
+# The job label is the jobLabel emqx-scraping, as before.
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
 metadata:
@@ -11,11 +11,11 @@ spec:
     - attach_metadata: {}
       basicAuth:
         password:
-          key: "password"
-          name: "emqx-emqx-enterprise-basic-auth"
+          key: "EMQX_DASHBOARD__DEFAULT_PASSWORD"
+          name: "emqx-dashboard-secret"
         username:
-          key: "username"
-          name: "emqx-emqx-enterprise-basic-auth"
+          key: "EMQX_DASHBOARD__DEFAULT_USERNAME"
+          name: "emqx-dashboard-secret"
       interval: "10s"
       params:
         type:

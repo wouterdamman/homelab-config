@@ -53,21 +53,24 @@ customConfig:
     internal_metrics:
       type: internal_metrics
   transforms:
-    # host is the node's address (socket source); keep the Talos fields as they are
+    # The node name comes from extraTags in the Talos machine config (node: <hostname>); the
+    # socket source adds the peer address and port, which only add noise
     talos_logs:
       type: remap
       inputs: [talos]
       source: |
-        .host = string(.host) ?? "unknown"
+        if !exists(.node) { .node = string(.host) ?? "unknown" }
         if !exists(.msg) { .msg = string(.message) ?? "" }
         del(.message)
+        del(.host)
+        del(.port)
         del(.source_type)
         del(.timestamp)
   sinks:
     victorialogs:
       type: http
       inputs: [talos_logs]
-      uri: http://vlsingle-vmks.monitoring.svc:9428/insert/jsonline?_stream_fields=host,talos-service&_msg_field=msg&_time_field=talos-time
+      uri: http://vlsingle-vmks.monitoring.svc:9428/insert/jsonline?_stream_fields=node,talos-service&_msg_field=msg&_time_field=talos-time
       method: post
       encoding:
         codec: json

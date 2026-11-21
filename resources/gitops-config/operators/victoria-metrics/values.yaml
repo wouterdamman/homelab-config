@@ -102,8 +102,18 @@ kubeEtcd:
       - port: http-metrics
         scheme: http
 
+# The chart names the job core-dns; the CoreDNS dashboard and the existing rules use coredns.
+# Helm replaces lists, so the chart's endpoint is copied whole.
 coreDns:
   enabled: true
+  vmScrape:
+    spec:
+      endpoints:
+      - port: http-metrics
+        bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabelConfigs:
+        - targetLabel: job
+          replacement: coredns
 
 # Not scraped, as before: not useful for the homelab / Cilium replaces kube-proxy
 kubeControllerManager:

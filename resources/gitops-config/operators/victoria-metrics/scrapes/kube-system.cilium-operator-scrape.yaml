@@ -1,18 +1,22 @@
-# Native version of the ServiceMonitor cilium-operator that the app's chart used to
-# render; the spec is what the operator's converter made of it (and what has been scraping).
-# If a chart upgrade changes the service labels or port names, this object has to follow.
+# Pod scrape: the chart only rendered the metrics Service together with its ServiceMonitor,
+# so with the ServiceMonitor switched off the pods are scraped directly. The job label
+# is kept at its old value so dashboards and rules keep matching.
 apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMServiceScrape
+kind: VMPodScrape
 metadata:
   name: cilium-operator-scrape
   namespace: kube-system
 spec:
-  endpoints:
+  podMetricsEndpoints:
     - attach_metadata: {}
       honorLabels: true
       interval: "10s"
       path: "/metrics"
-      port: "metrics"
+      port: "prometheus"
+      relabelConfigs:
+        - action: "replace"
+          replacement: "cilium-operator"
+          targetLabel: "job"
   namespaceSelector:
     matchNames:
       - "kube-system"
@@ -20,5 +24,5 @@ spec:
     matchLabels:
       io.cilium/app: "operator"
       name: "cilium-operator"
-  targetLabels:
+  podTargetLabels:
     - "io.cilium/app"

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: victoria-metrics
+description: VictoriaMetrics - metrics storage, agent and rule evaluation
+type: application
+version: 1.0.0

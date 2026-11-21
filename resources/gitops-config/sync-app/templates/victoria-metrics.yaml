@@ -1,0 +1,45 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: victoria-metrics
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: observability-stack
+    homelab.damman.tech/tier: tier-2
+    homelab.damman.tech/managed-by: argocd
+  name: victoria-metrics
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: operators
+  sources:
+  - repoURL: https://victoriametrics.github.io/helm-charts/
+    chart: victoria-metrics-k8s-stack
+    targetRevision: 0.98.1
+    helm:
+      valueFiles:
+      - $values/resources/gitops-config/operators/victoria-metrics/values.yaml
+  - repoURL: https://github.com/wouterdamman/homelab-config
+    targetRevision: HEAD
+    path: resources/gitops-config/operators/victoria-metrics
+    ref: values
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      # The operator CRDs are large
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true

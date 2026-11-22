@@ -35,7 +35,7 @@ resources:
     memory: 256Mi
   limits:
     cpu: 1000m
-    memory: 1024Mi
+    memory: 640Mi
 
 tolerations:
 - key: node-role.kubernetes.io/control-plane

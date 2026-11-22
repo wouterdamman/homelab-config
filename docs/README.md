@@ -51,6 +51,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 | [Longhorn Production Plan](operators/longhorn-production-plan.md) | Implementation plan, StorageClass tiers, alert rules |
 | [Longhorn DR Runbook](operators/longhorn-dr-runbook.md) | Disaster recovery procedures and test scripts |
 | [CloudNative-PG](operators/cloudnative-pg.md) | Shared PostgreSQL cluster, CNPG operator |
+| [Trivy Operator](operators/trivy-operator.md) | Vulnerability scans, ClientServer mode, timeouts |
 | [Proxmox VE Gateway](operators/proxmox-gateway.md) | TLS passthrough, Authentik OIDC, Let's Encrypt on Proxmox |
 | [AdGuard Home Gateway](operators/adguard-gateway.md) | TLS terminate, primary + kids instances, LXC subnet mask gotcha |
 

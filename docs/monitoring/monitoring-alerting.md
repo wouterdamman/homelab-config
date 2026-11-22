@@ -116,9 +116,9 @@ Dashboards are not created by hand: one ConfigMap per dashboard, rendered from J
 | Nodes | Node Exporter Nodes, USE method cluster and node |
 | Longhorn | grafana.com 16888 |
 | Argo CD | grafana.com 14584 |
-| Cilium | agent, operator, Hubble (metrics, DNS, L7 HTTP, network overview) from the Cilium 1.20.4 chart |
+| Cilium | agent, operator, Hubble (metrics, L7 HTTP, network overview) from the Cilium 1.20.4 chart; panels whose metrics this cluster does not produce (AWS ENI/EC2, Hubble DNS and port distribution, agent syscall and K8s-event panels) are removed |
 | PostgreSQL | CloudNativePG (cloudnative-pg chart 0.29.1) |
-| (root) | Trivy, from `operators/trivy-operator/dashboards` |
+| Trivy | Trivy Deep Dive, from `operators/trivy-operator/dashboards` |
 
 To add a dashboard: put the JSON in the right folder under `operators/grafana/dashboards/` and merge (the template maps `${DS_PROMETHEUS}` to the `prometheus` data source uid). Dashboards edited in the UI are not saved (`allowUiUpdates: false`).
 

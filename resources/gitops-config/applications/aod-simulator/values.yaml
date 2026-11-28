@@ -5,7 +5,7 @@ image:
   api: ghcr.io/wouterdamman/aod-simulator-api
   web: ghcr.io/wouterdamman/aod-simulator-web
   # Keep in sync with resources/images/aod-simulator/VERSION
-  tag: "2026.11.1-1"
+  tag: "2026.11.1-2"
   pullPolicy: IfNotPresent
 
 api:

@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aod-simulator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: aod-simulator
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aod-simulator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aod-simulator
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      imagePullSecrets:
+      - name: {{ .Values.pullSecret.name }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: api
+        image: "{{ .Values.image.api }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: api
+          containerPort: 10000
+          protocol: TCP
+        securityContext:
+          runAsUser: 10001
+          runAsGroup: 10001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          {{- toYaml .Values.api.resources | nindent 10 }}
+        startupProbe:
+          httpGet:
+            path: /api/get-purposes
+            port: api
+          periodSeconds: 5
+          failureThreshold: 36
+        livenessProbe:
+          httpGet:
+            path: /api/get-purposes
+            port: api
+          periodSeconds: 20
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: tmp-api
+          mountPath: /tmp
+      - name: web
+        image: "{{ .Values.image.web }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        securityContext:
+          runAsUser: 101
+          runAsGroup: 101
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        resources:
+          {{- toYaml .Values.web.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          periodSeconds: 10
+        volumeMounts:
+        - name: tmp-web
+          mountPath: /tmp
+      volumes:
+      - name: tmp-api
+        emptyDir:
+          sizeLimit: 64Mi
+      - name: tmp-web
+        emptyDir:
+          sizeLimit: 64Mi

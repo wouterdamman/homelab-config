@@ -70,6 +70,7 @@ In-repo documentation for the homelab Kubernetes cluster (`talos-prd`) running o
 | [Firefly III](applications/firefly-iii.md) | ⚠️ Decommissioned 2026-07-21, replaced by custom-built Home Finance app |
 | [Homepage](applications/homepage.md) | Dashboard, Authentik forward-auth |
 | [LucidVault](applications/lucidvault.md) | AI knowledge vault, Obsidian sync via CouchDB, MCP server for Claude Code |
+| [AOD simulator](applications/aod-simulator.md) | Area Occupancy Detection simulator, API + UI, no egress |
 
 ---
 

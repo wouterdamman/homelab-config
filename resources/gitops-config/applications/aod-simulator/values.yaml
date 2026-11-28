@@ -1,0 +1,42 @@
+# Images are built by .github/workflows/aod-simulator-image.yml from
+# resources/images/aod-simulator (upstream Hankanman/Area-Occupancy-Detection, pinned tag).
+# Private GHCR packages: pulled with the aod-simulator-ghcr pull secret.
+image:
+  api: ghcr.io/wouterdamman/aod-simulator-api
+  web: ghcr.io/wouterdamman/aod-simulator-web
+  # Keep in sync with resources/images/aod-simulator/VERSION
+  tag: "2026.11.1-1"
+  pullPolicy: IfNotPresent
+
+api:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+web:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 200m
+      memory: 64Mi
+
+# Pull secret for the private GHCR packages (1Password item with a read:packages token)
+pullSecret:
+  name: aod-simulator-ghcr
+  username: wouterdamman
+  remoteKey: aod-simulator-ghcr
+  property: token
+
+httproute:
+  enabled: true
+  hostname: aod.svc.damman.tech
+  gateway:
+    name: svc-gateway
+    namespace: kube-system
+    sectionName: svc-https-listener

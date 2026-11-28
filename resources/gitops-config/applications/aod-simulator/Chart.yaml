@@ -1,0 +1,6 @@
+apiVersion: v2
+name: aod-simulator
+description: Area Occupancy Detection simulator (Flask API + static docs UI), self-hosted
+type: application
+version: 1.0.0
+appVersion: "2026.11.1"

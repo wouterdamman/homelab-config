@@ -1,0 +1,23 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: aod-simulator
+  namespace: {{ .Release.Namespace }}
+spec:
+  endpointSelector: {}
+
+  # Only the web container port is reachable (container port, after DNAT).
+  # The api container (10000) is only reached via 127.0.0.1 inside the pod.
+  ingress:
+  - fromEntities:
+    - cluster
+    toPorts:
+    - ports:
+      - port: "8080"
+        protocol: TCP
+
+  # No egress at all: no DNS, no internet, no cluster services. Everything the pod
+  # needs is baked into the images (UI assets are vendored at build time).
+  egressDeny:
+  - toEntities:
+    - all

@@ -23,7 +23,7 @@ read-only root filesystem, all capabilities dropped, seccomp RuntimeDefault, no 
 - CiliumNetworkPolicy: ingress only on 8080, `egressDeny` to everything (no DNS, no internet). The UI assets that
   upstream loads from CDNs (Shoelace, Chart.js, MathJax, fonts) are vendored into the web image at build time.
 - Pulling the private images uses the `aod-simulator-ghcr` pull secret, created by an ExternalSecret from the
-  1Password item `aod-simulator-ghcr` (field `token`, a GitHub PAT with `read:packages`) in vault `KubernetesSecrets`.
+  1Password item `aod-simulator-ghcr` (field `credential`, a GitHub PAT with `read:packages`) in vault `KubernetesSecrets`.
 
 ## Home Assistant
 

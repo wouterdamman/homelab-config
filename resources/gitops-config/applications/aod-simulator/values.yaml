@@ -31,7 +31,7 @@ pullSecret:
   name: aod-simulator-ghcr
   username: wouterdamman
   remoteKey: aod-simulator-ghcr
-  property: token
+  property: credential
 
 httproute:
   enabled: true

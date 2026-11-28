@@ -32,11 +32,3 @@ pullSecret:
   username: wouterdamman
   remoteKey: aod-simulator-ghcr
   property: credential
-
-httproute:
-  enabled: true
-  hostname: aod.svc.damman.tech
-  gateway:
-    name: svc-gateway
-    namespace: kube-system
-    sectionName: svc-https-listener
